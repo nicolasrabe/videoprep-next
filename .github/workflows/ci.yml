@@ -28,6 +28,10 @@ jobs:
       - run: dotnet build videoprep.slnx -c Release
       # Integration tests (real ffmpeg/yt-dlp) are opt-in and run in their own job from phase 3.
       - run: dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration" --logger "trx" --results-directory TestResults
+      - name: Report failed tests as annotations
+        if: failure()
+        shell: bash
+        run: python3 .github/scripts/trx_annotations.py TestResults || python .github/scripts/trx_annotations.py TestResults
       - name: Upload test results and screenshots
         if: always()
         uses: actions/upload-artifact@v4
