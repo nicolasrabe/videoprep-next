@@ -22,15 +22,15 @@ Table columns: checkbox, Titulo, Fecha, Duracion, Vistas, Estado (Nuevo / Ya des
 Under it: Todo / Nada / Invertir, "N de M seleccionados", format selector, **Enviar a la cola**, **Suscribirme a esto...**.
 Optional thumbnail column or hover preview (nice to have, last).
 
-Listing mechanics (VERIFY each flag with the installed yt-dlp before use)
+Listing mechanics (VERIFIED 2026-10-26 with yt-dlp 2026.10.21: see `docs/VERIFY.md`)
 - Fast listing: `yt-dlp --flat-playlist -J --no-warnings <tab url>` (or `--print` with a template) gives id, title, duration,
   view count, url quickly without hitting each video. In flat mode the upload date is often missing.
-- Dates: try `--extractor-args "youtubetab:approximate_date"` for approximate date in flat mode (VERIFY it exists in the
+- Dates: try `--extractor-args "youtubetab:approximate_date"` for approximate date in flat mode (VERIFIED: exists, fills `timestamp`; see docs/VERIFY.md; it exists in the
   installed version). If a date filter is active and dates are missing, fetch exact metadata only for the entries that pass
   all the other filters, with `--skip-download --print ...` in small batches and a cap (default 100), showing progress.
   Show approximate dates with a "~" and confirm the exact date at download time with `--dateafter`/`--datebefore` as a safety net.
 - Server-side options available: `--playlist-end N`, `--lazy-playlist`, `--dateafter/--datebefore YYYYMMDD`,
-  `--match-filters` (e.g. `!is_live`, duration/availability expressions; VERIFY syntax), `--break-match-filters`,
+  `--match-filters` (e.g. `!is_live`, duration/availability expressions; VERIFIED: missing fields pass `!`/`!=` tests), `--break-match-filters`,
   `--max-downloads`. Prefer client-side filtering of the flat list (flexible, instant re-filter without new requests); use the
   yt-dlp options as a second guard when actually downloading.
 - Cancel button for long listings; results stream into the table; cache the list per URL for the session ("Aplicar filtros" re-filters locally).
@@ -51,7 +51,7 @@ Data: `%APPDATA%\videoprep\subscriptions.json` (macOS: `~/Library/Application Su
     "lastCheck": "2026-10-25T09:14:00-03:00", "lastNew": 2, "lastError": null } ] }
 ```
 Per-subscription archive: `%APPDATA%\videoprep\archives\<id>.txt` in yt-dlp archive format (`youtube <videoId>` per line,
-VERIFY format with a real run) and passed with `--download-archive`. Nothing is ever downloaded twice per subscription.
+VERIFIED: `youtube <id>`) and passed with `--download-archive`. Nothing is ever downloaded twice per subscription.
 
 First run choice when subscribing (radio in the dialog, default **only new from now**): (a) mark everything currently listed
 as seen (write the IDs to the archive without downloading), or (b) backfill what passes the filters (capped by maxCount).
