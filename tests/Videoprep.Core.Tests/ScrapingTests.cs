@@ -191,6 +191,8 @@ public class FiltersTests
         Assert.Equal(["a", "b", "c", "nd"], Ids(Apply(all, new FilterSet())));
         Assert.Equal(["c", "b", "a", "nd"], Ids(Apply(all, new FilterSet { OldestFirst = true })));
         Assert.Equal(["a", "b"], Ids(Apply(all, new FilterSet { MaxCount = 2 })));
+        // Max count first, then "skip downloaded": the 2 newest are a and b; a is downloaded, so only b (not b and c).
+        Assert.Equal(["b"], Ids(Apply(all, new FilterSet { MaxCount = 2 }, "a")));
     }
 
     [Fact]

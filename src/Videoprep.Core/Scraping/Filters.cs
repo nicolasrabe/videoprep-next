@@ -27,7 +27,7 @@ public sealed record FilterSet
 public static class Filters
 {
     /// <summary>
-    /// Keeps the entries that pass, in the chosen order, up to MaxCount. Playlists (rows that open a list) are kept as
+    /// Keeps the entries that pass, in the chosen order, up to MaxCount (counted before "skip already downloaded"). Playlists (rows that open a list) are kept as
     /// they are. An entry whose date (or length) is unknown passes that filter: the exact data is fetched afterwards
     /// for those (<see cref="NeedsExact"/>), and dates are checked again when downloading.
     /// </summary>
@@ -42,7 +42,6 @@ public static class Filters
             if (e.IsPlaylist) return true;
             if (f.SkipLive && e.IsLiveNow) return false;
             if (f.SkipMembers && e.IsMembersOnly) return false;
-            if (f.SkipDownloaded && isDownloaded(e)) return false;
             if (e.Date is { } d)
             {
                 // Approximate dates come from "2 weeks ago"-style texts: only drop what is clearly outside the range.
@@ -61,7 +60,10 @@ public static class Filters
             ? kept.OrderBy(e => e.Date ?? DateOnly.MaxValue).ThenByDescending(e => e.Order)
             : kept.OrderByDescending(e => e.Date ?? DateOnly.MinValue).ThenBy(e => e.Order);
         var list = ordered.ToList();
-        return f.MaxCount is { } n && n >= 0 ? list.Take(n).ToList() : list;
+        // "Cantidad máx. N" = the N newest (or oldest) that match; what is already downloaded is dropped AFTER that, so a
+        // subscription with max 2 never walks back through the whole channel two videos per check (Nico, 2026-10-26).
+        if (f.MaxCount is { } n && n >= 0) list = list.Take(n).ToList();
+        return f.SkipDownloaded ? list.Where(e => e.IsPlaylist || !isDownloaded(e)).ToList() : list;
     }
 
     /// <summary>How wrong an approximate date can be: "3 days ago" is close, "2 months ago" can be weeks off.</summary>

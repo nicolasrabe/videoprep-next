@@ -127,6 +127,23 @@ public sealed class CheckRunnerTests : IDisposable
     }
 
     [Fact]
+    public async Task Max_count_means_the_newest_ones_not_two_more_every_check()
+    {
+        // Nico's report 2026-10-26: backfill with max 2 downloaded two OLDER videos on every check.
+        SaveSubs(25, Sub("a", filters: new SubscriptionFilters { MaxCount = 2 }));
+        Assert.Equal(2, (await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken)).NewTotal);
+        Assert.Equal(0, (await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken)).NewTotal);
+        Assert.Equal(0, (await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken)).NewTotal);
+        Assert.Equal(2, Downloads());
+
+        // A new video on the channel: it is now one of the 2 newest, so it is downloaded.
+        var first = File.ReadLines(Path.Combine(_listing, "videos.jsonl")).First();
+        File.WriteAllLines(Path.Combine(_listing, "videos.jsonl"),
+            [first.Replace("Q1fMMYyt0I4", "NEWvideo001"), .. File.ReadAllLines(Path.Combine(_listing, "videos.jsonl"))]);
+        Assert.Equal(1, (await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken)).NewTotal);
+    }
+
+    [Fact]
     public async Task Only_new_from_now_marks_the_current_videos_as_seen()
     {
         SaveSubs(25, Sub("a", Subscription.FirstRunMarkSeen));

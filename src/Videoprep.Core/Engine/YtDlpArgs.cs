@@ -61,7 +61,7 @@ public static class YtDlpArgs
     /// (<c>--cookies FILE</c> both reads and saves the jar; docs/VERIFY.md).</param>
     public static IReadOnlyList<string> Download(Job job, DownloadOptions opt, ToolPaths tools, CookieSource cookies,
                                                  string folder, bool hasClips, string? archiveFile, bool forceArchive = false,
-                                                 string? dumpCookiesTo = null)
+                                                 string? dumpCookiesTo = null, string? finalPathFile = null)
     {
         var a = new List<string>
         {
@@ -100,6 +100,9 @@ public static class YtDlpArgs
 
         AddTools(a, tools);
         a.AddRange(["--progress-template", ProgressTemplate, "--print", FinalPathPrint]);
+        // The printed path can lose characters like "："/"？" that --windows-filenames puts in the real name; the copy
+        // written to a file is exact (docs/VERIFY.md, 2026-10-26). The engine reads that one first.
+        if (finalPathFile is not null) a.AddRange(["--print-to-file", FinalPathPrint, finalPathFile]);
         a.AddRange(cookies.Args());
         if (dumpCookiesTo is not null && cookies.Kind == CookieKind.Browser) a.AddRange(["--cookies", dumpCookiesTo]);
         a.Add(job.Url);

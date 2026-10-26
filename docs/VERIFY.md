@@ -58,6 +58,13 @@ with the Windows build videoprep downloads; to look at again if a user reports b
 
 Still to verify later: Chrome/Edge/Firefox cookie reading on Nico's PC (with permission), 429 / "not a bot" messages (only seen when they happen).
 
+Final path with symbols in the title (2026-10-26, yt-dlp 2026.10.21, Windows, PYTHONUTF8=1): for `685eur9lMGc`
+("OVERGROWN Project: What will you get?") `--windows-filenames` names the file `OVERGROWN Project： What will you get？.mp4`
+(full-width colon and question mark), but `--print after_move:filepath` on the console prints
+`...OVERGROWN Project What will you get.mp4` (symbols missing), so videoprep did not find the file and logged "SKIPPED"
+(Nico's report). `--print-to-file after_move:filepath FILE` writes the exact path in UTF-8. The engine now reads that
+file first; checked end to end with `videoprep --demo` on that video (file found, clip cut and verified).
+
 VERIFY (subscriptions, not run yet): creating the Windows scheduled task for real
 (`schtasks /Create /TN videoprep-check /TR "\"<exe>\" --check" /SC HOURLY /MO 6 /IT /F`, built with ArgumentList; flags read
 from `schtasks /Create /?` on Windows 10 2026-10-26: HOURLY accepts /MO 1-23, so 24 h uses DAILY /MO 1) and that the task

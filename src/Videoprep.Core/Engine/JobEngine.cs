@@ -178,8 +178,9 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 engine.Raise(new StepEvent(job, Number, Total, EngineStep.Downloading, src.Label));
 
                 var dump = ctx.SessionCookieFile is not null && src.Kind == CookieKind.Browser ? ctx.SessionCookieFile : null;
+                var pathFile = Path.Combine(Path.GetTempPath(), $"videoprep-final-{Guid.NewGuid():N}.txt");
                 var args = YtDlpArgs.Download(job, ctx.Options, ctx.Tools, src, ctx.Folder, g.HasClips, ctx.ArchiveFile,
-                                              ctx.ForceArchive, dump);
+                                              ctx.ForceArchive, dump, pathFile);
                 var before = SnapshotFolder(ctx.Folder);
                 var output = new StringBuilder();
                 var printed = new List<string>();
@@ -195,6 +196,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                     else _log.Write(line);
                 }, ct).ConfigureAwait(false);
 
+                printed.AddRange(ReadFinalPaths(pathFile));   // last = preferred over the console copy
                 if (r.Cancelled)
                 {
                     _log.Write("Stopped by user. Partial files (.part) may remain in the folder.");
@@ -251,6 +253,22 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             {
                 var copy = CookieSource.FromFile(jar);
                 _chain = [copy, .. _chain.Where(c => c != copy)];
+            }
+        }
+
+        /// <summary>Exact final paths from --print-to-file (UTF-8, one per line); the temp file is deleted.</summary>
+        private static IReadOnlyList<string> ReadFinalPaths(string pathFile)
+        {
+            try
+            {
+                if (!File.Exists(pathFile)) return [];
+                var lines = File.ReadAllLines(pathFile, Encoding.UTF8).Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
+                File.Delete(pathFile);
+                return lines;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return [];
             }
         }
 

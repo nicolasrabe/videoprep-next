@@ -144,7 +144,10 @@ var folder = Opt("-P") ?? ".";
 var template = Opt("-o") ?? "%(title,id).100s.%(ext)s";
 var source = Environment.GetEnvironmentVariable("FAKE_YTDLP_SOURCE");
 var ext = source is null ? "mp4" : Path.GetExtension(source).TrimStart('.');
-var name = template.Replace("%(title,id).100s", "Fake video " + id).Replace("%(ext)s", ext);
+// "fancy": a title with a full-width colon, like --windows-filenames makes of "Project: What". The real yt-dlp
+// leaves it out of the console --print but writes it to --print-to-file (docs/VERIFY.md).
+var title = scenario == "fancy" ? "Fancy： video " + id : "Fake video " + id;
+var name = template.Replace("%(title,id).100s", title).Replace("%(ext)s", ext);
 var target = Path.GetFullPath(Path.Combine(folder, name));
 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
 
@@ -164,7 +167,9 @@ if (cookieFile is not null && browser is not null)
     File.WriteAllText(cookieFile, "# Netscape HTTP Cookie File\n.fake.test\tTRUE\t/\tTRUE\t0\tSID\tfake\n");
 if (archive is not null) File.AppendAllText(archive, $"{extractor} {id}\n");
 
-Console.WriteLine(target);   // --print after_move:filepath
+var toFile = argv.IndexOf("--print-to-file");
+if (toFile >= 0 && toFile + 2 < argv.Count) File.AppendAllText(argv[toFile + 2], target + "\n", new System.Text.UTF8Encoding(false));
+Console.WriteLine(target.Replace("：", ""));   // --print after_move:filepath (loses the full-width colon, like the real one)
 return scenario switch
 {
     "ok101" => 101,

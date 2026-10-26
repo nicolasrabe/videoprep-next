@@ -98,6 +98,19 @@ public sealed class EngineTests : IDisposable
     }
 
     [Fact]
+    public async Task A_title_with_full_width_symbols_is_found_from_the_exact_path_file()
+    {
+        // Nico's report 2026-10-26: "OVERGROWN Project： What will you get？.mp4" was downloaded but logged as SKIPPED,
+        // because the console copy of the path loses those symbols.
+        var r = await Run([FakeYtDlpRig.Job("fancy")]);
+        Assert.Equal(JobStatus.OK, r.Statuses["1|0"]);
+        Assert.Equal("Fancy： video abc.mp4", r.Files["1|0"]);
+        var call = Assert.Single(_rig.Calls());
+        Assert.Equal("after_move:filepath", call[Array.IndexOf(call, "--print-to-file") + 1]);
+        Assert.Empty(Directory.GetFiles(Path.GetTempPath(), Path.GetFileName(call[Array.IndexOf(call, "--print-to-file") + 2])));
+    }
+
+    [Fact]
     public async Task Exit_code_101_is_not_an_error()
     {
         var r = await Run([FakeYtDlpRig.Job("ok101")]);

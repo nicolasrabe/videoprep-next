@@ -38,6 +38,10 @@ Versions below 1.0.0 are early releases: things can change between them.
   at a bot check. New `videoprep --check` runs the check without the window (log in `logs\check-YYYYMMDD.log`, exit
   codes 0 ok / 1 something failed / 2 blocked / 3 busy) and "Set up..." creates a Windows scheduled task for it after
   showing the exact command. The window and the check never run at the same time.
+- Fixes from the owner's first test: "Max. count" now means the N newest videos that match (already downloaded ones are
+  left out after that), so a subscription no longer downloads two older videos on every check. Videos whose title has
+  symbols such as ":" or "?" (saved as "：" / "？") or emoji were downloaded but reported as "skipped" and could not be
+  cut into clips; videoprep now gets the exact file name from yt-dlp.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.
