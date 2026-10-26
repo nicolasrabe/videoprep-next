@@ -25,7 +25,7 @@ Optional thumbnail column or hover preview (nice to have, last).
 Listing mechanics (VERIFIED 2026-10-26 with yt-dlp 2026.10.21: see `docs/VERIFY.md`)
 - Fast listing: `yt-dlp --flat-playlist -J --no-warnings <tab url>` (or `--print` with a template) gives id, title, duration,
   view count, url quickly without hitting each video. In flat mode the upload date is often missing.
-- Dates: try `--extractor-args "youtubetab:approximate_date"` for approximate date in flat mode (VERIFIED: exists, fills `timestamp`; see docs/VERIFY.md; it exists in the
+- Dates: try `--extractor-args "youtubetab:approximate_date"` for approximate date in flat mode (VERIFIED: exists, fills `timestamp` and, with `-j`, `upload_date`; Shorts get no date or duration; see docs/VERIFY.md; it exists in the
   installed version). If a date filter is active and dates are missing, fetch exact metadata only for the entries that pass
   all the other filters, with `--skip-download --print ...` in small batches and a cap (default 100), showing progress.
   Show approximate dates with a "~" and confirm the exact date at download time with `--dateafter`/`--datebefore` as a safety net.

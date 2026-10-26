@@ -33,6 +33,24 @@ Versions: **yt-dlp 2026.10.21**, **ffmpeg/ffprobe N-128097-g46f23be8b1-20261025*
 | Kill the process tree on Stop | yt-dlp and a child process it started both end (fake yt-dlp test). |
 | Real YouTube download + cut with `--demo` (run by Nico on Windows 10, 2026-10-26) | "Big Buck Bunny 60fps 4K" (aqz-KE-bpKQ, CC BY), no cookies, `--resolucion 480p`: YouTube served H.264 854x480 at **30 fps** (60 fps H.264 only from 720p). `00:00:10:00`-`00:00:12:29` gave **90 frames** (frames 300-389), confirmed by the demo's ffprobe check and in Premiere. A first try with `00:00:12:59` was correctly refused (frames must be 0-29) and the download was kept. |
 
+## Phase 5 - Scraping listings (2026-10-26, yt-dlp 2026.10.21, no cookies)
+
+Real runs against the Blender Studio channel (`https://www.youtube.com/@BlenderStudio`), listings only, 2-3 entries per
+tab, `--sleep-requests 1`. Saved as fixtures in `tests/Videoprep.Core.Tests/Fixtures/listing/`.
+
+| Flag / behavior | Result | Consequence for the code |
+|---|---|---|
+| `--flat-playlist -j <channel>/<tab>` | One JSON object per line, per entry, as the entries are found. | Results stream into the table (no need to wait for `-J`). |
+| `/videos` tab | `id`, `title`, `duration`, `view_count`, `url`; with `youtubetab:approximate_date` also `timestamp` **and `upload_date`** (in `-j` mode; `-J` left `upload_date` out). Both are approximate (day precision). | Show the date with "~"; confirm exact dates only when a date filter needs them. |
+| `/shorts` tab | `id`, `title`, `view_count`, `url` (`/shorts/ID`); **no `duration`, no date** even with `approximate_date`. | Date/duration filters on Shorts need the exact metadata step. |
+| `/streams` tab | Like videos, plus `live_status: "was_live"` for past streams. Current/upcoming streams would be `is_live` / `is_upcoming`. | "Skip live" skips `is_live` and `is_upcoming` only; past streams are normal videos. |
+| `/playlists` tab | Entries are playlists: `ie_key: "YoutubeTab"`, `url: https://www.youtube.com/playlist?list=...`, no counts. | Shown as list rows; "Ver videos de la lista" lists one playlist. |
+| `https://www.youtube.com/playlist?list=ID` | Its videos, with `duration`, approximate `timestamp`/`upload_date`, `playlist_id`, `playlist_title`. | Same parser as channel tabs. |
+| Exact metadata: `--skip-download --print "EX\|%(id)s\|%(upload_date)s\|%(duration)s\|%(live_status)s\|%(availability)s" URL1 URL2...` | One line per video (`EX\|Qqmj29bOcLA\|20261022\|43\|not_live\|public`), exit 0. Each video is a full extraction (several requests). | Only for entries that pass the other filters and miss a needed field; batches of 10, cap 100, `--sleep-requests 1`. |
+| Missing tab (`@jawed/shorts`) | `ERROR: [youtube:tab] @jawed: This channel does not have a shorts tab`, exit 1. | Reported as "this channel has no Shorts tab", not as a failure. |
+| Archive line format | `youtube <id>` (ie_key in lower case + id), confirmed in phase 2. | "Already downloaded" = `ie_key.lower() + " " + id` is in the archive. |
+| `--match-filters` | Missing fields pass `!`/`!=` tests (phase 2). | Filters are applied by videoprep on the listing; yt-dlp filters only as a second guard when downloading. |
+
 Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe -count_frames` on a WebM clip printed
 "Error parsing Opus packet header" and sometimes no count. The tests now count video packets without decoding. Not seen
 with the Windows build videoprep downloads; to look at again if a user reports broken Opus audio in WebM clips.
