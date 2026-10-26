@@ -37,6 +37,47 @@ if (argv.Contains("-U"))
     return 0;
 }
 
+// Listings (Scraping). FAKE_YTDLP_LISTING = folder with <last URL segment>.jsonl files (e.g. videos.jsonl, shorts.jsonl,
+// list-<id>.jsonl for playlists). A missing file answers like a channel without that tab. Respects -I 1:N.
+// FAKE_YTDLP_SCENARIO=bot answers with the bot check instead.
+if (argv.Contains("--flat-playlist") && Environment.GetEnvironmentVariable("FAKE_YTDLP_LISTING") is { Length: > 0 } listingDir)
+{
+    var listUrl = argv.Last();
+    if (Environment.GetEnvironmentVariable("FAKE_YTDLP_SCENARIO") == "bot")
+    {
+        Console.Error.WriteLine("ERROR: [youtube:tab] x: Sign in to confirm you’re not a bot.");
+        return 1;
+    }
+    var u = new Uri(listUrl);
+    var listId = System.Web.HttpUtility.ParseQueryString(u.Query)["list"];
+    var tabName = listId is not null ? "list-" + listId : u.AbsolutePath.TrimEnd('/').Split('/').Last();
+    var file = Path.Combine(listingDir, tabName + ".jsonl");
+    if (!File.Exists(file))
+    {
+        Console.Error.WriteLine($"ERROR: [youtube:tab] @fake: This channel does not have a {tabName} tab");
+        return 1;
+    }
+    var max = int.MaxValue;
+    if (Opt("-I") is { } range && range.StartsWith("1:", StringComparison.Ordinal)) max = int.Parse(range[2..]);
+    foreach (var l in File.ReadLines(file).Where(l => l.StartsWith('{')).Take(max)) Console.WriteLine(l);
+    return 0;
+}
+
+// Exact data (Scraping): one EX line per URL. FAKE_YTDLP_LISTING/exact.txt may give "id|yyyymmdd|seconds|live|availability".
+if (Opt("--print") is { } exactPrint && exactPrint.StartsWith("EX|", StringComparison.Ordinal))
+{
+    var known = new Dictionary<string, string>();
+    if (Environment.GetEnvironmentVariable("FAKE_YTDLP_LISTING") is { Length: > 0 } dir2 && File.Exists(Path.Combine(dir2, "exact.txt")))
+        foreach (var l in File.ReadLines(Path.Combine(dir2, "exact.txt"))) known[l.Split('|')[0]] = l;
+    foreach (var link in argv.Where(a => a.StartsWith("http", StringComparison.Ordinal)))
+    {
+        var lu = new Uri(link);
+        var vid = System.Web.HttpUtility.ParseQueryString(lu.Query)["v"] ?? lu.AbsolutePath.TrimEnd('/').Split('/').Last();
+        Console.WriteLine("EX|" + (known.TryGetValue(vid, out var line) ? line : $"{vid}|20260101|60|not_live|public"));
+    }
+    return 0;
+}
+
 var url = argv.LastOrDefault() ?? "";
 var parts = new Uri(url).AbsolutePath.Trim('/').Split('/');
 // FAKE_YTDLP_SCENARIO forces a scenario for real-looking links (e.g. a YouTube watch URL).
