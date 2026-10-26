@@ -56,6 +56,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             g => g.Key, g => new VideoGroup(g.Count(), g.Any(j => j.IsRange)));
         private readonly Dictionary<string, JobStatus> _status = jobs.ToDictionary(j => j.Key, _ => JobStatus.Queued);
         private readonly Dictionary<string, string> _files = [];
+        private readonly Dictionary<string, string> _reasons = [];
         private readonly HashSet<int> _skippedGroups = [];
         private readonly List<string> _failed = [];
         private IReadOnlyList<CookieSource> _chain = ctx.Cookies.Count > 0 ? ctx.Cookies : [CookieSource.NoCookies];
@@ -85,7 +86,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             var word = _cancelled ? "Stopped" : "Done";
             _log.Write($"=== {word}: {_ok} OK, {_warn} to review, {_fail} failed ===");
             foreach (var f in _failed) _log.Write("  FAILED: " + f);
-            return new BatchResult(_ok, _warn, _fail, _failed, _cancelled, _blocked, _status, _files);
+            return new BatchResult(_ok, _warn, _fail, _failed, _cancelled, _blocked, _status, _files, _reasons);
         }
 
         private async Task RunJobAsync(Job job)
@@ -132,7 +133,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                         g.OutputFinished();
                         g.MarkFailed();
                         _warn++;
-                        SetStatus(job, JobStatus.REVIEW, Path.GetFileName(dl.Path!));
+                        SetStatus(job, JobStatus.REVIEW, Path.GetFileName(dl.Path!), "yt-dlp reported an error after writing the file");
                         return;
                     default:
                         g.MarkFailed();
@@ -378,7 +379,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 _warn++;
                 var why = r.StartError ?? $"exit code {r.ExitCode}";
                 _log.Write($"REVIEW  ffmpeg failed ({why}). The downloaded video was kept: {Path.GetFileName(file)}");
-                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file));
+                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file), $"ffmpeg failed ({why})");
                 return;
             }
 
@@ -396,7 +397,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 g.MarkKeep();
                 _warn++;
                 _log.Write($"REVIEW  the result did not pass the check: {check.Reason}. The downloaded video was kept: {Path.GetFileName(file)}");
-                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file));
+                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file), "the result did not pass the check: " + check.Reason);
                 return;
             }
 
@@ -411,7 +412,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 g.MarkKeep();
                 _warn++;
                 _log.Write($"REVIEW  could not give the result its final name ({ex.Message}). Kept: {Path.GetFileName(tmp)} and {Path.GetFileName(file)}");
-                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(tmp));
+                SetStatus(job, JobStatus.REVIEW, Path.GetFileName(tmp), "could not give the result its final name: " + ex.Message);
                 return;
             }
 
@@ -435,7 +436,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             g.OutputFinished();
             _warn++;
             _log.Write($"REVIEW  not processed: {why}. The downloaded file was kept: {Path.GetFileName(file)}");
-            SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file));
+            SetStatus(job, JobStatus.REVIEW, Path.GetFileName(file), why);
         }
 
         /// <summary>Port of Finish-Job: check the codecs of the final file.</summary>
@@ -472,11 +473,12 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             catch (System.Text.Json.JsonException) { return null; }
         }
 
-        private void SetStatus(Job job, JobStatus status, string file = "")
+        private void SetStatus(Job job, JobStatus status, string file = "", string reason = "")
         {
             _status[job.Key] = status;
             if (file.Length > 0) _files[job.Key] = file;
-            engine.Raise(new StatusEvent(job, status, file));
+            if (reason.Length > 0) _reasons[job.Key] = reason;
+            engine.Raise(new StatusEvent(job, status, file, reason));
         }
 
         private void AddFailure(Job job)

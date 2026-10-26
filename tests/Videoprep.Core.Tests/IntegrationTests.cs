@@ -288,6 +288,20 @@ public sealed class EngineWithFfmpegTests : IDisposable
         Assert.Equal(JobStatus.REVIEW, r.Statuses["1|0"]);
         Assert.True(File.Exists(Path.Combine(_rig.Folder, "Fake video v2__full.mp4")));
         Assert.Contains("Start is after the end of the video", _rig.LogText);
+        Assert.StartsWith("Start is after the end of the video (", r.Reasons["1|0"]);
+    }
+
+    [Fact]
+    public async Task Frames_beyond_the_fps_explain_why_like_the_real_480p_case()
+    {
+        // Nico's first real run: 480p H.264 from YouTube is 30 fps, so "00:00:12:59" is not a valid frame.
+        Ffmpeg.SkipIfMissing();
+        var jobs = JobPlanner.Build([new QueueItem { Id = 1, Url = "https://fake.test/ok/v4", Clips = [new("00:00:01:00", "00:00:02:59")] }],
+                                    new Dictionary<string, int>());
+        var r = await _rig.Engine.RunAsync(jobs, Ctx(), TestContext.Current.CancellationToken);
+        Assert.Equal(JobStatus.REVIEW, r.Statuses["1|0"]);
+        Assert.Equal("frames must be 0-29 for this video (30 fps)", r.Reasons["1|0"]);
+        Assert.True(File.Exists(Path.Combine(_rig.Folder, "Fake video v4__full.mp4")));
     }
 
     [Fact]

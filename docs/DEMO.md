@@ -43,6 +43,14 @@ dotnet run --project src/Videoprep.App -- --demo "<enlace>" 00:00:05:00 00:00:07
 lo marca como "Creative Commons Attribution license (reuse allowed)" (dato leído con yt-dlp el 2026-10-26). La
 demostración baja el video entero antes de cortar: con `--resolucion 480p` pesa mucho menos.
 
+**Ojo con los fotogramas:** el último número del código de tiempo (FF) depende de los fotogramas por segundo **del
+archivo que se baja**, no del original. YouTube da este video a 60 fps solo desde 720p; en 480p lo da a **30 fps**, así
+que FF va de 00 a 29 (por ejemplo `00:00:10:00` a `00:00:12:29` = 90 fotogramas, 3 segundos). Si se pide un fotograma
+que no existe, el motor no corta, conserva el video descargado y la demostración explica el motivo.
+
+Si el video completo (`...__full.mp4`) ya está en la carpeta de una prueba anterior, se reutiliza y **no se borra**
+(videoprep nunca borra un archivo que ya estaba antes de empezar). Para una prueba desde cero, borralo antes a mano.
+
 ## Qué se ve
 
 ```

@@ -187,7 +187,9 @@ internal static class DemoCommand
                 Say("   " + Path.Combine(o.Folder, fileName!));
                 break;
             case JobStatus.REVIEW:
-                Say("No se pudo terminar el fragmento. Se conservó el video descargado:");
+                Say("No se pudo terminar el fragmento. Motivo:");
+                Say("   " + ExplainReview(result.Reasons.GetValueOrDefault(key, "")));
+                Say("Se conservó el video descargado (no se borró nada):");
                 Say("   " + Path.Combine(o.Folder, fileName ?? ""));
                 break;
             case JobStatus.Skipped:
@@ -202,6 +204,30 @@ internal static class DemoCommand
         Say("Registro detallado (en inglés, para reportar problemas):");
         Say("   " + log.FilePath);
         return status is JobStatus.OK or JobStatus.WARN ? 0 : 1;
+    }
+
+    /// <summary>The engine's review reasons are English (they go to the log); here they are explained in Spanish.</summary>
+    internal static string ExplainReview(string reason)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(reason, @"^frames must be 0-(\d+) for this video \((\d+) fps\)$");
+        if (m.Success)
+            return $"este video tiene {m.Groups[2].Value} fotogramas por segundo, así que el último número del código de tiempo " +
+                   $"(los fotogramas, FF) tiene que ir de 00 a {m.Groups[1].Value}.";
+        m = System.Text.RegularExpressions.Regex.Match(reason, @"^Start is after the end of the video \((\d+) frames\)$");
+        if (m.Success) return $"el inicio queda después del final del video (tiene {m.Groups[1].Value} fotogramas).";
+        return reason switch
+        {
+            "Start is before the beginning of the video" => "el inicio queda antes del principio del video.",
+            "End is before Start" => "el fin está antes del inicio.",
+            "End cannot start with a minus sign" => "el fin no puede empezar con signo menos.",
+            "invalid timecode" => "un código de tiempo no es válido.",
+            "" => "desconocido (mirá el registro detallado).",
+            _ when reason.StartsWith("the result did not pass the check", StringComparison.Ordinal)
+                => "el fragmento cortado no pasó la revisión con ffprobe (detalle en inglés: " + reason + ").",
+            _ when reason.StartsWith("ffmpeg failed", StringComparison.Ordinal)
+                => "ffmpeg no pudo cortar el video (detalle en inglés: " + reason + ").",
+            _ => "detalle en inglés: " + reason,
+        };
     }
 
     private static Options? Parse(string[] args)

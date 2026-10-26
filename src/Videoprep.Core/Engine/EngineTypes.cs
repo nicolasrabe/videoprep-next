@@ -16,8 +16,11 @@ public sealed record StepEvent(Job Job, int Number, int Total, EngineStep Step, 
 
 public sealed record ProgressEvent(Job Job, int Number, int Total, ProgressLine Progress) : EngineEvent;
 
-/// <summary>A row of the queue changed status; <paramref name="File"/> is the output file name when there is one.</summary>
-public sealed record StatusEvent(Job Job, JobStatus Status, string File = "") : EngineEvent;
+/// <summary>
+/// A row of the queue changed status; <paramref name="File"/> is the output file name when there is one and
+/// <paramref name="Reason"/> says why a job needs review (English, the same text as the log).
+/// </summary>
+public sealed record StatusEvent(Job Job, JobStatus Status, string File = "", string Reason = "") : EngineEvent;
 
 /// <summary>A clip was checked: frames and seconds expected vs. found (for the demo and the log).</summary>
 public sealed record VerifiedEvent(Job Job, string File, long? Frames, double? Seconds, bool Ok, string Reason) : EngineEvent;
@@ -25,7 +28,7 @@ public sealed record VerifiedEvent(Job Job, string File, long? Frames, double? S
 /// <summary>Final numbers of a batch (port of the counters of Complete-Batch).</summary>
 public sealed record BatchResult(int Ok, int Warn, int Fail, IReadOnlyList<string> FailedItems, bool Cancelled,
                                  bool Blocked, IReadOnlyDictionary<string, JobStatus> Statuses,
-                                 IReadOnlyDictionary<string, string> Files);
+                                 IReadOnlyDictionary<string, string> Files, IReadOnlyDictionary<string, string> Reasons);
 
 /// <summary>Fixed inputs of one batch.</summary>
 public sealed record EngineContext

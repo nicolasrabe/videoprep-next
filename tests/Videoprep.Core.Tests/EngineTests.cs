@@ -129,6 +129,8 @@ public sealed class EngineTests : IDisposable
         var r = await Run([FakeYtDlpRig.Job("partial")]);
         Assert.Equal(JobStatus.REVIEW, r.Statuses["1|0"]);
         Assert.Equal(1, r.Warn);
+        Assert.Equal("yt-dlp reported an error after writing the file", r.Reasons["1|0"]);
+        Assert.Contains(_rig.Events.OfType<StatusEvent>(), e => e.Status == JobStatus.REVIEW && e.Reason.Length > 0);
     }
 
     [Fact]

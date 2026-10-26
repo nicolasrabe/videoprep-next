@@ -27,6 +27,10 @@
   </Target>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Videoprep.App.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Videoprep.Core\Videoprep.Core.csproj" />
   </ItemGroup>
 
