@@ -58,6 +58,13 @@ Windows; findings come from reading the code. Severity: **H** = can lose data or
 - macOS build after 0.2.0 (no macOS ffmpeg from yt-dlp/FFmpeg-Builds; needs another source + Gatekeeper quarantine handling).
 - Release exe uses `EnableCompressionInSingleFile`; no trimming/NativeAOT.
 
+## Status after Phase 3 (2026-10-26)
+Done in `Videoprep.Core` with tests: H1 (engine without UI), H2 (`after_move:filepath`), H3 (ffprobe check -> move -> only
+then delete), H4 (log + crash file for unhandled errors; friendly message box comes with the phase 4 screens), H6 queue part
+(`queue.json`), M2, M3 (verified frame-exact), M4 (VFR warning in the log), M5 (session cookie copy; **not tried with real
+browser cookies**), M6, M12 (`VideoGroup`), L6 (kill the process tree), X3 (preferred browser reported by the engine),
+X4 (fps guess noted in the log), X6. Tool download/update (`ToolManager`) tested with a fake web server only.
+
 ## Things that are good and must be preserved
 Timer/queue-driven non-blocking design (no UI freeze), the cookie fallback chain with "remember the source that worked",
 frame-accurate timecode math incl. drop-frame and negative-from-end starts, never overwriting existing files (`Get-UniquePath`),

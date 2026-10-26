@@ -10,6 +10,11 @@ Versions below 1.0.0 are early releases: things can change between them.
 - Fixes in this logic: an 11-character word is no longer taken for a YouTube ID unless it is alone on its line; safer
   file names (reserved Windows names, trailing dots); audio preview no longer asks for H.264 video; variable frame rate
   is detected; clips seek faster on long videos.
+- Phase 3: the engine. It downloads each video once, cuts every clip from it, checks each result with ffprobe before
+  moving it to its final name, and only then deletes the downloaded full video (never one that was already in the folder).
+  Stop also closes any program yt-dlp started. Tools are downloaded to `%LOCALAPPDATA%ideoprep	ools`. The queue is
+  saved to `queue.json`. Unexpected errors are written to a log with all details.
+- New developer command `--demo` to watch the engine work from the terminal (docs/DEMO.md).
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.

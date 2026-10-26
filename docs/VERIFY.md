@@ -23,5 +23,13 @@ Versions: **yt-dlp 2026.10.21**, **ffmpeg/ffprobe N-128097-g46f23be8b1-20261025*
 | `--windows-filenames`, `--trim-filenames N`, `-w/--no-overwrites`, `--remux-video mov/mp4`, `--sleep-requests`, `--sleep-interval` + `--max-sleep-interval`, `--lazy-playlist`, `--break-match-filters`, `--max-downloads`, `--force-write-archive` | Present in `--help` of this version (not all exercised in a run). | Usable. |
 | Preview line `--print "DET\|%(duration_string)s\|..."` with the strict H.264 selector | `DET\|19\|240\|15\|avc1.4D400C\|mp4a.40.2\|20050424\|jawed\|https://i.ytimg.com/...\|Me at the zoo`. Note `duration_string` is `19` (no `0:`) for short videos. | Preview parser must not assume `M:SS`. |
 
-Still to verify later (needs a later phase): frame-exact clip cut with input-side `-ss` + `-frames:v` (phase 3 integration
-test), Chrome/Edge/Firefox cookie reading on Nico's PC (with permission), 429 / "not a bot" messages (only seen when they happen).
+## Phase 3 (2026-10-26, same ffmpeg)
+
+| What | Result |
+|---|---|
+| AUDIT M3: input-side `-ss T0` + `-t Dur` + `-frames:v N` (re-encode) | **Frame-exact.** `IntegrationTests.cs` cuts generated videos whose every frame has its own brightness, then decodes every output frame: the count, the first frame and the last frame match the plan at 23.976, 25, 29.97 and 59.94 fps, from the start, mid-GOP, the last 15 frames, a single frame and drop-frame after the first minute, for MP4, MOV H.264, ProRes, WebM and MKV. Hybrid seek is not needed. |
+| Audio clips (m4a, mp3, wav, flac, opus) | Length within 2 frames / 0.1 s of the plan. |
+| Engine end to end with the fake yt-dlp + real ffmpeg | Downloads once, cuts 3 exact clips, verifies each with ffprobe, deletes the full file only after the last verified clip; never deletes a pre-existing full file; never overwrites an existing output. |
+| Kill the process tree on Stop | yt-dlp and a child process it started both end (fake yt-dlp test). |
+
+Still to verify later: Chrome/Edge/Firefox cookie reading on Nico's PC (with permission), 429 / "not a bot" messages (only seen when they happen).
