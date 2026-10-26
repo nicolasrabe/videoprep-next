@@ -65,6 +65,8 @@ internal sealed class TestRig : IDisposable
     public TestRig(bool tools = false)
     {
         Paths = new AppPaths(Path.Combine(Dir, "roaming"), Path.Combine(Dir, "local"));
+        // Start in Spanish whatever the language of the machine (CI runners are English).
+        SettingsStore.Save(Paths.SettingsFile, new Settings { Lang = "es" });
         if (tools) InstallFakeTools(Paths.ToolsDir);
         var runner = new ProcessRunner();
         var http = new HttpClient(new FakeWeb());
