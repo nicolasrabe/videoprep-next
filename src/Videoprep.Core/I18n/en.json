@@ -224,5 +224,20 @@
   "msg_queue_loaded": "The saved queue was restored ({0} items).",
   "tool_found": "found",
   "tool_missing": "MISSING",
-  "prev_reason_notools": "the tools are missing (they install when you press Download)"
+  "prev_reason_notools": "the tools are missing (they install when you press Download)",
+  "sc_bad_url": "Paste a link to a channel (for example https://www.youtube.com/@channel), a playlist or another site.",
+  "sc_bad_date": "The date \"{0}\" is not valid. Use YYYY-MM-DD, for example 2026-09-01.",
+  "sc_bad_duration": "The length \"{0}\" is not valid. Use M:SS or H:MM:SS, for example 2:00.",
+  "sc_bad_max": "The maximum count must be a whole number, for example 50.",
+  "sc_searching": "Finding videos... {0} found",
+  "sc_found": "{0} videos found; {1} pass the filters.",
+  "sc_no_tab": "This channel has no {0} tab.",
+  "sc_tab_failed": "{0} could not be listed. The details are in the Log tab.",
+  "sc_confirming": "Checking exact dates and lengths... {0} of {1}",
+  "sc_cancelled": "Search cancelled.",
+  "sc_sent": "{0} videos were sent to the queue.",
+  "sc_nothing_selected": "Check at least one video in the table.",
+  "sc_status_playlist": "Playlist",
+  "sc_expand": "Show videos",
+  "sc_subs_later": "Subscriptions are turned on in the next test version."
 }

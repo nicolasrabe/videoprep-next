@@ -48,6 +48,8 @@ public sealed class Settings
     [JsonPropertyName("lastUpdate")] public string LastUpdate { get; set; } = "";
     [JsonPropertyName("sound")] public bool Sound { get; set; } = true;
     [JsonPropertyName("openDone")] public bool OpenDone { get; set; }
+    /// <summary>The Scraping legal notice was shown once (SCRAPING_SPEC: "shown once on first use of the tab").</summary>
+    [JsonPropertyName("scrapingLegal")] public bool ScrapingLegalShown { get; set; }
 
     /// <summary>Fix bad or old values (legacy ranges: crf 10-28, limit 0-500, sleep 0-30) and migrate the cookie index.</summary>
     public void Normalize(bool fromLegacyFile)

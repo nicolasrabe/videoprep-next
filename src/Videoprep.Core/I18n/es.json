@@ -224,5 +224,20 @@
   "msg_queue_loaded": "Se recuperó la cola guardada ({0} elementos).",
   "tool_found": "encontrado",
   "tool_missing": "FALTA",
-  "prev_reason_notools": "faltan las herramientas (se instalan solas al apretar Descargar)"
+  "prev_reason_notools": "faltan las herramientas (se instalan solas al apretar Descargar)",
+  "sc_bad_url": "Pegá el enlace de un canal (por ejemplo https://www.youtube.com/@canal), de una lista o de otro sitio.",
+  "sc_bad_date": "La fecha \"{0}\" no es válida. Usá AAAA-MM-DD, por ejemplo 2026-09-01.",
+  "sc_bad_duration": "La duración \"{0}\" no es válida. Usá M:SS o H:MM:SS, por ejemplo 2:00.",
+  "sc_bad_max": "La cantidad máxima tiene que ser un número entero, por ejemplo 50.",
+  "sc_searching": "Buscando videos... {0} encontrados",
+  "sc_found": "{0} videos encontrados; {1} pasan los filtros.",
+  "sc_no_tab": "Este canal no tiene la pestaña {0}.",
+  "sc_tab_failed": "No se pudo listar {0}. El detalle está en la pestaña Registro.",
+  "sc_confirming": "Confirmando fechas y duraciones exactas... {0} de {1}",
+  "sc_cancelled": "Búsqueda cancelada.",
+  "sc_sent": "Se enviaron {0} videos a la cola.",
+  "sc_nothing_selected": "Marcá al menos un video de la tabla.",
+  "sc_status_playlist": "Lista",
+  "sc_expand": "Ver videos",
+  "sc_subs_later": "Las suscripciones se activan en la próxima versión de prueba."
 }
