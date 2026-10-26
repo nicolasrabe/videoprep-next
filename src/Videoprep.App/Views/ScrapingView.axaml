@@ -1,0 +1,143 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.ScrapingView"
+             x:DataType="vm:ScrapingSampleViewModel">
+  <!-- Approved mockup (docs/mockup-scraping.html), shown as a preview in Phase 4. Nothing here works yet. -->
+  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8" Margin="4,10,4,4">
+    <Border Classes="note">
+      <TextBlock Text="{s:T sc_coming}" TextWrapping="Wrap" />
+    </Border>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
+      <ToggleButton x:Name="ExploreButton" Content="{s:T sc_explore}" IsChecked="{Binding ShowExplore, Mode=OneWay}" />
+      <ToggleButton x:Name="SubsButton" Content="{s:T sc_subs}" IsChecked="{Binding ShowSubscriptions, Mode=OneWay}" />
+    </StackPanel>
+
+    <!-- Explorar -->
+    <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
+      <Border Classes="card">
+        <StackPanel Spacing="7">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox Text="{Binding SourceUrl, Mode=OneWay}" PlaceholderText="{s:T sc_url_ph}" IsReadOnly="True" />
+            <Button Grid.Column="1" Classes="o" Content="{s:T sc_search}" IsEnabled="False" />
+          </Grid>
+          <WrapPanel ItemSpacing="10" LineSpacing="4">
+            <TextBlock Classes="muted" Text="{s:T sc_tabs}" VerticalAlignment="Center" />
+            <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="True" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_tabs_shorts}" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_tabs_streams}" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_tabs_playlists}" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_tabs_hint}" VerticalAlignment="Center" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <Border Grid.Row="1" Classes="card">
+        <StackPanel Spacing="7">
+          <WrapPanel ItemSpacing="8" LineSpacing="6">
+            <TextBlock Classes="muted" Text="{s:T sc_from}" VerticalAlignment="Center" />
+            <TextBox Text="2026-09-01" Width="110" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_to}" VerticalAlignment="Center" />
+            <TextBox Text="2026-10-25" Width="110" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_dur_min}" VerticalAlignment="Center" Margin="10,0,0,0" />
+            <TextBox Text="2:00" Width="70" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_dur_max}" VerticalAlignment="Center" />
+            <TextBox Text="45:00" Width="70" IsEnabled="False" />
+          </WrapPanel>
+          <WrapPanel ItemSpacing="8" LineSpacing="6">
+            <TextBlock Classes="muted" Text="{s:T sc_incl}" VerticalAlignment="Center" />
+            <TextBox Text="entrevista, review" Width="170" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_excl}" VerticalAlignment="Center" />
+            <TextBox Text="short, trailer" Width="170" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{s:T sc_max}" VerticalAlignment="Center" />
+            <TextBox Text="50" Width="70" IsEnabled="False" />
+          </WrapPanel>
+          <WrapPanel ItemSpacing="10" LineSpacing="6">
+            <TextBlock Classes="muted" Text="{s:T sc_order}" VerticalAlignment="Center" />
+            <ComboBox SelectedIndex="0" IsEnabled="False" MinWidth="170">
+              <ComboBoxItem Content="{s:T sc_order_new}" />
+              <ComboBoxItem Content="{s:T sc_order_old}" />
+            </ComboBox>
+            <CheckBox Content="{s:T sc_skip_live}" IsChecked="True" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_skip_members}" IsChecked="True" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_skip_done}" IsChecked="True" IsEnabled="False" />
+            <Button Content="{s:T sc_apply}" IsEnabled="False" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+      <DataGrid Grid.Row="2" ItemsSource="{Binding Videos}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridCheckBoxColumn Binding="{Binding Selected}" Width="40" />
+          <DataGridTextColumn Header="{s:T sc_col_title}" Binding="{Binding Title}" Width="*" />
+          <DataGridTextColumn Header="{s:T sc_col_date}" Binding="{Binding Date}" Width="115" />
+          <DataGridTextColumn Header="{s:T sc_col_dur}" Binding="{Binding Duration}" Width="105" />
+          <DataGridTextColumn Header="{s:T sc_col_views}" Binding="{Binding Views}" Width="80" />
+          <DataGridTemplateColumn Header="{s:T sc_col_status}" Width="130">
+            <DataTemplate x:DataType="vm:ScrapingSampleViewModel+VideoRow">
+              <TextBlock Text="{Binding StatusKey, Converter={x:Static s:LocConverter.Instance}}" VerticalAlignment="Center" Margin="10,0" />
+            </DataTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+      <TextBlock Grid.Row="3" Classes="muted" Text="{s:T sc_approx_note}" TextWrapping="Wrap" />
+      <Border Grid.Row="4" Classes="card">
+        <WrapPanel ItemSpacing="24" LineSpacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="{s:T sc_all}" IsEnabled="False" />
+            <Button Content="{s:T sc_none}" IsEnabled="False" />
+            <Button Content="{s:T sc_invert}" IsEnabled="False" />
+            <TextBlock Classes="muted" Text="{Binding SelectedText}" VerticalAlignment="Center" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+            <ComboBox SelectedIndex="0" IsEnabled="False">
+              <ComboBoxItem Content="MP4 - H.264 + AAC, 1080p" />
+            </ComboBox>
+            <Button Classes="o" Content="{s:T sc_to_queue}" IsEnabled="False" />
+            <Button Classes="g" Content="{s:T sc_subscribe}" IsEnabled="False" />
+          </StackPanel>
+        </WrapPanel>
+      </Border>
+    </Grid>
+
+    <!-- Suscripciones -->
+    <Grid Grid.Row="2" RowDefinitions="*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
+      <DataGrid ItemsSource="{Binding Subscriptions}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
+        <DataGrid.Columns>
+          <DataGridCheckBoxColumn Header="{s:T sc_col_on}" Binding="{Binding Enabled}" Width="60" />
+          <DataGridTextColumn Header="{s:T sc_col_channel}" Binding="{Binding Channel}" Width="*" />
+          <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="140" />
+          <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding Filters}" Width="*" />
+          <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding Format}" Width="100" />
+          <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding Last}" Width="100" />
+          <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding New}" Width="70" />
+        </DataGrid.Columns>
+      </DataGrid>
+      <Border Grid.Row="1" Classes="card">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="o" Content="{s:T sc_add}" IsEnabled="False" />
+            <Button Content="{s:T sc_edit}" IsEnabled="False" />
+            <Button Classes="r" Content="{s:T sc_remove}" IsEnabled="False" />
+          </StackPanel>
+          <Button Grid.Column="2" Classes="g" Content="{s:T sc_check_now}" IsEnabled="False" />
+        </Grid>
+      </Border>
+      <Border Grid.Row="2" Classes="card">
+        <StackPanel Spacing="7">
+          <WrapPanel ItemSpacing="10" LineSpacing="6">
+            <CheckBox Content="{s:T sc_check_start}" IsChecked="True" IsEnabled="False" />
+            <CheckBox IsEnabled="False">
+              <TextBlock Text="{Binding CheckEveryText}" />
+            </CheckBox>
+          </WrapPanel>
+          <WrapPanel ItemSpacing="10" LineSpacing="6">
+            <CheckBox Content="{s:T sc_task}" IsEnabled="False" />
+            <Button Content="{s:T sc_task_config}" IsEnabled="False" />
+          </WrapPanel>
+          <TextBlock Classes="muted" Text="{s:T sc_subs_note}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

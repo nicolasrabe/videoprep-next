@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.QueueView"
+             x:DataType="vm:MainViewModel">
+  <Grid RowDefinitions="*,Auto,Auto,Auto" RowSpacing="8" Margin="4,10,4,4">
+    <DataGrid x:Name="Grid" ItemsSource="{Binding QueueRows}" IsReadOnly="True" SelectionMode="Extended"
+              CanUserReorderColumns="False" CanUserSortColumns="False" HeadersVisibility="Column">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="{s:T col_num}" Binding="{Binding Num}" Width="56" />
+        <DataGridTextColumn Header="{s:T col_name}" Binding="{Binding Name}" Width="2*" />
+        <DataGridTextColumn Header="{s:T col_fmt}" Binding="{Binding Format}" Width="180" />
+        <DataGridTextColumn Header="{s:T col_clip}" Binding="{Binding Clip}" Width="170" />
+        <DataGridTextColumn Header="{s:T col_status}" Binding="{Binding Status}" Width="100" />
+        <DataGridTextColumn Header="{s:T col_file}" Binding="{Binding File}" Width="*" />
+      </DataGrid.Columns>
+    </DataGrid>
+    <WrapPanel Grid.Row="1" ItemSpacing="8" LineSpacing="8">
+      <Button Content="{s:T btn_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_retry}" Command="{Binding RetryFailedCommand}" IsEnabled="{Binding CanRetry}" />
+    </WrapPanel>
+    <WrapPanel Grid.Row="2" ItemSpacing="8" LineSpacing="8">
+      <Button Content="{s:T btn_loadtxt}" Command="{Binding LoadTxtCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_clearq}" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding IsIdle}" />
+    </WrapPanel>
+    <TextBlock Grid.Row="3" Classes="muted" Text="{s:T lbl_qhelp}" TextWrapping="Wrap" />
+  </Grid>
+</UserControl>

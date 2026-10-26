@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.LogView"
+             x:DataType="vm:MainViewModel">
+  <Grid RowDefinitions="*,Auto" RowSpacing="8" Margin="4,10,4,4">
+    <!-- Dark log box in every theme, like the legacy one (English lines, for bug reports). -->
+    <TextBox x:Name="LogBox" Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+             FontFamily="Consolas,Menlo,monospace" FontSize="12" Background="#1e1e1e" Foreground="#dcdcdc"
+             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+    <WrapPanel Grid.Row="1" ItemSpacing="8" LineSpacing="8">
+      <Button Content="{s:T btn_copylog}" Command="{Binding CopyLogCommand}" />
+      <Button Content="{s:T btn_savelog}" Command="{Binding SaveLogCommand}" />
+      <Button Content="{s:T btn_clearlog}" Command="{Binding ClearLogCommand}" />
+      <Button Content="{s:T btn_test}" Command="{Binding TestSetupCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{s:T btn_diag}" Command="{Binding CopyDiagnosticsCommand}" />
+    </WrapPanel>
+  </Grid>
+</UserControl>

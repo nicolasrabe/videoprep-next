@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Threading;
 using Videoprep.App.Cli;
 using Videoprep.Core.Logging;
 using Videoprep.Core.Storage;
@@ -50,12 +49,5 @@ internal static class Program
         AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .LogToTrace()
-            .AfterSetup(_ => Dispatcher.UIThread.UnhandledException += (_, e) =>
-            {
-                // Errors in buttons and other UI handlers: log them and keep the window alive.
-                // The friendly message box comes with the phase 4 screens.
-                Log.Crash(e.Exception, "user interface");
-                e.Handled = true;
-            });
+            .LogToTrace();   // UI errors: App.OnFrameworkInitializationCompleted logs them and shows a friendly message.
 }

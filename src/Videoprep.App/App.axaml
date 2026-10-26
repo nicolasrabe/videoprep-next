@@ -2,7 +2,161 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Videoprep.App.App"
              RequestedThemeVariant="Light">
+  <!-- Theme colors (legacy palette keys). ThemeService replaces them when the user picks a theme. -->
+  <Application.Resources>
+    <SolidColorBrush x:Key="Bg">#f1f1ee</SolidColorBrush>
+    <SolidColorBrush x:Key="Card">#ffffff</SolidColorBrush>
+    <SolidColorBrush x:Key="Inp">#ffffff</SolidColorBrush>
+    <SolidColorBrush x:Key="Tx">#1f1f1d</SolidColorBrush>
+    <SolidColorBrush x:Key="Mu">#6b6b66</SolidColorBrush>
+    <SolidColorBrush x:Key="Bd">#d6d6cf</SolidColorBrush>
+    <SolidColorBrush x:Key="Gb">#cdeccf</SolidColorBrush>
+    <SolidColorBrush x:Key="Gt">#1f5a26</SolidColorBrush>
+    <SolidColorBrush x:Key="Rb">#f6cccc</SolidColorBrush>
+    <SolidColorBrush x:Key="Rt">#7a1f1f</SolidColorBrush>
+    <SolidColorBrush x:Key="Ob">#fbddb8</SolidColorBrush>
+    <SolidColorBrush x:Key="Ot">#7a4510</SolidColorBrush>
+  </Application.Resources>
+
   <Application.Styles>
     <FluentTheme />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource Bg}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+    </Style>
+    <Style Selector="TextBlock.title">
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+    <Style Selector="Border.note">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="Padding" Value="8,5" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+    <Style Selector="Border.note TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+    </Style>
+
+    <!-- Inputs -->
+    <Style Selector="TextBox, ComboBox, NumericUpDown">
+      <Setter Property="Background" Value="{DynamicResource Inp}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+    </Style>
+    <Style Selector="TextBox.bad">
+      <Setter Property="Foreground" Value="Red" />
+    </Style>
+    <Style Selector="CheckBox, RadioButton">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+
+    <!-- Buttons: plain, green (g), red (r), orange (o) like the legacy Tag colors -->
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="12,5" />
+    </Style>
+    <Style Selector="Button.g">
+      <Setter Property="Background" Value="{DynamicResource Gb}" />
+      <Setter Property="Foreground" Value="{DynamicResource Gt}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Gb}" />
+    </Style>
+    <Style Selector="Button.r">
+      <Setter Property="Background" Value="{DynamicResource Rb}" />
+      <Setter Property="Foreground" Value="{DynamicResource Rt}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Rb}" />
+    </Style>
+    <Style Selector="Button.o">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />
+    </Style>
+    <!-- Keep the theme color on hover/press (Fluent would switch to its own gray). -->
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{Binding $parent[Button].Background}" />
+      <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Mu}" />
+      <Setter Property="Opacity" Value="0.85" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <!-- Sub-view switch (Scraping: Explorar / Suscripciones), like the mockup -->
+    <Style Selector="ToggleButton">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+    </Style>
+    <Style Selector="ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ot}" />
+    </Style>
+    <Style Selector="ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+
+    <!-- Tabs: muted text, the selected one in normal text with an orange line (legacy owner-drawn tabs) -->
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="14,0" />
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+    </Style>
+    <Style Selector="TabItem:selected">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
+      <Setter Property="Background" Value="{DynamicResource Ot}" />
+    </Style>
+
+    <!-- Tables -->
+    <Style Selector="DataGrid">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="GridLinesVisibility" Value="Horizontal" />
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="DataGridCell">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+      <Setter Property="Fill" Value="{DynamicResource Ob}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="DataGridRow:selected DataGridCell">
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+    </Style>
   </Application.Styles>
 </Application>

@@ -1,16 +1,29 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Videoprep.App.ViewModels"
+        xmlns:v="using:Videoprep.App.Views"
+        xmlns:s="using:Videoprep.App.Services"
         x:Class="Videoprep.App.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Title="{Binding Title}"
-        Width="900" Height="640" MinWidth="900" MinHeight="640"
-        WindowStartupLocation="CenterScreen"
-        Background="#f1f1ee">
-  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
-    <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="28" FontWeight="SemiBold"
-               Foreground="#1f1f1d" HorizontalAlignment="Center" />
-    <TextBlock x:Name="SubtitleText" Text="{Binding Subtitle}" FontSize="14"
-               Foreground="#6b6b66" HorizontalAlignment="Center" />
-  </StackPanel>
+        x:DataType="vm:MainViewModel"
+        Title="videoprep"
+        Width="1000" Height="740" MinWidth="900" MinHeight="640"
+        WindowStartupLocation="CenterScreen">
+  <!-- Resizable (AUDIT M7: the legacy window was a fixed 760x640). -->
+  <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
+    <TabItem x:Name="TabDownload" Header="{s:T tab_dl}">
+      <v:DownloadView />
+    </TabItem>
+    <TabItem x:Name="TabQueue" Header="{s:T tab_q}">
+      <v:QueueView />
+    </TabItem>
+    <TabItem x:Name="TabScraping" Header="{s:T tab_scraping}">
+      <v:ScrapingView DataContext="{Binding Scraping}" />
+    </TabItem>
+    <TabItem x:Name="TabSettings" Header="{s:T tab_st}">
+      <v:SettingsView />
+    </TabItem>
+    <TabItem x:Name="TabLog" Header="{s:T tab_log}">
+      <v:LogView />
+    </TabItem>
+  </TabControl>
 </Window>

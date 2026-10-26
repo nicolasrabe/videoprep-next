@@ -1,0 +1,31 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.OptionsView"
+             x:DataType="vm:OptionsViewModel">
+  <!-- Port of Show-OptionsDialog (same options and ranges). -->
+  <StackPanel Spacing="10">
+    <Grid ColumnDefinitions="*,Auto,110" ColumnSpacing="8">
+      <CheckBox Content="{s:T opt_subs}" IsChecked="{Binding Subs}" />
+      <TextBlock Grid.Column="1" Text="{s:T opt_langs}" VerticalAlignment="Center" />
+      <TextBox Grid.Column="2" Text="{Binding SubLangs}" />
+    </Grid>
+    <CheckBox Content="{s:T opt_thumbs}" IsChecked="{Binding Thumbs}" />
+    <CheckBox Content="{s:T opt_skip}" IsChecked="{Binding Archive}" />
+    <CheckBox Content="{s:T opt_conv}" IsChecked="{Binding Fallback}" />
+    <CheckBox Content="{s:T opt_keep}" IsChecked="{Binding KeepFull}" />
+    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+      <TextBlock Text="{s:T opt_crf}" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <NumericUpDown Grid.Column="1" Value="{Binding Crf}" Minimum="10" Maximum="28" Increment="1" FormatString="0" />
+    </Grid>
+    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+      <TextBlock Text="{s:T opt_limit}" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <NumericUpDown Grid.Column="1" Value="{Binding Limit}" Minimum="0" Maximum="500" Increment="1" FormatString="0" />
+    </Grid>
+    <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
+      <TextBlock Text="{s:T opt_sleep}" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <NumericUpDown Grid.Column="1" Value="{Binding Sleep}" Minimum="0" Maximum="30" Increment="1" FormatString="0" />
+    </Grid>
+  </StackPanel>
+</UserControl>

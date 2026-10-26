@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.SettingsView"
+             x:DataType="vm:MainViewModel">
+  <ScrollViewer>
+    <StackPanel Spacing="10" Margin="4,10,12,4" MaxWidth="900" HorizontalAlignment="Left">
+      <!-- Login cookies -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <Grid ColumnDefinitions="260,*" ColumnSpacing="8">
+            <TextBlock Text="{s:T lbl_cookies}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding CookieChoices}" SelectedIndex="{Binding SelectedCookieIndex}"
+                      HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" />
+          </Grid>
+          <Grid ColumnDefinitions="260,*,Auto" ColumnSpacing="8">
+            <TextBlock Text="{s:T lbl_cookiefile}" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" Text="{Binding CookieFile}" IsEnabled="{Binding IsIdle}" />
+            <Button Grid.Column="2" Content="{s:T btn_browse}" Command="{Binding BrowseCookieFileCommand}" IsEnabled="{Binding IsIdle}" />
+          </Grid>
+          <TextBlock Classes="muted" Text="{s:T txt_privacy}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{s:T txt_cookie_export}" TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <!-- Tools -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="title" Text="{s:T grp_tools}" />
+          <TextBlock x:Name="ToolsText" Text="{Binding ToolsStatus}" FontFamily="Consolas,Menlo,monospace" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="{s:T btn_recheck}" Command="{Binding RecheckToolsCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{s:T btn_update}" Command="{Binding UpdateToolsCommand}" IsEnabled="{Binding IsIdle}" />
+          </StackPanel>
+          <CheckBox Content="{s:T chk_autoupdate}" IsChecked="{Binding AutoUpdate}" IsEnabled="{Binding IsIdle}" />
+        </StackPanel>
+      </Border>
+
+      <!-- When a batch finishes -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <CheckBox Content="{s:T chk_sound}" IsChecked="{Binding Sound}" IsEnabled="{Binding IsIdle}" />
+          <CheckBox Content="{s:T chk_opendone}" IsChecked="{Binding OpenDone}" IsEnabled="{Binding IsIdle}" />
+          <Button Content="{s:T btn_cleararchive}" Command="{Binding ClearArchiveCommand}" IsEnabled="{Binding IsIdle}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Appearance -->
+      <Border Classes="card">
+        <WrapPanel ItemSpacing="10" LineSpacing="8">
+          <TextBlock Text="{s:T lbl_theme}" VerticalAlignment="Center" />
+          <ComboBox x:Name="ThemeBox" ItemsSource="{Binding ThemeChoices}" SelectedIndex="{Binding SelectedThemeIndex}" MinWidth="190" />
+          <Button Content="{s:T btn_pickcolor}" Command="{Binding PickColorCommand}" IsVisible="{Binding IsCustomTheme}" />
+          <TextBlock Text="{s:T lbl_lang}" VerticalAlignment="Center" Margin="20,0,0,0" />
+          <ComboBox x:Name="LangBox" ItemsSource="{Binding LanguageChoices}" SelectedIndex="{Binding SelectedLanguageIndex}" MinWidth="150" />
+        </WrapPanel>
+      </Border>
+
+      <TextBlock Classes="muted" Text="{Binding AboutText}" TextWrapping="Wrap" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
