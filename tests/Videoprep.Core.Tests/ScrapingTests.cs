@@ -32,6 +32,21 @@ public class SourceUrlTests
         Assert.Empty(SourceUrl.Targets("hola", VideosStreams));
         Assert.Single(SourceUrl.Targets("@BlenderStudio", []));   // no tab checked: Videos
     }
+
+    [Theory]
+    [InlineData("https://www.instagram.com/nasa/", "Instagram")]
+    [InlineData("instagram.com/nasa?igsh=abc", "Instagram")]
+    [InlineData("https://x.com/NASA", "X")]
+    [InlineData("https://twitter.com/NASA/media", "X")]
+    [InlineData("https://www.tiktok.com/@nasa", "TikTok")]
+    [InlineData("https://www.instagram.com/p/C1abc/", null)]
+    [InlineData("https://www.instagram.com/reel/C1abc/", null)]
+    [InlineData("https://x.com/NASA/status/123", null)]
+    [InlineData("https://www.tiktok.com/@nasa/video/123", null)]
+    [InlineData("https://www.twitch.tv/nasa/videos", null)]
+    [InlineData("@BlenderStudio", null)]
+    public void Profiles_that_cannot_be_listed_are_recognized(string input, string? site) =>
+        Assert.Equal(site, SourceUrl.UnsupportedProfile(input));
 }
 
 public class ListingEntryTests

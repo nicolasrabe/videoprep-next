@@ -50,6 +50,7 @@ tab, `--sleep-requests 1`. Saved as fixtures in `tests/Videoprep.Core.Tests/Fixt
 | Missing tab (`@jawed/shorts`) | `ERROR: [youtube:tab] @jawed: This channel does not have a shorts tab`, exit 1. | Reported as "this channel has no Shorts tab", not as a failure. |
 | Archive line format | `youtube <id>` (ie_key in lower case + id), confirmed in phase 2. | "Already downloaded" = `ie_key.lower() + " " + id` is in the archive. |
 | `--match-filters` | Missing fields pass `!`/`!=` tests (phase 2). | Filters are applied by videoprep on the listing; yt-dlp filters only as a second guard when downloading. |
+| Profiles of other sites (2026-10-26, `--flat-playlist -j -I 1:3`) | Twitch `/<user>/videos`, Kick `/<user>/videos`, Vimeo `/<user>`: entries with id, title, url. Instagram `/<user>/`: `--list-extractors` says `instagram:user (CURRENTLY BROKEN)`; run gives `ERROR: [instagram:user] ...: Unable to extract data`. X `x.com/<user>`: `ERROR: Unsupported URL` (no profile extractor; only single posts). TikTok `/@user`: `ERROR: [tiktok:user] ...: Unable to extract secondary user ID`. | Explorar recognizes Instagram/X/TikTok profile links and explains instead of failing (copy post links into Download). Re-check after yt-dlp updates. |
 
 Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe -count_frames` on a WebM clip printed
 "Error parsing Opus packet header" and sometimes no count. The tests now count video packets without decoding. Not seen

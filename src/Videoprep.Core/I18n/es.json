@@ -240,5 +240,6 @@
   "sc_status_playlist": "Lista",
   "sc_expand": "Ver videos",
   "sc_subs_later": "Las suscripciones se activan en la próxima versión de prueba.",
-  "sc_date_ph": "AAAA-MM-DD"
+  "sc_date_ph": "AAAA-MM-DD",
+  "sc_profile_unsupported": "Todavía no se pueden buscar los videos de un perfil de {0}: la herramienta que usa videoprep para leer los sitios hoy no lo permite. Lo que sí podés hacer: abrí cada publicación, copiá su enlace y pegalos todos juntos en la pestaña Descargar (van directo a la cola). Explorar sí funciona con canales y listas de YouTube y con perfiles de Twitch, Kick y Vimeo."
 }

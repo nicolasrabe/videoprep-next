@@ -142,6 +142,9 @@
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Bd}" />
       <Setter Property="GridLinesVisibility" Value="Horizontal" />
+      <!-- Every table: drag a header border to widen a column (off by default in Avalonia). -->
+      <Setter Property="CanUserResizeColumns" Value="True" />
+      <Setter Property="MinColumnWidth" Value="40" />
     </Style>
     <Style Selector="DataGridColumnHeader">
       <Setter Property="Background" Value="{DynamicResource Card}" />

@@ -240,5 +240,6 @@
   "sc_status_playlist": "Playlist",
   "sc_expand": "Show videos",
   "sc_subs_later": "Subscriptions are turned on in the next test version.",
-  "sc_date_ph": "YYYY-MM-DD"
+  "sc_date_ph": "YYYY-MM-DD",
+  "sc_profile_unsupported": "Videos from a {0} profile cannot be listed yet: the tool videoprep uses to read sites does not support it today. What you can do: open each post, copy its link and paste them all together in the Download tab (they go straight to the queue). Explore does work with YouTube channels and playlists and with Twitch, Kick and Vimeo profiles."
 }

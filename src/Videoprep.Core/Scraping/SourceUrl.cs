@@ -18,6 +18,27 @@ public static partial class SourceUrl
     [GeneratedRegex(@"[?&]list=([A-Za-z0-9_-]+)")]
     private static partial Regex ListParam();
 
+    // Profiles yt-dlp cannot list today (docs/VERIFY.md phase 5): instagram:user is marked broken, X has no profile
+    // extractor at all, tiktok:user fails ("Unable to extract secondary user ID"). Single posts still download fine.
+    [GeneratedRegex(@"^(?:https?://)?(?:www\.|m\.)?instagram\.com/(?!(?:p|reels?|tv|stories|explore)/)[A-Za-z0-9._]+/?(?:[?#].*)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex InstagramProfile();
+
+    [GeneratedRegex(@"^(?:https?://)?(?:www\.|mobile\.)?(?:x|twitter)\.com/(?!i/|home|search|explore)[A-Za-z0-9_]+(?:/(?:media|with_replies|highlights))?/?(?:[?#].*)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex XProfile();
+
+    [GeneratedRegex(@"^(?:https?://)?(?:www\.|m\.)?tiktok\.com/@[^/?#\s]+/?(?:[?#].*)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex TikTokProfile();
+
+    /// <summary>"Instagram", "X" or "TikTok" when the text is a profile page of a site that cannot be listed; else null.</summary>
+    public static string? UnsupportedProfile(string input)
+    {
+        var t = input.Trim();
+        if (InstagramProfile().IsMatch(t)) return "Instagram";
+        if (XProfile().IsMatch(t)) return "X";
+        if (TikTokProfile().IsMatch(t)) return "TikTok";
+        return null;
+    }
+
     public sealed record Target(SourceTab Tab, string Url);
 
     public static string TabPath(SourceTab tab) => tab switch

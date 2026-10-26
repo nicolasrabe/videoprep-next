@@ -137,6 +137,24 @@ public sealed partial class MainWindowTests : IDisposable
     }
 
     [AvaloniaFact]
+    public void Every_table_lets_the_user_widen_its_columns()
+    {
+        var (w, vm) = Open("es", "light");
+        var grids = new List<DataGrid>();
+        foreach (var tab in new[] { MainViewModel.TabQueue, MainViewModel.TabScraping })
+        {
+            vm.SelectedTab = tab;
+            Dispatcher.UIThread.RunJobs();
+            grids.AddRange(w.GetVisualDescendants().OfType<DataGrid>());
+        }
+        vm.Scraping.ShowSubscriptionsView();
+        Dispatcher.UIThread.RunJobs();
+        grids.AddRange(w.GetVisualDescendants().OfType<DataGrid>());
+        Assert.True(grids.Distinct().Count() >= 3);
+        Assert.All(grids, g => Assert.True(g.CanUserResizeColumns));
+    }
+
+    [AvaloniaFact]
     public void Narrow_window_still_fits_at_the_minimum_size()
     {
         var (w, vm) = Open("es", "light");

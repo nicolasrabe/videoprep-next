@@ -103,6 +103,15 @@ public sealed class ExploreTests : IDisposable
     }
 
     [AvaloniaFact]
+    public async Task An_instagram_profile_gets_an_explanation_not_an_error()
+    {
+        var ex = await Searched("https://www.instagram.com/nasa/");
+        Assert.Contains(_rig.Ui.Messages, m => m.StartsWith("Todavía no se pueden buscar los videos de un perfil de Instagram", StringComparison.Ordinal));
+        Assert.Equal(0, CallCount());
+        Assert.Empty(ex.Rows);
+    }
+
+    [AvaloniaFact]
     public async Task Checked_videos_go_to_the_queue_with_their_titles()
     {
         var vm = _rig.Create();

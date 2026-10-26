@@ -27,7 +27,9 @@ Versions below 1.0.0 are early releases: things can change between them.
   site again. Dates from the quick list are approximate (~); when a date or length filter needs it, exact data is
   fetched for at most 100 videos. Checked videos go to the queue with their titles and the chosen format. A bot check
   stops the search with a clear message. Searches use no cookies unless one browser or a cookie file is chosen in Settings.
-  Subscriptions come in the second part.
+  Instagram, X and TikTok profiles cannot be listed today (yt-dlp does not support it); Explore says so and explains
+  what to do instead. Twitch, Kick and Vimeo profiles work. Every table's columns can now be widened by dragging the
+  header border. Subscriptions come in the second part.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.

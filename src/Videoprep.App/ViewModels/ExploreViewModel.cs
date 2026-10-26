@@ -141,6 +141,11 @@ public sealed partial class ExploreViewModel : ObservableObject
             await _host.Ui.ShowMessage(problem!, warning: true);
             return;
         }
+        if (SourceUrl.UnsupportedProfile(SourceText) is { } site)
+        {
+            await _host.Ui.ShowMessage(L.Format("sc_profile_unsupported", site));
+            return;
+        }
         var targets = SourceUrl.Targets(SourceText, CheckedTabs());
         if (targets.Count == 0)
         {
