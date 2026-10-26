@@ -32,4 +32,8 @@ Versions: **yt-dlp 2026.10.21**, **ffmpeg/ffprobe N-128097-g46f23be8b1-20261025*
 | Engine end to end with the fake yt-dlp + real ffmpeg | Downloads once, cuts 3 exact clips, verifies each with ffprobe, deletes the full file only after the last verified clip; never deletes a pre-existing full file; never overwrites an existing output. |
 | Kill the process tree on Stop | yt-dlp and a child process it started both end (fake yt-dlp test). |
 
+Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe -count_frames` on a WebM clip printed
+"Error parsing Opus packet header" and sometimes no count. The tests now count video packets without decoding. Not seen
+with the Windows build videoprep downloads; to look at again if a user reports broken Opus audio in WebM clips.
+
 Still to verify later: Chrome/Edge/Firefox cookie reading on Nico's PC (with permission), 429 / "not a bot" messages (only seen when they happen).

@@ -71,12 +71,16 @@ internal static class Ffmpeg
         return bytes;
     }
 
-    /// <summary>Frames really stored in the file, counted by ffprobe decoding it (independent of the gray decode).</summary>
+    /// <summary>
+    /// Video packets stored in the file, counted by ffprobe WITHOUT decoding (independent of the gray decode, and immune
+    /// to audio decoder trouble: Ubuntu's ffprobe failed on Opus packets when asked to decode with -count_frames).
+    /// For H.264, ProRes and VP9 in these files one packet is one frame.
+    /// </summary>
     public static long CountFrames(string file)
     {
         var sb = new System.Text.StringBuilder();
-        var r = new ProcessRunner().RunAsync(new ProcessSpec(Probe!, ["-v", "error", "-select_streams", "v:0", "-count_frames",
-            "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", file]), l => sb.AppendLine(l), CancellationToken.None)
+        var r = new ProcessRunner().RunAsync(new ProcessSpec(Probe!, ["-v", "error", "-select_streams", "v:0", "-count_packets",
+            "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", file]), l => sb.AppendLine(l), CancellationToken.None)
             .GetAwaiter().GetResult();
         Assert.Equal(0, r.ExitCode);
         // stderr is mixed in (Ubuntu's ffprobe warns about Opus packets here): keep the line that is just the number.
