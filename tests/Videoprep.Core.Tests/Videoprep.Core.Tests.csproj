@@ -16,5 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Videoprep.Core\Videoprep.Core.csproj" />
+    <!-- Built next to the tests so engine tests can run it as "yt-dlp". -->
+    <ProjectReference Include="..\FakeYtDlp\FakeYtDlp.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Test helper: a tiny program that answers like yt-dlp, so the engine can be tested without the internet. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>fake-yt-dlp</AssemblyName>
+  </PropertyGroup>
+</Project>
