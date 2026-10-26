@@ -3,31 +3,30 @@
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
              x:Class="Videoprep.App.Views.ScrapingView"
-             x:DataType="vm:ScrapingSampleViewModel">
-  <!-- Approved mockup (docs/mockup-scraping.html), shown as a preview in Phase 4. Nothing here works yet. -->
-  <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8" Margin="4,10,4,4">
-    <Border Classes="note">
-      <TextBlock Text="{s:T sc_coming}" TextWrapping="Wrap" />
-    </Border>
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
+             x:DataType="vm:ScrapingViewModel">
+  <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="4,10,4,4">
+    <StackPanel Orientation="Horizontal" Spacing="6">
       <ToggleButton x:Name="ExploreButton" Content="{s:T sc_explore}" IsChecked="{Binding ShowExplore, Mode=OneWay}" />
       <ToggleButton x:Name="SubsButton" Content="{s:T sc_subs}" IsChecked="{Binding ShowSubscriptions, Mode=OneWay}" />
     </StackPanel>
 
-    <!-- Explorar -->
-    <Grid Grid.Row="2" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
+    <!-- Explorar (SCRAPING_SPEC 1) -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
       <Border Classes="card">
         <StackPanel Spacing="7">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <TextBox Text="{Binding SourceUrl, Mode=OneWay}" PlaceholderText="{s:T sc_url_ph}" IsReadOnly="True" />
-            <Button Grid.Column="1" Classes="o" Content="{s:T sc_search}" IsEnabled="False" />
+            <TextBox x:Name="SourceBox" Text="{Binding Explore.SourceText}" PlaceholderText="{s:T sc_url_ph}" IsEnabled="{Binding Explore.IsIdle}" />
+            <Panel Grid.Column="1">
+              <Button Classes="o" Content="{s:T sc_search}" Command="{Binding Explore.SearchCommand}" IsVisible="{Binding Explore.IsIdle}" />
+              <Button Classes="r" Content="{s:T sc_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" />
+            </Panel>
           </Grid>
           <WrapPanel ItemSpacing="10" LineSpacing="4">
             <TextBlock Classes="muted" Text="{s:T sc_tabs}" VerticalAlignment="Center" />
-            <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="True" IsEnabled="False" />
-            <CheckBox Content="{s:T sc_tabs_shorts}" IsEnabled="False" />
-            <CheckBox Content="{s:T sc_tabs_streams}" IsEnabled="False" />
-            <CheckBox Content="{s:T sc_tabs_playlists}" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="{Binding Explore.TabVideos}" />
+            <CheckBox Content="{s:T sc_tabs_shorts}" IsChecked="{Binding Explore.TabShorts}" />
+            <CheckBox Content="{s:T sc_tabs_streams}" IsChecked="{Binding Explore.TabStreams}" />
+            <CheckBox Content="{s:T sc_tabs_playlists}" IsChecked="{Binding Explore.TabPlaylists}" />
             <TextBlock Classes="muted" Text="{s:T sc_tabs_hint}" VerticalAlignment="Center" />
           </WrapPanel>
         </StackPanel>
@@ -36,73 +35,87 @@
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="8" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_from}" VerticalAlignment="Center" />
-            <TextBox Text="2026-09-01" Width="110" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.FromText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.FromBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_to}" VerticalAlignment="Center" />
-            <TextBox Text="2026-10-25" Width="110" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.ToText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.ToBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_dur_min}" VerticalAlignment="Center" Margin="10,0,0,0" />
-            <TextBox Text="2:00" Width="70" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.MinText}" Width="80" PlaceholderText="M:SS" Classes.bad="{Binding Explore.MinBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_dur_max}" VerticalAlignment="Center" />
-            <TextBox Text="45:00" Width="70" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.MaxText}" Width="80" PlaceholderText="H:MM:SS" Classes.bad="{Binding Explore.MaxBad}" />
           </WrapPanel>
           <WrapPanel ItemSpacing="8" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_incl}" VerticalAlignment="Center" />
-            <TextBox Text="entrevista, review" Width="170" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.IncludeText}" Width="170" />
             <TextBlock Classes="muted" Text="{s:T sc_excl}" VerticalAlignment="Center" />
-            <TextBox Text="short, trailer" Width="170" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.ExcludeText}" Width="170" />
             <TextBlock Classes="muted" Text="{s:T sc_max}" VerticalAlignment="Center" />
-            <TextBox Text="50" Width="70" IsEnabled="False" />
+            <TextBox Text="{Binding Explore.MaxCountText}" Width="70" Classes.bad="{Binding Explore.MaxCountBad}" />
           </WrapPanel>
           <WrapPanel ItemSpacing="10" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_order}" VerticalAlignment="Center" />
-            <ComboBox SelectedIndex="0" IsEnabled="False" MinWidth="170">
+            <ComboBox SelectedIndex="{Binding Explore.OrderIndex}" MinWidth="170">
               <ComboBoxItem Content="{s:T sc_order_new}" />
               <ComboBoxItem Content="{s:T sc_order_old}" />
             </ComboBox>
-            <CheckBox Content="{s:T sc_skip_live}" IsChecked="True" IsEnabled="False" />
-            <CheckBox Content="{s:T sc_skip_members}" IsChecked="True" IsEnabled="False" />
-            <CheckBox Content="{s:T sc_skip_done}" IsChecked="True" IsEnabled="False" />
-            <Button Content="{s:T sc_apply}" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_skip_live}" IsChecked="{Binding Explore.SkipLive}" />
+            <CheckBox Content="{s:T sc_skip_members}" IsChecked="{Binding Explore.SkipMembers}" />
+            <CheckBox Content="{s:T sc_skip_done}" IsChecked="{Binding Explore.SkipDone}" />
+            <Button Content="{s:T sc_apply}" Command="{Binding Explore.ApplyFiltersCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </WrapPanel>
         </StackPanel>
       </Border>
-      <DataGrid Grid.Row="2" ItemsSource="{Binding Videos}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
+      <TextBlock Grid.Row="2" Classes="muted" Text="{Binding Explore.StatusLine}" TextWrapping="Wrap"
+                 IsVisible="{Binding Explore.StatusLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <DataGrid Grid.Row="3" ItemsSource="{Binding Explore.Rows}" HeadersVisibility="Column" CanUserSortColumns="False"
+                CanUserReorderColumns="False" SelectionMode="Single">
         <DataGrid.Columns>
-          <DataGridCheckBoxColumn Binding="{Binding Selected}" Width="40" />
-          <DataGridTextColumn Header="{s:T sc_col_title}" Binding="{Binding Title}" Width="*" />
-          <DataGridTextColumn Header="{s:T sc_col_date}" Binding="{Binding Date}" Width="115" />
-          <DataGridTextColumn Header="{s:T sc_col_dur}" Binding="{Binding Duration}" Width="105" />
-          <DataGridTextColumn Header="{s:T sc_col_views}" Binding="{Binding Views}" Width="80" />
-          <DataGridTemplateColumn Header="{s:T sc_col_status}" Width="130">
-            <DataTemplate x:DataType="vm:ScrapingSampleViewModel+VideoRow">
-              <TextBlock Text="{Binding StatusKey, Converter={x:Static s:LocConverter.Instance}}" VerticalAlignment="Center" Margin="10,0" />
+          <DataGridTemplateColumn Width="40">
+            <DataTemplate x:DataType="vm:ExploreRow">
+              <CheckBox IsChecked="{Binding Selected}" IsVisible="{Binding CanSelect}" HorizontalAlignment="Center" />
+            </DataTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="{s:T sc_col_title}" Binding="{Binding Title}" Width="*" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_date}" Binding="{Binding DateText}" Width="115" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_dur}" Binding="{Binding DurationText}" Width="105" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_views}" Binding="{Binding ViewsText}" Width="90" IsReadOnly="True" />
+          <DataGridTemplateColumn Header="{s:T sc_col_status}" Width="140">
+            <DataTemplate x:DataType="vm:ExploreRow">
+              <Panel Margin="10,0">
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" IsVisible="{Binding !CanExpand}" />
+                <Button Content="{s:T sc_expand}" Padding="8,2" IsVisible="{Binding CanExpand}"
+                        Command="{Binding $parent[UserControl].((vm:ScrapingViewModel)DataContext).Explore.ExpandCommand}"
+                        CommandParameter="{Binding}" />
+              </Panel>
             </DataTemplate>
           </DataGridTemplateColumn>
         </DataGrid.Columns>
       </DataGrid>
-      <TextBlock Grid.Row="3" Classes="muted" Text="{s:T sc_approx_note}" TextWrapping="Wrap" />
-      <Border Grid.Row="4" Classes="card">
+      <TextBlock Grid.Row="4" Classes="muted" Text="{s:T sc_approx_note}" TextWrapping="Wrap" IsVisible="{Binding Explore.HasApproxDates}" />
+      <Border Grid.Row="5" Classes="card">
         <WrapPanel ItemSpacing="24" LineSpacing="8">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="{s:T sc_all}" IsEnabled="False" />
-            <Button Content="{s:T sc_none}" IsEnabled="False" />
-            <Button Content="{s:T sc_invert}" IsEnabled="False" />
-            <TextBlock Classes="muted" Text="{Binding SelectedText}" VerticalAlignment="Center" />
+            <Button Content="{s:T sc_all}" Command="{Binding Explore.SelectAllCommand}" />
+            <Button Content="{s:T sc_none}" Command="{Binding Explore.SelectNoneCommand}" />
+            <Button Content="{s:T sc_invert}" Command="{Binding Explore.InvertCommand}" />
+            <TextBlock Classes="muted" Text="{Binding Explore.SelectedText}" VerticalAlignment="Center" />
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
-            <ComboBox SelectedIndex="0" IsEnabled="False">
-              <ComboBoxItem Content="MP4 - H.264 + AAC, 1080p" />
-            </ComboBox>
-            <Button Classes="o" Content="{s:T sc_to_queue}" IsEnabled="False" />
-            <Button Classes="g" Content="{s:T sc_subscribe}" IsEnabled="False" />
+            <ComboBox ItemsSource="{Binding Explore.FormatChoices}" SelectedItem="{Binding Explore.SelectedFormat}" MinWidth="200" />
+            <ComboBox ItemsSource="{Binding Explore.ResolutionChoices}" SelectedItem="{Binding Explore.SelectedResolution}" MinWidth="90" />
+            <Button Classes="o" Content="{s:T sc_to_queue}" Command="{Binding Explore.SendToQueueCommand}" IsEnabled="{Binding Explore.IsIdle}" />
+            <Button Classes="g" Content="{s:T sc_subscribe}" IsEnabled="False" ToolTip.Tip="{s:T sc_subs_later}" />
           </StackPanel>
         </WrapPanel>
       </Border>
     </Grid>
 
-    <!-- Suscripciones -->
-    <Grid Grid.Row="2" RowDefinitions="*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
-      <DataGrid ItemsSource="{Binding Subscriptions}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
+    <!-- Suscripciones: still the approved mockup until tanda B -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
+      <Border Classes="note">
+        <TextBlock Text="{s:T sc_subs_later}" TextWrapping="Wrap" />
+      </Border>
+      <DataGrid Grid.Row="1" ItemsSource="{Binding Sample.Subscriptions}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
         <DataGrid.Columns>
           <DataGridCheckBoxColumn Header="{s:T sc_col_on}" Binding="{Binding Enabled}" Width="60" />
           <DataGridTextColumn Header="{s:T sc_col_channel}" Binding="{Binding Channel}" Width="*" />
@@ -113,7 +126,7 @@
           <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding New}" Width="70" />
         </DataGrid.Columns>
       </DataGrid>
-      <Border Grid.Row="1" Classes="card">
+      <Border Grid.Row="2" Classes="card">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <StackPanel Orientation="Horizontal" Spacing="8">
             <Button Classes="o" Content="{s:T sc_add}" IsEnabled="False" />
@@ -123,12 +136,12 @@
           <Button Grid.Column="2" Classes="g" Content="{s:T sc_check_now}" IsEnabled="False" />
         </Grid>
       </Border>
-      <Border Grid.Row="2" Classes="card">
+      <Border Grid.Row="3" Classes="card">
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="10" LineSpacing="6">
             <CheckBox Content="{s:T sc_check_start}" IsChecked="True" IsEnabled="False" />
             <CheckBox IsEnabled="False">
-              <TextBlock Text="{Binding CheckEveryText}" />
+              <TextBlock Text="{Binding Sample.CheckEveryText}" />
             </CheckBox>
           </WrapPanel>
           <WrapPanel ItemSpacing="10" LineSpacing="6">

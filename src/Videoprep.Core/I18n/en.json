@@ -239,5 +239,6 @@
   "sc_nothing_selected": "Check at least one video in the table.",
   "sc_status_playlist": "Playlist",
   "sc_expand": "Show videos",
-  "sc_subs_later": "Subscriptions are turned on in the next test version."
+  "sc_subs_later": "Subscriptions are turned on in the next test version.",
+  "sc_date_ph": "YYYY-MM-DD"
 }

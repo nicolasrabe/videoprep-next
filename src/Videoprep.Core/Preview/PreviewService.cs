@@ -78,6 +78,17 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
         return info;
     }
 
+    /// <summary>
+    /// A title already known from a listing (Scraping): the queue shows it without asking the site again.
+    /// Does nothing when the link is already known.
+    /// </summary>
+    public void Remember(string url, string title)
+    {
+        if (title.Length == 0) return;
+        var key = UrlParser.LinkKey(url);
+        if (_cache.TryAdd(key, new PreviewInfo { Key = key, Url = url, Meta = MetaState.Ready, Title = title })) Changed?.Invoke(key);
+    }
+
     /// <summary>Format or resolution changed: check again if the format group changed (port of Reset-Details).</summary>
     public void Refresh(string key, DetailRequest details)
     {

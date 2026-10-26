@@ -239,5 +239,6 @@
   "sc_nothing_selected": "Marcá al menos un video de la tabla.",
   "sc_status_playlist": "Lista",
   "sc_expand": "Ver videos",
-  "sc_subs_later": "Las suscripciones se activan en la próxima versión de prueba."
+  "sc_subs_later": "Las suscripciones se activan en la próxima versión de prueba.",
+  "sc_date_ph": "AAAA-MM-DD"
 }

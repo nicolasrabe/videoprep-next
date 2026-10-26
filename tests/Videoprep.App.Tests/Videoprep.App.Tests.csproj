@@ -16,4 +16,7 @@
     <ProjectReference Include="..\..\src\Videoprep.App\Videoprep.App.csproj" />
     <ProjectReference Include="..\FakeYtDlp\FakeYtDlp.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Videoprep.Core.Tests\Fixtures\listing\**" LinkBase="Fixtures\listing" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

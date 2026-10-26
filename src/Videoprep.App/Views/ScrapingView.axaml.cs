@@ -8,7 +8,7 @@ public partial class ScrapingView : UserControl
     public ScrapingView()
     {
         InitializeComponent();
-        ExploreButton.Click += (_, _) => (DataContext as ScrapingSampleViewModel)?.ShowExploreView();
-        SubsButton.Click += (_, _) => (DataContext as ScrapingSampleViewModel)?.ShowSubscriptionsView();
+        ExploreButton.Click += (_, _) => (DataContext as ScrapingViewModel)?.ShowExploreView();
+        SubsButton.Click += (_, _) => (DataContext as ScrapingViewModel)?.ShowSubscriptionsView();
     }
 }

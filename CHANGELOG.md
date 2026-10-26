@@ -12,7 +12,7 @@ Versions below 1.0.0 are early releases: things can change between them.
   is detected; clips seek faster on long videos.
 - Phase 3: the engine. It downloads each video once, cuts every clip from it, checks each result with ffprobe before
   moving it to its final name, and only then deletes the downloaded full video (never one that was already in the folder).
-  Stop also closes any program yt-dlp started. Tools are downloaded to `%LOCALAPPDATA%ideoprep	ools`. The queue is
+  Stop also closes any program yt-dlp started. Tools are downloaded to `%LOCALAPPDATA%\videoprep\tools`. The queue is
   saved to `queue.json`. Unexpected errors are written to a log with all details.
 - New developer command `--demo` to watch the engine work from the terminal (docs/DEMO.md).
 - Phase 4: the screens. Download, Queue, Settings and Log tabs with everything from 0.1.1, plus a preview of the new
@@ -21,6 +21,13 @@ Versions below 1.0.0 are early releases: things can change between them.
   and .txt files, Delete key in the queue, "Copy diagnostics" in the Log tab, and a friendly message if something
   unexpected happens. The preview always ends in a clear state (title, "no H.264", or why it failed) instead of
   staying on "Loading". The queue is kept when videoprep closes. Settings from 0.1.1 are read as they are.
+- Phase 5 (first part): Scraping > Explore works. Paste a channel, playlist or other-site link, pick the tabs
+  (Videos, Shorts, Live, Playlists), press Find videos and the list fills in as it arrives. Filters (dates, length, words
+  in the title, count, order, skip live / members-only / already downloaded) re-filter the saved list without asking the
+  site again. Dates from the quick list are approximate (~); when a date or length filter needs it, exact data is
+  fetched for at most 100 videos. Checked videos go to the queue with their titles and the chosen format. A bot check
+  stops the search with a clear message. Searches use no cookies unless one browser or a cookie file is chosen in Settings.
+  Subscriptions come in the second part.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.

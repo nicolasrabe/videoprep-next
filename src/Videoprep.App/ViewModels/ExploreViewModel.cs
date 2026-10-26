@@ -339,7 +339,7 @@ public sealed partial class ExploreViewModel : ObservableObject
             return;
         }
         var cap = SelectedResolution is not null && FormatCatalog.Resolutions.TryGetValue(SelectedResolution, out var c) ? c : FormatCatalog.DefaultCap;
-        _host.AddToQueue(picked.Select(r => r.Entry.Url), SelectedFormat?.Key ?? "mp4", cap);
+        _host.AddToQueue(picked.Select(r => (r.Entry.Url, r.Entry.Title)), SelectedFormat?.Key ?? "mp4", cap);
         foreach (var r in picked)
         {
             r.Selected = false;
@@ -353,6 +353,9 @@ public sealed partial class ExploreViewModel : ObservableObject
 public sealed partial class ScrapingViewModel(MainViewModel host) : ObservableObject
 {
     public ExploreViewModel Explore { get; } = new(host);
+
+    /// <summary>Suscripciones is still the approved mockup until tanda B.</summary>
+    public ScrapingSampleViewModel Sample { get; } = new();
 
     /// <summary>0 = Explorar, 1 = Suscripciones.</summary>
     [ObservableProperty]

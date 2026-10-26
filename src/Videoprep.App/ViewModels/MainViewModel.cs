@@ -23,7 +23,6 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly Action<Action> _post;
 
     public Loc L => Loc.Instance;
-    public ScrapingSampleViewModel Scraping { get; } = new();
     public Settings Settings { get; }
 
     /// <summary>The queue (legacy $Items). Saved to queue.json after every change (AUDIT H6).</summary>
@@ -59,6 +58,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         InitDownload();
         InitSettings();
+        Scraping = new ScrapingViewModel(this);
         RebuildQueueRows();
         Loc.Instance.PropertyChanged += (_, e) => { if (e.PropertyName == "Item[]") OnLanguageChanged(); };
     }
