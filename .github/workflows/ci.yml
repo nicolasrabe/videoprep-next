@@ -42,9 +42,30 @@ jobs:
             tests/*/bin/Release/net10.0/screenshots/
           if-no-files-found: ignore
 
+  integration:
+    # Real ffmpeg on generated test videos (frame-exact cuts, the whole engine with the fake yt-dlp).
+    # Never downloads from YouTube.
+    name: integration (ubuntu, real ffmpeg)
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
+      - run: dotnet build videoprep.slnx -c Release
+      - run: dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResults
+      - name: Report failed tests as annotations
+        if: failure()
+        run: python3 .github/scripts/trx_annotations.py TestResults
+
   publish:
     name: publish ${{ matrix.rid }}
-    needs: build-test
+    needs: [build-test, integration]
     runs-on: ubuntu-latest
     strategy:
       matrix:
