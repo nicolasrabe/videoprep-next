@@ -39,6 +39,23 @@ Windows; findings come from reading the code. Severity: **H** = can lose data or
 - L6 `FormClosing` only handles the running download; setup/update children may linger. Kill the whole process tree on exit.
 - L7 Window is not resizable and has no keyboard shortcuts besides Ctrl+A/Enter. Add Delete in the queue (backlog), Ctrl+V, F5.
 
+## Found in Phase 0 (2026-10-25, reading the .ps1 again)
+| # | Finding | Port / fix |
+|---|---|---|
+| X1 | `Get-SafeName` only strips `\/:*?"<>|%`: control characters, trailing dots/spaces and reserved names (`CON`, `NUL`, `COM1`...) still break Windows file names. | `SafeName` strips control chars, trims trailing dots/spaces, renames reserved names; unit tests. |
+| X2 | Preview with an **audio** format still asks yt-dlp for the H.264 selector (`Start-DetailAttempt`), so it can wrongly say "No H.264 version". | Audio preview uses `ba/b`. |
+| X3 | The cookie source that worked (`$Pref.Browser`) lives only in memory; it is lost on restart. | Persist it in settings. |
+| X4 | Audio clips use the fps from the preview; if the preview did not finish, 30 fps is assumed silently (frames 30-59 rejected for 60 fps sources). | Log the fps used; if unknown, say so in the clip error/note. |
+| X5 | Name example shows `Title - 1, Title - 2` even when there are no clips (cosmetic). | Example depends on the clip count. |
+
+## Phase 0 decisions (approved 2026-10-25)
+- Tools live in `%LOCALAPPDATA%\videoprep\tools` (also looked up beside the exe and in PATH). Logs and caches in `%LOCALAPPDATA%\videoprep`.
+- M5: the exported cookie file is kept in the user's profile folder, deleted when videoprep closes, and Settings explains it.
+- M3: clip cut = input-side `-ss` with the same T0/Dur math plus `-frames:v N` as a guard; the frame-count integration test decides (fall back to hybrid seek if not exact).
+- `videoprep --check` exit code 3 = another run holds the lock.
+- macOS build after 0.2.0 (no macOS ffmpeg from yt-dlp/FFmpeg-Builds; needs another source + Gatekeeper quarantine handling).
+- Release exe uses `EnableCompressionInSingleFile`; no trimming/NativeAOT.
+
 ## Things that are good and must be preserved
 Timer/queue-driven non-blocking design (no UI freeze), the cookie fallback chain with "remember the source that worked",
 frame-accurate timecode math incl. drop-frame and negative-from-end starts, never overwriting existing files (`Get-UniquePath`),

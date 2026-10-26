@@ -36,7 +36,10 @@ videoprep/
   legacy-ps/               untouched reference (can move to a `legacy` branch/tag later)
   docs/                    PORT_PLAN, SCRAPING_SPEC, AUDIT, mockup, RELEASE_CHECKLIST
 ```
-Use the latest installed LTS SDK (`dotnet --version`; pin it in `global.json`). Prefer built-in libs (System.Text.Json,
+Use the latest installed LTS SDK (`dotnet --version`; pin it in `global.json`). **Phase 1 result:** .NET 10.0.403, Avalonia 12.1.4,
+CommunityToolkit.Mvvm 8.4.2, xUnit v3 3.2.2 (the version Avalonia.Headless.XUnit 12.1.4 is built against), solution file `videoprep.slnx`.
+Extra package: `Avalonia.Headless.XUnit` (tests only) - renders windows without a screen so tests can check them and save screenshots.
+A repo `nuget.config` pins nuget.org as the only package source (the dev machine had none configured). Prefer built-in libs (System.Text.Json,
 HttpClient, System.Diagnostics.Process). Allowed packages: Avalonia (+ Avalonia.Controls.DataGrid, Themes.Fluent),
 CommunityToolkit.Mvvm, xUnit. Anything else needs a one-line justification.
 

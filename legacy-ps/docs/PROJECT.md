@@ -42,6 +42,7 @@
   preview via yt-dlp metadata; best available then convert; names fall back to the video id; login needed for private content.
 
 ## Vision, platforms, distribution (discussed, not built)
+- **Superseded (2026-10-25):** the rewrite is C#/.NET + Avalonia, see `docs/PORT_PLAN.md`. The Tauri text below is kept only as history.
 - Today: Windows-only PowerShell/WinForms prototype/spec. Recommended future: **Tauri 2 + TypeScript UI** with yt-dlp/FFmpeg as
   managed sidecars (Electron as the safer-but-heavier alternative); GitHub Actions to build Windows/macOS/Linux; separate
   tested "engine" from UI. A **web version** = local helper (runs yt-dlp/FFmpeg) + browser UI (or static UI talking to localhost);

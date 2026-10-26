@@ -65,7 +65,8 @@ Check procedure (`CheckRunner`, used by the UI button, on-start, timer and `vide
 4. Rate limiting: pause between subscriptions (random 5-15 s), `--sleep-requests 1-2`, `--sleep-interval 3 --max-sleep-interval 8`
    between downloads, back-off (stop the run) on HTTP 429 or "Sign in to confirm you are not a bot" and report it. Never loop.
 5. Summary: a Log section and a toast/notification in the UI ("2 videos nuevos de @canal-de-ejemplo"); headless run writes
-   `%APPDATA%\videoprep\logs\check-YYYYMMDD.log` and exits 0 (ok), 1 (some failed), 2 (blocked/rate-limited).
+   `%APPDATA%\videoprep\logs\check-YYYYMMDD.log` and exits 0 (ok), 1 (some failed), 2 (blocked/rate-limited),
+   3 (skipped: another check or download run holds the lock; decided in Phase 0).
 
 Triggers
 - **Revisar ahora** button (one or all). **Revisar al abrir videoprep** (default on). **Revisar cada N horas** while open.
