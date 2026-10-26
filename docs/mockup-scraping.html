@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup Scraping</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.win{max-width:860px;margin:0 auto;border:1px solid var(--bd);background:var(--bg);padding:8px 10px 12px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--bd);margin-bottom:10px}
+.tab{padding:6px 16px;color:var(--mu);cursor:default}.tab.on{color:var(--tx);border-bottom:2px solid var(--ot)}
+.sub{display:flex;gap:6px;margin-bottom:8px}
+.sbtn{padding:4px 14px;border:1px solid var(--bd);background:var(--card);cursor:pointer;color:var(--mu)}
+.sbtn.on{color:var(--tx);border-color:var(--ot)}
+.card{background:var(--card);border:1px solid var(--bd);padding:9px 10px;margin-bottom:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mu{color:var(--mu)}
+input[type=text],select{background:var(--card);color:var(--tx);border:1px solid var(--bd);padding:3px 6px;font:inherit}
+input.w1{width:70px}input.w2{width:110px}input.w3{width:170px}input.full{flex:1;min-width:200px}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px;cursor:default}
+.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd)}
+th{background:var(--card);text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--bd)}
+td{padding:4px 6px;border-bottom:1px solid var(--bd)}tr.sel td{background:var(--ob);color:var(--ot)}
+.scroll{max-height:230px;overflow:auto}
+.pill{font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)}
+.hide{display:none}.spread{justify-content:space-between}
+.note{font-size:12px;color:var(--mu);margin-top:6px}
+</style></head><body>
+<div class="win">
+  <div class="tabs"><div class="tab">Descargar</div><div class="tab">Cola</div><div class="tab on">Scraping</div><div class="tab">Ajustes</div><div class="tab">Registro</div></div>
+  <div class="sub"><div class="sbtn on" id="b1" onclick="show(1)">Explorar</div><div class="sbtn" id="b2" onclick="show(2)">Suscripciones</div></div>
+
+  <div id="p1">
+    <div class="card">
+      <div class="row"><input type="text" class="full" value="https://www.youtube.com/@canal-de-ejemplo" aria-label="Canal o lista">
+        <button class="o">Buscar videos</button></div>
+      <div class="row" style="margin-top:7px"><span class="mu">Pestañas:</span>
+        <label><input type="checkbox" checked> Videos</label><label><input type="checkbox"> Shorts</label>
+        <label><input type="checkbox"> Directos</label><label><input type="checkbox"> Listas de reproducción</label>
+        <span class="mu" style="margin-left:auto">También sirve un enlace de lista, Twitch, etc.</span></div>
+    </div>
+    <div class="card">
+      <div class="row"><span class="mu">Publicados desde</span><input type="text" class="w2" value="2026-09-01"><span class="mu">hasta</span><input type="text" class="w2" value="2026-10-25">
+        <span class="mu" style="margin-left:10px">Duración mín.</span><input type="text" class="w1" value="2:00"><span class="mu">máx.</span><input type="text" class="w1" value="45:00"></div>
+      <div class="row" style="margin-top:7px"><span class="mu">El título incluye</span><input type="text" class="w3" value="entrevista, review"><span class="mu">excluye</span><input type="text" class="w3" value="short, trailer">
+        <span class="mu">Cantidad máx.</span><input type="text" class="w1" value="50"></div>
+      <div class="row" style="margin-top:7px"><span class="mu">Orden</span><select><option>Más nuevos primero</option><option>Más viejos primero</option></select>
+        <label><input type="checkbox" checked> Omitir directos en vivo</label><label><input type="checkbox" checked> Omitir exclusivos de miembros</label><label><input type="checkbox" checked> Omitir los ya descargados</label>
+        <button style="margin-left:auto">Aplicar filtros</button></div>
+    </div>
+    <div class="scroll"><table>
+      <tr><th style="width:26px"></th><th>Título</th><th style="width:92px">Fecha</th><th style="width:64px">Duración</th><th style="width:70px">Vistas</th><th style="width:96px">Estado</th></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>Entrevista completa con el invitado</td><td>2026-10-21</td><td>38:12</td><td>41 mil</td><td>Nuevo</td></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>Review del equipo de edición</td><td>2026-10-14</td><td>12:40</td><td>18 mil</td><td>Nuevo</td></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>Entrevista: detrás de escena</td><td>2026-10-02</td><td>24:05</td><td>9,3 mil</td><td>Nuevo</td></tr>
+      <tr><td><input type="checkbox"></td><td>Review del mes pasado</td><td>2026-09-18</td><td>09:51</td><td>22 mil</td><td><span class="pill">Ya descargado</span></td></tr>
+      <tr><td><input type="checkbox"></td><td>Entrevista con el equipo</td><td>2026-09-03</td><td>31:27</td><td>15 mil</td><td><span class="pill">Ya descargado</span></td></tr>
+    </table></div>
+    <div class="note">Fecha aproximada: en la lista rápida YouTube a veces no da la fecha exacta; se confirma al bajar.</div>
+    <div class="card row spread" style="margin-top:8px">
+      <div class="row"><button>Todo</button><button>Nada</button><button>Invertir</button><span class="mu">3 de 5 seleccionados</span></div>
+      <div class="row"><span class="mu">Formato</span><select><option>MP4 - H.264 + AAC, 1080p</option></select>
+        <button class="o">Enviar a la cola</button><button class="g">Suscribirme a esto...</button></div>
+    </div>
+  </div>
+
+  <div id="p2" class="hide">
+    <div class="scroll"><table>
+      <tr><th style="width:26px">On</th><th>Canal</th><th>Qué baja</th><th>Filtros</th><th style="width:86px">Formato</th><th style="width:96px">Última vez</th><th style="width:56px">Nuevos</th></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>@canal-de-ejemplo</td><td>Videos + Directos</td><td>desde 2026-09-01, 2:00-45:00</td><td>MP4 1080p</td><td>hoy 09:14</td><td>2</td></tr>
+      <tr><td><input type="checkbox" checked></td><td>Lista: Clips de abril</td><td>Lista completa</td><td>sin filtros</td><td>MOV ProRes</td><td>ayer 21:02</td><td>0</td></tr>
+      <tr><td><input type="checkbox"></td><td>twitch.tv/ejemplo</td><td>Clips</td><td>máx. 20, más nuevos</td><td>MP4 720p</td><td>nunca</td><td>-</td></tr>
+    </table></div>
+    <div class="card row" style="margin-top:8px"><button class="o">Agregar</button><button>Editar</button><button class="r">Quitar</button><button class="g" style="margin-left:auto">Revisar ahora</button></div>
+    <div class="card">
+      <div class="row"><label><input type="checkbox" checked> Revisar al abrir videoprep</label>
+        <label><input type="checkbox"> Revisar cada</label><input type="text" class="w1" value="6"><span class="mu">horas mientras esté abierto</span></div>
+      <div class="row" style="margin-top:7px"><label><input type="checkbox"> Revisar aunque videoprep esté cerrado (tarea programada de Windows)</label><button>Configurar...</button></div>
+      <div class="note">Cada suscripción lleva su propio historial: no se baja dos veces lo mismo. Los videos nuevos se bajan solos a la carpeta de la suscripción. Pausa entre pedidos para no cargar a YouTube.</div>
+    </div>
+  </div>
+</div>
+<script>
+function show(n){document.getElementById('p1').className=n==1?'':'hide';document.getElementById('p2').className=n==2?'':'hide';
+document.getElementById('b1').className='sbtn'+(n==1?' on':'');document.getElementById('b2').className='sbtn'+(n==2?' on':'')}
+</script></body></html>
