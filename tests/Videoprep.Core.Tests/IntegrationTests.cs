@@ -79,7 +79,12 @@ internal static class Ffmpeg
             "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", file]), l => sb.AppendLine(l), CancellationToken.None)
             .GetAwaiter().GetResult();
         Assert.Equal(0, r.ExitCode);
-        return long.Parse(sb.ToString().Trim().TrimEnd(','), CultureInfo.InvariantCulture);
+        // stderr is mixed in (Ubuntu's ffprobe warns about Opus packets here): keep the line that is just the number.
+        var lines = sb.ToString().Split('
+', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var number = lines.Select(l => l.TrimEnd(',')).FirstOrDefault(l => l.All(char.IsAsciiDigit) && l.Length > 0);
+        Assert.True(number is not null, "ffprobe gave no frame count: " + sb);
+        return long.Parse(number!, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
