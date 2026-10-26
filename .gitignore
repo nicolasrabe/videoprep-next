@@ -1,0 +1,21 @@
+# build output
+bin/
+obj/
+dist/
+TestResults/
+*.user
+.vs/
+.idea/
+
+# local tools for verification (yt-dlp, ffmpeg, deno) - never in git
+/.tools/
+/tools/
+_tmp/
+
+# downloads and archives
+*.zip
+*.part
+*.log
+
+# never commit cookies
+cookies*.txt
