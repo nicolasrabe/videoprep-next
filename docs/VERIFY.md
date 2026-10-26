@@ -31,6 +31,7 @@ Versions: **yt-dlp 2026.10.21**, **ffmpeg/ffprobe N-128097-g46f23be8b1-20261025*
 | Audio clips (m4a, mp3, wav, flac, opus) | Length within 2 frames / 0.1 s of the plan. |
 | Engine end to end with the fake yt-dlp + real ffmpeg | Downloads once, cuts 3 exact clips, verifies each with ffprobe, deletes the full file only after the last verified clip; never deletes a pre-existing full file; never overwrites an existing output. |
 | Kill the process tree on Stop | yt-dlp and a child process it started both end (fake yt-dlp test). |
+| Real YouTube download + cut with `--demo` (run by Nico on Windows 10, 2026-10-26) | "Big Buck Bunny 60fps 4K" (aqz-KE-bpKQ, CC BY), no cookies, `--resolucion 480p`: YouTube served H.264 854x480 at **30 fps** (60 fps H.264 only from 720p). `00:00:10:00`-`00:00:12:29` gave **90 frames** (frames 300-389), confirmed by the demo's ffprobe check and in Premiere. A first try with `00:00:12:59` was correctly refused (frames must be 0-29) and the download was kept. |
 
 Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe -count_frames` on a WebM clip printed
 "Error parsing Opus packet header" and sometimes no count. The tests now count video packets without decoding. Not seen
