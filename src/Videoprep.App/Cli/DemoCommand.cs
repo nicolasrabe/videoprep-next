@@ -168,7 +168,10 @@ internal static class DemoCommand
             cts.Cancel();
         };
 
+        // To tell the truth at the end: a "__full" file that was already there is reused and never deleted.
+        var fullBefore = Directory.GetFiles(o.Folder, "*__full.*").ToHashSet(StringComparer.OrdinalIgnoreCase);
         var result = await engine.RunAsync(jobs, ctx, cts.Token);
+        var fullAfter = Directory.GetFiles(o.Folder, "*__full.*");
         if (progressShown) Say();
         Say();
 
@@ -180,7 +183,16 @@ internal static class DemoCommand
             case JobStatus.OK:
                 Say("Listo. Archivo final:");
                 Say("   " + Path.Combine(o.Folder, fileName!));
-                Say("El video completo que se descargó para cortar ya se borró (solo después de revisar el fragmento).");
+                var kept = fullAfter.FirstOrDefault(fullBefore.Contains);
+                if (kept is not null)
+                {
+                    Say("El video completo ya estaba en la carpeta de antes: se reutilizó (no se volvió a bajar) y NO se borró:");
+                    Say("   " + kept);
+                }
+                else if (fullAfter.Length == 0)
+                {
+                    Say("El video completo que se descargó para cortar ya se borró (solo después de revisar el fragmento).");
+                }
                 break;
             case JobStatus.WARN:
                 Say("Terminó, pero el archivo no tiene los códecs esperados. Archivo:");
