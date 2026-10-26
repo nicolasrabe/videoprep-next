@@ -8,6 +8,9 @@
 //   bot-unless-X  bot check unless --cookies-from-browser X (then like ok)
 //   partial       writes the file and prints its path, but exits 1
 //   slow          prints progress for 60 s (to test Stop); starts a child process too (to test killing the tree)
+//   noformat      "Requested format is not available", exit 1
+//   hang          prints nothing for 60 s (to test the preview time limit)
+// With --print "DET|..." (preview) the ok scenarios print one DET line instead of downloading.
 // Environment:
 //   FAKE_YTDLP_SOURCE  media file to copy as the "download" (else a few dummy bytes)
 //   FAKE_YTDLP_CALLS   file where each call's arguments are appended (one call per line, args separated by \u001f)
@@ -36,7 +39,8 @@ if (argv.Contains("-U"))
 
 var url = argv.LastOrDefault() ?? "";
 var parts = new Uri(url).AbsolutePath.Trim('/').Split('/');
-var scenario = parts[0];
+// FAKE_YTDLP_SCENARIO forces a scenario for real-looking links (e.g. a YouTube watch URL).
+var scenario = Environment.GetEnvironmentVariable("FAKE_YTDLP_SCENARIO") is { Length: > 0 } forced ? forced : parts[0];
 var id = parts.Length > 1 ? parts[1] : "abc";
 var browser = Opt("--cookies-from-browser");
 var cookieFile = Opt("--cookies");
@@ -48,6 +52,12 @@ if (scenario.StartsWith("bot-unless-", StringComparison.Ordinal))
 
 switch (scenario)
 {
+    case "noformat":
+        Console.Error.WriteLine($"ERROR: [youtube] {id}: Requested format is not available. Use --list-formats for a list of available formats");
+        return 1;
+    case "hang":
+        Thread.Sleep(60_000);
+        return 0;
     case "error":
         Console.Error.WriteLine($"ERROR: [fake] {id}: Unable to download webpage: HTTP Error 404: Not Found");
         return 1;
@@ -65,6 +75,12 @@ switch (scenario)
             }
         }
         return 0;
+}
+
+if (Opt("--print") is { } print && print.StartsWith("DET|", StringComparison.Ordinal))
+{
+    Console.WriteLine($"DET|4:05|1080|30|avc1.640028|mp4a.40.2|20260101|Fake uploader|https://fake.test/thumb/{id}.jpg|Fake video {id}");
+    return 0;
 }
 
 // Archive: skip what is already recorded, like yt-dlp (prints nothing, exit 0).
