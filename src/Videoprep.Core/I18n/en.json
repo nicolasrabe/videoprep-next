@@ -212,5 +212,17 @@
   "prev_timeout": "The preview took too long. Retrying without cookies.",
   "msg_vfr": "This video has a variable frame rate: cuts may not be frame-accurate.",
   "msg_error_title": "Something went wrong",
-  "msg_error": "videoprep hit an unexpected error. The details are in the Log tab.{0}{1}"
+  "msg_error": "videoprep hit an unexpected error. The details are in the Log tab.{0}{1}",
+  "sc_coming": "Preview: this tab starts working in the next test version. The table shows sample data.",
+  "dlg_color": "Pick a color",
+  "lbl_color_hex": "Color as #rrggbb (for example #d9e1ea):",
+  "msg_bad_color": "That color is not valid. Use the #rrggbb format.",
+  "prev_fail_reason": "Quality check unavailable: {0}",
+  "prev_reason_timeout": "it took too long",
+  "msg_diag_copied": "Diagnostics copied. Paste it into your report (no cookies or links with private data).",
+  "st_tools_progress": "Downloading {0}: {1}",
+  "msg_queue_loaded": "The saved queue was restored ({0} items).",
+  "tool_found": "found",
+  "tool_missing": "MISSING",
+  "prev_reason_notools": "the tools are missing (they install when you press Download)"
 }

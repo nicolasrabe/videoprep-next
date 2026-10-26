@@ -212,5 +212,17 @@
   "prev_timeout": "La vista previa tardó demasiado. Se reintentará sin cookies.",
   "msg_vfr": "Este video tiene velocidad de fotogramas variable: los cortes pueden no ser exactos al fotograma.",
   "msg_error_title": "Ocurrió un error",
-  "msg_error": "videoprep encontró un error inesperado. Los detalles quedaron en la pestaña Registro.{0}{1}"
+  "msg_error": "videoprep encontró un error inesperado. Los detalles quedaron en la pestaña Registro.{0}{1}",
+  "sc_coming": "Muestra: esta pestaña empieza a funcionar en la próxima versión de prueba. Los datos de la tabla son de ejemplo.",
+  "dlg_color": "Elegir color",
+  "lbl_color_hex": "Color en formato #rrggbb (por ejemplo #d9e1ea):",
+  "msg_bad_color": "Ese color no es válido. Usá el formato #rrggbb.",
+  "prev_fail_reason": "No se pudo revisar la calidad: {0}",
+  "prev_reason_timeout": "tardó demasiado",
+  "msg_diag_copied": "Se copió el diagnóstico. Pegalo en tu reporte (no incluye cookies ni enlaces con datos privados).",
+  "st_tools_progress": "Descargando {0}: {1}",
+  "msg_queue_loaded": "Se recuperó la cola guardada ({0} elementos).",
+  "tool_found": "encontrado",
+  "tool_missing": "FALTA",
+  "prev_reason_notools": "faltan las herramientas (se instalan solas al apretar Descargar)"
 }
