@@ -65,6 +65,14 @@ then delete), H4 (log + crash file for unhandled errors; friendly message box co
 browser cookies**), M6, M12 (`VideoGroup`), L6 (kill the process tree), X3 (preferred browser reported by the engine),
 X4 (fps guess noted in the log), X6. Tool download/update (`ToolManager`) tested with a fake web server only.
 
+## Status after Phase 4 (2026-10-26)
+Also done, with view-model tests and screenshots of every tab in every theme and both languages: H4 (friendly message for UI
+errors), H6 queue in the UI (restored on start), M7 (resizable, min 900x640, checked at the minimum size), M11 (preview
+states, retry without cookies, time limit, reason shown), L7 (Delete key; paste and Enter in the link box), X2, X3 (saved),
+X5. Spanish texts: "MISSING"/"found" in the tools box and "yt-dlp is not installed" in the preview were English in 0.1.1
+and are now translated (the log stays English). Not done: Windows title bar stays light in dark themes (Avalonia sets the
+window content only); F5 shortcut (no clear use yet).
+
 ## Things that are good and must be preserved
 Timer/queue-driven non-blocking design (no UI freeze), the cookie fallback chain with "remember the source that worked",
 frame-accurate timecode math incl. drop-frame and negative-from-end starts, never overwriting existing files (`Get-UniquePath`),

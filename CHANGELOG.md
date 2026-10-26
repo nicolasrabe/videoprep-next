@@ -15,6 +15,12 @@ Versions below 1.0.0 are early releases: things can change between them.
   Stop also closes any program yt-dlp started. Tools are downloaded to `%LOCALAPPDATA%ideoprep	ools`. The queue is
   saved to `queue.json`. Unexpected errors are written to a log with all details.
 - New developer command `--demo` to watch the engine work from the terminal (docs/DEMO.md).
+- Phase 4: the screens. Download, Queue, Settings and Log tabs with everything from 0.1.1, plus a preview of the new
+  Scraping tab (sample data, it starts working in the next phase). The window can be resized (minimum 900x640).
+  Six themes (also for check boxes and option buttons), Spanish and English that switch at once, drag and drop of links
+  and .txt files, Delete key in the queue, "Copy diagnostics" in the Log tab, and a friendly message if something
+  unexpected happens. The preview always ends in a clear state (title, "no H.264", or why it failed) instead of
+  staying on "Loading". The queue is kept when videoprep closes. Settings from 0.1.1 are read as they are.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.
