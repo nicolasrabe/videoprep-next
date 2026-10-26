@@ -1,0 +1,39 @@
+name: Release
+
+# Push a tag like v0.2.0 to build the release zips and create a GitHub pre-release (0.x is always pre-release).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet test videoprep.slnx -c Release --filter "Category!=Integration"
+      - name: Publish and zip
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VER="${TAG#v}"
+          for RID in win-x64 osx-arm64; do
+            dotnet publish src/Videoprep.App -c Release -r "$RID" -o "dist/$RID" -p:VersionPrefix="$VER" -p:VersionSuffix=
+            (cd "dist/$RID" && zip -9 "../videoprep-$TAG-$RID.zip" *)
+          done
+          cd dist
+          sha256sum videoprep-*.zip | tee SHA256SUMS.txt
+      - name: Create pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/videoprep-*.zip dist/SHA256SUMS.txt \
+            --prerelease --title "videoprep ${GITHUB_REF_NAME#v}" \
+            --notes "See CHANGELOG.md. SHA-256 of each zip is in SHA256SUMS.txt."

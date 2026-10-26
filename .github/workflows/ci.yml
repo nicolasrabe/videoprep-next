@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build + test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet build videoprep.slnx -c Release
+      # Integration tests (real ffmpeg/yt-dlp) are opt-in and run in their own job from phase 3.
+      - run: dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration" --logger "trx" --results-directory TestResults
+      - name: Upload test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-${{ matrix.os }}
+          path: |
+            TestResults/
+            tests/*/bin/Release/net10.0/screenshots/
+          if-no-files-found: ignore
+
+  publish:
+    name: publish ${{ matrix.rid }}
+    needs: build-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rid: [win-x64, osx-arm64]
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet publish src/Videoprep.App -c Release -r ${{ matrix.rid }} -o dist/${{ matrix.rid }}
+      - name: Zip and SHA-256
+        run: |
+          cd dist/${{ matrix.rid }}
+          zip -9 ../videoprep-ci-${{ matrix.rid }}.zip *
+          cd ..
+          sha256sum videoprep-ci-${{ matrix.rid }}.zip | tee videoprep-ci-${{ matrix.rid }}.zip.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: videoprep-${{ matrix.rid }}
+          path: |
+            dist/videoprep-ci-${{ matrix.rid }}.zip
+            dist/videoprep-ci-${{ matrix.rid }}.zip.sha256
