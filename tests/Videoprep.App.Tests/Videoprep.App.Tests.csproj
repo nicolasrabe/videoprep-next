@@ -14,5 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Videoprep.App\Videoprep.App.csproj" />
+    <ProjectReference Include="..\FakeYtDlp\FakeYtDlp.csproj" />
   </ItemGroup>
 </Project>

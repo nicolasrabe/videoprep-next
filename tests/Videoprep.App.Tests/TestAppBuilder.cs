@@ -3,6 +3,8 @@ using Avalonia.Headless;
 using Videoprep.App.Tests;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
+// The UI texts (Loc.Instance) and the theme are app-wide: these tests run one at a time.
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace Videoprep.App.Tests;
 
