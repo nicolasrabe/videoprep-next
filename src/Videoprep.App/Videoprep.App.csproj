@@ -5,6 +5,8 @@
     <AssemblyName>videoprep</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Needed by [LibraryImport]: Windows console attach for the demo and check modes. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <!-- Release exe: one self-contained, compressed file. Only applies when a runtime is chosen (-r win-x64, osx-arm64...). -->
