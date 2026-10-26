@@ -17,6 +17,9 @@ public sealed record DownloadOptions
     public int LimitMBps { get; init; }
     /// <summary>Seconds between requests (0-30).</summary>
     public int SleepRequests { get; init; } = 1;
+    /// <summary>Random pause before each download, from SleepInterval to MaxSleepInterval seconds (0 = none; subscriptions).</summary>
+    public int SleepInterval { get; init; }
+    public int MaxSleepInterval { get; init; }
 }
 
 /// <summary>Absolute paths of the external tools (null = missing).</summary>

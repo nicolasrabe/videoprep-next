@@ -85,6 +85,12 @@ public static class YtDlpArgs
         if (opt.Thumbnail) a.AddRange(["--write-thumbnail", "--convert-thumbnails", "jpg"]);
         else a.Add("--no-write-thumbnail");
 
+        if (opt.SleepInterval > 0)
+        {
+            a.AddRange(["--sleep-interval", opt.SleepInterval.ToString(CultureInfo.InvariantCulture)]);
+            if (opt.MaxSleepInterval > opt.SleepInterval)
+                a.AddRange(["--max-sleep-interval", opt.MaxSleepInterval.ToString(CultureInfo.InvariantCulture)]);
+        }
         if (opt.LimitMBps > 0) a.AddRange(["--limit-rate", opt.LimitMBps.ToString(CultureInfo.InvariantCulture) + "M"]);
         if (archiveFile is not null && (opt.SkipDownloaded || forceArchive)) a.AddRange(["--download-archive", archiveFile]);
 

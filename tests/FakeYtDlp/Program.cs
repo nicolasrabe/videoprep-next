@@ -38,7 +38,7 @@ if (argv.Contains("-U"))
 }
 
 // Listings (Scraping). FAKE_YTDLP_LISTING = folder with <last URL segment>.jsonl files (e.g. videos.jsonl, shorts.jsonl,
-// list-<id>.jsonl for playlists). A missing file answers like a channel without that tab. Respects -I 1:N.
+// list-<id>.jsonl for playlists). A missing file answers like a channel without that tab; ".../gone" is a broken link. Respects -I 1:N.
 // FAKE_YTDLP_SCENARIO=bot answers with the bot check instead.
 if (argv.Contains("--flat-playlist") && Environment.GetEnvironmentVariable("FAKE_YTDLP_LISTING") is { Length: > 0 } listingDir)
 {
@@ -51,6 +51,11 @@ if (argv.Contains("--flat-playlist") && Environment.GetEnvironmentVariable("FAKE
     var u = new Uri(listUrl);
     var listId = System.Web.HttpUtility.ParseQueryString(u.Query)["list"];
     var tabName = listId is not null ? "list-" + listId : u.AbsolutePath.TrimEnd('/').Split('/').Last();
+    if (tabName == "gone")
+    {
+        Console.Error.WriteLine("ERROR: [generic] Unable to download webpage: HTTP Error 404: Not Found");
+        return 1;
+    }
     var file = Path.Combine(listingDir, tabName + ".jsonl");
     if (!File.Exists(file))
     {
@@ -82,7 +87,10 @@ var url = argv.LastOrDefault() ?? "";
 var parts = new Uri(url).AbsolutePath.Trim('/').Split('/');
 // FAKE_YTDLP_SCENARIO forces a scenario for real-looking links (e.g. a YouTube watch URL).
 var scenario = Environment.GetEnvironmentVariable("FAKE_YTDLP_SCENARIO") is { Length: > 0 } forced ? forced : parts[0];
-var id = parts.Length > 1 ? parts[1] : "abc";
+var linkUri = new Uri(url);
+// YouTube watch links: the id is v=..., and the archive line says "youtube <id>" like the real yt-dlp.
+var id = System.Web.HttpUtility.ParseQueryString(linkUri.Query)["v"] ?? (parts.Length > 1 ? parts[1] : "abc");
+var extractor = linkUri.Host.Contains("youtube", StringComparison.OrdinalIgnoreCase) ? "youtube" : "fake";
 var browser = Opt("--cookies-from-browser");
 var cookieFile = Opt("--cookies");
 
@@ -126,7 +134,7 @@ if (Opt("--print") is { } print && print.StartsWith("DET|", StringComparison.Ord
 
 // Archive: skip what is already recorded, like yt-dlp (prints nothing, exit 0).
 var archive = Opt("--download-archive");
-if (archive is not null && File.Exists(archive) && File.ReadAllLines(archive).Contains($"fake {id}"))
+if (archive is not null && File.Exists(archive) && File.ReadAllLines(archive).Contains($"{extractor} {id}"))
 {
     Console.WriteLine($"[download] {id}: has already been recorded in the archive");
     return 0;
@@ -154,7 +162,7 @@ else
 // --cookies FILE together with a browser: yt-dlp saves the jar there.
 if (cookieFile is not null && browser is not null)
     File.WriteAllText(cookieFile, "# Netscape HTTP Cookie File\n.fake.test\tTRUE\t/\tTRUE\t0\tSID\tfake\n");
-if (archive is not null) File.AppendAllText(archive, $"fake {id}\n");
+if (archive is not null) File.AppendAllText(archive, $"{extractor} {id}\n");
 
 Console.WriteLine(target);   // --print after_move:filepath
 return scenario switch
