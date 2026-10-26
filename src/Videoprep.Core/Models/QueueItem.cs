@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Videoprep.Core.Formats;
 using Videoprep.Core.Text;
 
@@ -18,10 +19,10 @@ public sealed record QueueItem
 {
     public int Id { get; init; }
     public required string Url { get; init; }
-    public string VideoKey => UrlParser.LinkKey(Url);
-    public Site Site => UrlParser.IsYoutubeKey(VideoKey) ? Site.Youtube : Site.Other;
+    [JsonIgnore] public string VideoKey => UrlParser.LinkKey(Url);
+    [JsonIgnore] public Site Site => UrlParser.IsYoutubeKey(VideoKey) ? Site.Youtube : Site.Other;
     public string Format { get; init; } = "mp4";
-    public MediaKind Kind => FormatCatalog.Get(Format).Kind;
+    [JsonIgnore] public MediaKind Kind => FormatCatalog.Get(Format).Kind;
     public int Cap { get; init; } = FormatCatalog.DefaultCap;
     public NamingMode Naming { get; init; } = NamingMode.Original;
     public string Custom { get; init; } = "";

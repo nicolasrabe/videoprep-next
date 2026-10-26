@@ -23,6 +23,9 @@ public sealed class AppPaths(string roamingRoot, string localRoot)
     public string ToolsDir => Path.Combine(Local, "tools");
     public string LogsDir => Path.Combine(Local, "logs");
     public string CacheDir => Path.Combine(Local, "cache");
+    public string RunLockFile => Path.Combine(Local, "run.lock");
+    /// <summary>Session copy of the browser cookies (AUDIT M5); deleted when videoprep closes.</summary>
+    public string SessionCookieFile => Path.Combine(Local, "session-cookies.txt");
 
     /// <summary>
     /// One-time copy of the pre-0.0.3 folder (%APPDATA%\VideoDownloader), as the legacy script did.
