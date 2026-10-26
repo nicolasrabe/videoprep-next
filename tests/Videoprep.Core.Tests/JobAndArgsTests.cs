@@ -82,7 +82,12 @@ public class JobPlannerTests
 
 public class YtDlpArgsTests
 {
-    private static readonly ToolPaths Tools = new(@"C:\t\yt-dlp.exe", @"C:\t\ffmpeg.exe", @"C:\t\ffprobe.exe", @"C:\t\deno.exe");
+    // Tool paths are always native to the OS running videoprep, so the tests build them the same way
+    // (a "C:\t\ffmpeg.exe" string has no folder part on macOS/Linux).
+    private static readonly string ToolDir = Path.Combine(Path.GetTempPath(), "t");
+    private static readonly string Deno = Path.Combine(ToolDir, "deno.exe");
+    private static readonly ToolPaths Tools = new(Path.Combine(ToolDir, "yt-dlp.exe"), Path.Combine(ToolDir, "ffmpeg.exe"),
+                                                  Path.Combine(ToolDir, "ffprobe.exe"), Deno);
 
     private static Job J(string fmt, Site site = Site.Youtube, int cap = 1080, string? label = null) => new()
     {
@@ -119,7 +124,7 @@ public class YtDlpArgsTests
             "-f", YtDlpArgs.StrictH264 + "/bv*+ba/b", "-S", "res:1080,fps", "--merge-output-format", "mp4/mkv",
             "--no-write-subs", "--no-write-auto-subs", "--no-write-thumbnail",
             "-P", @"D:\Videos", "-o", "%(title,id).100s.%(ext)s",
-            "--ffmpeg-location", @"C:\t", "--js-runtimes", @"deno:C:\t\deno.exe",
+            "--ffmpeg-location", ToolDir, "--js-runtimes", "deno:" + Deno,
             "--progress-template", YtDlpArgs.ProgressTemplate, "--print", "after_move:filepath",
             "--cookies-from-browser", "firefox",
             "https://www.youtube.com/watch?v=jNQXAC9IVRw",
@@ -174,7 +179,7 @@ public class YtDlpArgsTests
         Assert.Equal("bv*+ba/b", Sel(YtDlpArgs.Preview(u, true, "mp4", 1080, Tools, CookieSource.NoCookies)));
         var p = YtDlpArgs.Preview(u, false, "mp4", 720, Tools, CookieSource.NoCookies);
         Assert.Equal(["--ignore-config", "--no-playlist", "--no-warnings", "-f", YtDlpArgs.StrictH264, "-S", "res:720,fps",
-                      "--print", YtDlpArgs.DetailTemplate, "--js-runtimes", @"deno:C:\t\deno.exe", u], p);
+                      "--print", YtDlpArgs.DetailTemplate, "--js-runtimes", "deno:" + Deno, u], p);
     }
 }
 
