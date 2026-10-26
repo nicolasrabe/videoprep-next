@@ -3,4 +3,7 @@
   <PropertyGroup>
     <RootNamespace>Videoprep.Core</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="I18n\*.json" LogicalName="Videoprep.Core.I18n.%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>
