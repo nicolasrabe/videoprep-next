@@ -5,6 +5,11 @@ Versions below 1.0.0 are early releases: things can change between them.
 ## 0.2.0 (in progress)
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).
 - Phase 1: project skeleton, automatic build and tests on Windows, macOS and Linux (GitHub Actions), test window showing the version.
+- Phase 2: the rules of 0.1.1 moved to tested C# code: timecode and frame math (drop-frame included), clip planning,
+  link recognition, file names, series numbering, yt-dlp/ffmpeg commands, ffprobe reading, settings, Spanish/English texts.
+- Fixes in this logic: an 11-character word is no longer taken for a YouTube ID unless it is alone on its line; safer
+  file names (reserved Windows names, trailing dots); audio preview no longer asks for H.264 video; variable frame rate
+  is detected; clips seek faster on long videos.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.

@@ -47,6 +47,8 @@ Windows; findings come from reading the code. Severity: **H** = can lose data or
 | X3 | The cookie source that worked (`$Pref.Browser`) lives only in memory; it is lost on restart. | Persist it in settings. |
 | X4 | Audio clips use the fps from the preview; if the preview did not finish, 30 fps is assumed silently (frames 30-59 rejected for 60 fps sources). | Log the fps used; if unknown, say so in the clip error/note. |
 | X5 | Name example shows `Title - 1, Title - 2` even when there are no clips (cosmetic). | Example depends on the clip count. |
+| X6 | Found while verifying (docs/VERIFY.md): when the `__full` file already exists, yt-dlp reuses it and still prints its path, so the legacy cleanup could delete a file the user already had. | Engine records whether the file existed before the job and never deletes a pre-existing file. |
+| X7 | `tip_tc` (es) said "drop frame", an anglicism. | Spanish text now says only "descarte de fotogramas". Checked by a test that scans the Spanish texts. |
 
 ## Phase 0 decisions (approved 2026-10-25)
 - Tools live in `%LOCALAPPDATA%\videoprep\tools` (also looked up beside the exe and in PATH). Logs and caches in `%LOCALAPPDATA%\videoprep`.
