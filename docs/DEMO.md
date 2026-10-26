@@ -27,6 +27,7 @@ Opciones:
 |---|---|---|
 | `--carpeta <carpeta>` | Dónde guardar el resultado | `Videos\videoprep-demo` |
 | `--formato <formato>` | `mp4`, `movh`, `movp`, `webm`, `mkv`, `m4a`, `mp3`, `wav`, `flac`, `opus` | `mp4` |
+| `--resolucion <res>` | Resolución máxima a descargar: `480p`, `720p`, `1080p` (y `1440p`, `4K` para ProRes/WebM/MKV) | `1080p` |
 | `--herramientas <carpeta>` | Carpeta donde están yt-dlp, ffmpeg, ffprobe y deno | `%LOCALAPPDATA%\videoprep\tools`, la carpeta del programa y el PATH |
 | `--descargar-herramientas` | Si faltan, las descarga (unos 200 MB, una sola vez) a la carpeta de herramientas | No descarga nada y explica qué falta |
 
@@ -35,6 +36,12 @@ Para usar las herramientas que ya están en el proyecto (`.tools/`):
 ```
 dotnet run --project src/Videoprep.App -- --demo "<enlace>" 00:00:05:00 00:00:07:29 --herramientas .tools
 ```
+
+## Video de prueba sugerido
+
+"Big Buck Bunny 60fps 4K" de Blender Foundation, `https://www.youtube.com/watch?v=aqz-KE-bpKQ` (10:35). YouTube
+lo marca como "Creative Commons Attribution license (reuse allowed)" (dato leído con yt-dlp el 2026-10-26). La
+demostración baja el video entero antes de cortar: con `--resolucion 480p` pesa mucho menos.
 
 ## Qué se ve
 

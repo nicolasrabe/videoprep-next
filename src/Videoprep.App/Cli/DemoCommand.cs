@@ -12,13 +12,13 @@ namespace Videoprep.App.Cli;
 
 /// <summary>
 /// Developer command to watch the engine work without the new screens (docs/DEMO.md):
-/// <c>videoprep --demo "&lt;link&gt;" &lt;start&gt; &lt;end&gt; [--carpeta DIR] [--formato mp4] [--herramientas DIR] [--descargar-herramientas]</c>.
+/// <c>videoprep --demo "&lt;link&gt;" &lt;start&gt; &lt;end&gt; [--carpeta DIR] [--formato mp4] [--resolucion 1080p] [--herramientas DIR] [--descargar-herramientas]</c>.
 /// Downloads one video WITHOUT cookies, cuts one clip, checks it and prints every step in plain Spanish.
 /// It never changes settings.json. Exit code: 0 ok, 1 something failed, 2 wrong use or missing tools.
 /// </summary>
 internal static class DemoCommand
 {
-    private sealed record Options(string Url, string Start, string End, string Folder, string Format, string? ToolsDir, bool InstallTools);
+    private sealed record Options(string Url, string Start, string End, string Folder, string Format, int Cap, string? ToolsDir, bool InstallTools);
 
     private static void Say(string text = "") => Console.WriteLine(text);
 
@@ -49,6 +49,11 @@ internal static class DemoCommand
         if (url is null)
         {
             Say($"\"{o.Url}\" no parece un enlace de video.");
+            return 2;
+        }
+        if (o.Cap <= 0)
+        {
+            Say($"Resolución desconocida. Opciones: {string.Join(", ", FormatCatalog.Resolutions.Keys)}.");
             return 2;
         }
         if (!FormatCatalog.IsKnown(o.Format))
@@ -103,11 +108,11 @@ internal static class DemoCommand
         Say("Paso 2 de 5 - Preparo el pedido");
         Say($"   Enlace:  {url}");
         Say($"   Fragmento: desde {(start.Blank ? "el principio" : o.Start)} hasta {(end.Blank ? "el final" : o.End)} (el fotograma final se incluye)");
-        Say($"   Formato: {fmt.Label}");
+        Say($"   Formato: {fmt.Label}, hasta {FormatCatalog.ResolutionLabel(o.Cap)}");
         Say($"   Carpeta: {o.Folder}");
         Say();
 
-        var item = new QueueItem { Id = 1, Url = url, Format = fmt.Key, Clips = [new ClipRange(o.Start, o.End)] };
+        var item = new QueueItem { Id = 1, Url = url, Format = fmt.Key, Cap = o.Cap, Clips = [new ClipRange(o.Start, o.End)] };
         var jobs = JobPlanner.Build([item], new Dictionary<string, int>());
         var ctx = new EngineContext
         {
@@ -205,6 +210,7 @@ internal static class DemoCommand
         string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "videoprep-demo");
         string format = "mp4";
         string? tools = null;
+        var cap = FormatCatalog.DefaultCap;
         var install = false;
         for (var i = 0; i < args.Length; i++)
         {
@@ -213,6 +219,9 @@ internal static class DemoCommand
                 case "--carpeta" when i + 1 < args.Length: folder = Path.GetFullPath(args[++i]); break;
                 case "--formato" when i + 1 < args.Length: format = args[++i].ToLowerInvariant(); break;
                 case "--herramientas" when i + 1 < args.Length: tools = args[++i]; break;
+                case "--resolucion" when i + 1 < args.Length:
+                    cap = FormatCatalog.Resolutions.TryGetValue(args[++i], out var c) ? c : 0;
+                    break;
                 case "--descargar-herramientas": install = true; break;
                 default:
                     if (args[i].StartsWith("--", StringComparison.Ordinal)) return null;
@@ -221,13 +230,13 @@ internal static class DemoCommand
             }
         }
         if (positional.Count is < 2 or > 3) return null;
-        return new Options(positional[0], positional[1], positional.Count == 3 ? positional[2] : "", folder, format, tools, install);
+        return new Options(positional[0], positional[1], positional.Count == 3 ? positional[2] : "", folder, format, cap, tools, install);
     }
 
     private static void PrintUsage()
     {
         Say("Uso:");
-        Say("  videoprep --demo \"<enlace>\" <inicio> [<fin>] [--carpeta <carpeta>] [--formato mp4] [--herramientas <carpeta>] [--descargar-herramientas]");
+        Say("  videoprep --demo \"<enlace>\" <inicio> [<fin>] [--carpeta <carpeta>] [--formato mp4] [--resolucion 480p] [--herramientas <carpeta>] [--descargar-herramientas]");
         Say();
         Say("Ejemplo:");
         Say("  videoprep --demo \"https://www.youtube.com/watch?v=XXXXXXXXXXX\" 00:00:05:00 00:00:07:29");
