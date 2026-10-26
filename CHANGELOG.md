@@ -29,7 +29,15 @@ Versions below 1.0.0 are early releases: things can change between them.
   stops the search with a clear message. Searches use no cookies unless one browser or a cookie file is chosen in Settings.
   Instagram, X and TikTok profiles cannot be listed today (yt-dlp does not support it); Explore says so and explains
   what to do instead. Twitch, Kick and Vimeo profiles work. Every table's columns can now be widened by dragging the
-  header border. Subscriptions come in the second part.
+  header border.
+- Phase 5 (second part): Scraping > Subscriptions works. Add a channel or link (or "Subscribe to this..." from Explore)
+  with the same filters, format, folder and naming; the first time it either takes only what comes later (default) or
+  also downloads what already matches the filters. "Check now" / "Check all", check when videoprep opens and every N
+  hours while open. Each subscription has its own history, so nothing is downloaded twice. Gentle with the sites
+  (newest 100 per tab, pauses between subscriptions and between downloads, at most 25 new videos per check) and it stops
+  at a bot check. New `videoprep --check` runs the check without the window (log in `logs\check-YYYYMMDD.log`, exit
+  codes 0 ok / 1 something failed / 2 blocked / 3 busy) and "Set up..." creates a Windows scheduled task for it after
+  showing the exact command. The window and the check never run at the same time.
 
 ## 0.1.1
 - Links from other sites: Twitch (clips and videos), Kick, X/Twitter, Facebook, Instagram, TikTok, Vimeo and any other site supported by yt-dlp.

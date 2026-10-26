@@ -57,3 +57,9 @@ Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe
 with the Windows build videoprep downloads; to look at again if a user reports broken Opus audio in WebM clips.
 
 Still to verify later: Chrome/Edge/Firefox cookie reading on Nico's PC (with permission), 429 / "not a bot" messages (only seen when they happen).
+
+VERIFY (subscriptions, not run yet): creating the Windows scheduled task for real
+(`schtasks /Create /TN videoprep-check /TR "\"<exe>\" --check" /SC HOURLY /MO 6 /IT /F`, built with ArgumentList; flags read
+from `schtasks /Create /?` on Windows 10 2026-10-26: HOURLY accepts /MO 1-23, so 24 h uses DAILY /MO 1) and that the task
+really starts `videoprep.exe --check`. Needs Nico's permission because it creates a task on his PC. Also to see once on a
+real channel: a full check that downloads (only the fake yt-dlp was used so far).

@@ -4,6 +4,15 @@
              xmlns:s="using:Videoprep.App.Services"
              x:Class="Videoprep.App.Views.ScrapingView"
              x:DataType="vm:ScrapingViewModel">
+  <UserControl.Styles>
+    <!-- Suscripciones: the name in red when the last check failed (tooltip says why), dimmed when switched off. -->
+    <Style Selector="TextBlock.err">
+      <Setter Property="Foreground" Value="Red" />
+    </Style>
+    <Style Selector="TextBlock.off">
+      <Setter Property="Opacity" Value="0.5" />
+    </Style>
+  </UserControl.Styles>
   <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="4,10,4,4">
     <StackPanel Orientation="Horizontal" Spacing="6">
       <ToggleButton x:Name="ExploreButton" Content="{s:T sc_explore}" IsChecked="{Binding ShowExplore, Mode=OneWay}" />
@@ -35,31 +44,31 @@
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="8" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_from}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.FromText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.FromBad}" />
+            <TextBox Text="{Binding Explore.Filter.FromText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.FromBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_to}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.ToText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.ToBad}" />
+            <TextBox Text="{Binding Explore.Filter.ToText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.ToBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_dur_min}" VerticalAlignment="Center" Margin="10,0,0,0" />
-            <TextBox Text="{Binding Explore.MinText}" Width="80" PlaceholderText="M:SS" Classes.bad="{Binding Explore.MinBad}" />
+            <TextBox Text="{Binding Explore.Filter.MinText}" Width="80" PlaceholderText="M:SS" Classes.bad="{Binding Explore.Filter.MinBad}" />
             <TextBlock Classes="muted" Text="{s:T sc_dur_max}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.MaxText}" Width="80" PlaceholderText="H:MM:SS" Classes.bad="{Binding Explore.MaxBad}" />
+            <TextBox Text="{Binding Explore.Filter.MaxText}" Width="80" PlaceholderText="H:MM:SS" Classes.bad="{Binding Explore.Filter.MaxBad}" />
           </WrapPanel>
           <WrapPanel ItemSpacing="8" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_incl}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.IncludeText}" Width="170" />
+            <TextBox Text="{Binding Explore.Filter.IncludeText}" Width="170" />
             <TextBlock Classes="muted" Text="{s:T sc_excl}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.ExcludeText}" Width="170" />
+            <TextBox Text="{Binding Explore.Filter.ExcludeText}" Width="170" />
             <TextBlock Classes="muted" Text="{s:T sc_max}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.MaxCountText}" Width="70" Classes.bad="{Binding Explore.MaxCountBad}" />
+            <TextBox Text="{Binding Explore.Filter.MaxCountText}" Width="70" Classes.bad="{Binding Explore.Filter.MaxCountBad}" />
           </WrapPanel>
           <WrapPanel ItemSpacing="10" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_order}" VerticalAlignment="Center" />
-            <ComboBox SelectedIndex="{Binding Explore.OrderIndex}" MinWidth="170">
+            <ComboBox SelectedIndex="{Binding Explore.Filter.OrderIndex}" MinWidth="170">
               <ComboBoxItem Content="{s:T sc_order_new}" />
               <ComboBoxItem Content="{s:T sc_order_old}" />
             </ComboBox>
-            <CheckBox Content="{s:T sc_skip_live}" IsChecked="{Binding Explore.SkipLive}" />
-            <CheckBox Content="{s:T sc_skip_members}" IsChecked="{Binding Explore.SkipMembers}" />
-            <CheckBox Content="{s:T sc_skip_done}" IsChecked="{Binding Explore.SkipDone}" />
+            <CheckBox Content="{s:T sc_skip_live}" IsChecked="{Binding Explore.Filter.SkipLive}" />
+            <CheckBox Content="{s:T sc_skip_members}" IsChecked="{Binding Explore.Filter.SkipMembers}" />
+            <CheckBox Content="{s:T sc_skip_done}" IsChecked="{Binding Explore.Filter.SkipDone}" />
             <Button Content="{s:T sc_apply}" Command="{Binding Explore.ApplyFiltersCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </WrapPanel>
         </StackPanel>
@@ -101,54 +110,70 @@
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="8">
             <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
-            <ComboBox ItemsSource="{Binding Explore.FormatChoices}" SelectedItem="{Binding Explore.SelectedFormat}" MinWidth="200" />
-            <ComboBox ItemsSource="{Binding Explore.ResolutionChoices}" SelectedItem="{Binding Explore.SelectedResolution}" MinWidth="90" />
+            <ComboBox ItemsSource="{Binding Explore.Format.FormatChoices}" SelectedItem="{Binding Explore.Format.SelectedFormat}" MinWidth="200" />
+            <ComboBox ItemsSource="{Binding Explore.Format.ResolutionChoices}" SelectedItem="{Binding Explore.Format.SelectedResolution}" MinWidth="90" />
             <Button Classes="o" Content="{s:T sc_to_queue}" Command="{Binding Explore.SendToQueueCommand}" IsEnabled="{Binding Explore.IsIdle}" />
-            <Button Classes="g" Content="{s:T sc_subscribe}" IsEnabled="False" ToolTip.Tip="{s:T sc_subs_later}" />
+            <Button Classes="g" Content="{s:T sc_subscribe}" Command="{Binding SubscribeFromExploreCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </StackPanel>
         </WrapPanel>
       </Border>
     </Grid>
 
-    <!-- Suscripciones: still the approved mockup until tanda B -->
-    <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
-      <Border Classes="note">
-        <TextBlock Text="{s:T sc_subs_later}" TextWrapping="Wrap" />
-      </Border>
-      <DataGrid Grid.Row="1" ItemsSource="{Binding Sample.Subscriptions}" IsReadOnly="True" HeadersVisibility="Column" CanUserSortColumns="False">
+    <!-- Suscripciones (SCRAPING_SPEC 2) -->
+    <Grid Grid.Row="1" RowDefinitions="*,Auto,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
+      <DataGrid ItemsSource="{Binding Subscriptions.Rows}" SelectedItem="{Binding Subscriptions.Selected}" SelectionMode="Single"
+                HeadersVisibility="Column" CanUserSortColumns="False" CanUserReorderColumns="False" IsEnabled="{Binding Subscriptions.IsIdle}">
         <DataGrid.Columns>
-          <DataGridCheckBoxColumn Header="{s:T sc_col_on}" Binding="{Binding Enabled}" Width="60" />
-          <DataGridTextColumn Header="{s:T sc_col_channel}" Binding="{Binding Channel}" Width="*" />
-          <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="140" />
-          <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding Filters}" Width="*" />
-          <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding Format}" Width="100" />
-          <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding Last}" Width="100" />
-          <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding New}" Width="70" />
+          <DataGridTemplateColumn Header="{s:T sc_col_on}" Width="80">
+            <DataTemplate x:DataType="vm:SubscriptionRow">
+              <CheckBox IsChecked="{Binding Enabled}" HorizontalAlignment="Center" />
+            </DataTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="{s:T sc_col_channel}" Width="*">
+            <DataTemplate x:DataType="vm:SubscriptionRow">
+              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="10,0" TextTrimming="CharacterEllipsis"
+                         Classes.err="{Binding HasError}" Classes.off="{Binding !Enabled}"
+                         ToolTip.Tip="{Binding Error}" />
+            </DataTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="170" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding FiltersText}" Width="*" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding FormatText}" Width="120" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding LastText}" Width="110" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding NewText}" Width="90" IsReadOnly="True" />
         </DataGrid.Columns>
       </DataGrid>
+      <TextBlock Grid.Row="1" Classes="muted" Text="{Binding Subscriptions.StatusLine}" TextWrapping="Wrap"
+                 IsVisible="{Binding Subscriptions.StatusLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
       <Border Grid.Row="2" Classes="card">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Classes="o" Content="{s:T sc_add}" IsEnabled="False" />
-            <Button Content="{s:T sc_edit}" IsEnabled="False" />
-            <Button Classes="r" Content="{s:T sc_remove}" IsEnabled="False" />
+            <Button Classes="o" Content="{s:T sc_add}" Command="{Binding Subscriptions.AddCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
+            <Button Content="{s:T sc_edit}" Command="{Binding Subscriptions.EditCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="r" Content="{s:T sc_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
           </StackPanel>
-          <Button Grid.Column="2" Classes="g" Content="{s:T sc_check_now}" IsEnabled="False" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+            <Button Content="{s:T sc_check_now}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="g" Content="{s:T sc_check_all}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="r" Content="{s:T sc_stop_check}" Command="{Binding Subscriptions.StopCheckCommand}" IsVisible="{Binding Subscriptions.IsChecking}" />
+          </StackPanel>
         </Grid>
       </Border>
       <Border Grid.Row="3" Classes="card">
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="10" LineSpacing="6">
-            <CheckBox Content="{s:T sc_check_start}" IsChecked="True" IsEnabled="False" />
-            <CheckBox IsEnabled="False">
-              <TextBlock Text="{Binding Sample.CheckEveryText}" />
-            </CheckBox>
+            <CheckBox Content="{s:T sc_check_start}" IsChecked="{Binding Subscriptions.CheckOnStart}" />
+            <CheckBox Content="{s:T sc_every_pre}" IsChecked="{Binding Subscriptions.CheckEvery}" />
+            <NumericUpDown Value="{Binding Subscriptions.EveryHours}" Minimum="1" Maximum="24" Increment="1" FormatString="0" Width="110" />
+            <TextBlock Text="{s:T sc_every_post}" VerticalAlignment="Center" />
           </WrapPanel>
           <WrapPanel ItemSpacing="10" LineSpacing="6">
-            <CheckBox Content="{s:T sc_task}" IsEnabled="False" />
-            <Button Content="{s:T sc_task_config}" IsEnabled="False" />
+            <CheckBox Content="{s:T sc_task}" IsChecked="{Binding Subscriptions.TaskInstalled, Mode=OneWay}" IsHitTestVisible="False" Focusable="False" />
+            <Button Content="{s:T sc_task_config}" Command="{Binding Subscriptions.ConfigureTaskCommand}" />
+            <Button Content="{s:T sc_task_remove}" Command="{Binding Subscriptions.RemoveTaskCommand}" IsVisible="{Binding Subscriptions.TaskInstalled}" />
           </WrapPanel>
           <TextBlock Classes="muted" Text="{s:T sc_subs_note}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{s:T sc_warn_account}" TextWrapping="Wrap" />
         </StackPanel>
       </Border>
     </Grid>

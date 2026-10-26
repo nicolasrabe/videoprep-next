@@ -64,6 +64,13 @@ public static partial class CookieStrategy
         }
     }
 
+    /// <summary>
+    /// Cookies for listings (Scraping): none unless the user chose one browser or a cookie file. Public channels do not
+    /// need them, and many requests with a logged-in account can put it at risk (SCRAPING_SPEC 2).
+    /// </summary>
+    public static CookieSource ForListing(Settings settings, IReadOnlyList<string> installedBrowsers) =>
+        settings.CookieSource is "auto" or "none" ? CookieSource.NoCookies : Chain(settings, installedBrowsers)[0];
+
     /// <summary>Moves the browser that worked to the front (port of the "remember the source" step).</summary>
     public static IReadOnlyList<CookieSource> PreferFirst(IReadOnlyList<CookieSource> chain, string? browserKey)
     {

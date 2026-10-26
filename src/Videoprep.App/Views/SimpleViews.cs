@@ -24,3 +24,8 @@ public partial class OptionsView : UserControl
 {
     public OptionsView() => InitializeComponent();
 }
+
+public partial class SubscriptionEditView : UserControl
+{
+    public SubscriptionEditView() => InitializeComponent();
+}

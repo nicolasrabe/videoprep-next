@@ -6,6 +6,7 @@ using Videoprep.Core.Scraping;
 namespace Videoprep.App.Tests;
 
 /// <summary>Scraping > Explorar driven like a user, over saved listings and the fake yt-dlp (no internet).</summary>
+[Collection("fake yt-dlp environment")]
 public sealed class ExploreTests : IDisposable
 {
     private readonly TestRig _rig = new(tools: true);
@@ -67,13 +68,13 @@ public sealed class ExploreTests : IDisposable
     {
         var ex = await Searched();
         var calls = CallCount();
-        ex.IncludeText = "overgrown";
-        ex.ExcludeText = "teaser";
+        ex.Filter.IncludeText = "overgrown";
+        ex.Filter.ExcludeText = "teaser";
         await ex.ApplyFiltersCommand.ExecuteAsync(null);
         var row = Assert.Single(ex.Rows);
         Assert.Equal("685eur9lMGc", row.Entry.Id);
-        ex.IncludeText = ex.ExcludeText = "";
-        ex.MinText = "5:00";
+        ex.Filter.IncludeText = ex.Filter.ExcludeText = "";
+        ex.Filter.MinText = "5:00";
         await ex.ApplyFiltersCommand.ExecuteAsync(null);
         Assert.Equal("Q1fMMYyt0I4", Assert.Single(ex.Rows).Entry.Id);
         Assert.Equal(calls, CallCount());
@@ -85,8 +86,8 @@ public sealed class ExploreTests : IDisposable
         var vm = _rig.Create();
         var ex = vm.Scraping.Explore;
         ex.SourceText = "@fake";
-        ex.FromText = "31/10/2026";
-        Assert.True(ex.FromBad);
+        ex.Filter.FromText = "31/10/2026";
+        Assert.True(ex.Filter.FromBad);
         await ex.SearchCommand.ExecuteAsync(null);
         Assert.Contains(_rig.Ui.Messages, m => m.Contains("31/10/2026"));
         Assert.Empty(ex.Rows);
@@ -119,8 +120,8 @@ public sealed class ExploreTests : IDisposable
         ex.SourceText = "@fake";
         await ex.SearchCommand.ExecuteAsync(null);
         ex.Rows[1].Selected = false;
-        ex.SelectedFormat = ex.FormatChoices.First(f => f.Key == "movp");
-        ex.SelectedResolution = "720p";
+        ex.Format.SelectedFormat = ex.Format.FormatChoices.First(f => f.Key == "movp");
+        ex.Format.SelectedResolution = "720p";
         await ex.SendToQueueCommand.ExecuteAsync(null);
 
         Assert.Equal(2, vm.Items.Count);
@@ -145,7 +146,7 @@ public sealed class ExploreTests : IDisposable
         File.WriteAllLines(Path.Combine(_rig.Paths.Roaming, "downloaded.txt"), ["youtube Q1fMMYyt0I4"]);
         var ex = await Searched();
         Assert.Equal(2, ex.Rows.Count);                    // "skip already downloaded" is on by default
-        ex.SkipDone = false;
+        ex.Filter.SkipDone = false;
         await ex.ApplyFiltersCommand.ExecuteAsync(null);
         var done = ex.Rows.Single(r => r.Entry.Id == "Q1fMMYyt0I4");
         Assert.Equal("Ya descargado", done.Status);

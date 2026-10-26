@@ -136,6 +136,39 @@ public sealed partial class MainWindowTests : IDisposable
         Assert.DoesNotContain("Video completo", shown);
     }
 
+    [AvaloniaTheory]
+    [InlineData("es", "light")]
+    [InlineData("en", "dark")]
+    public void Subscriptions_table_and_dialog(string lang, string theme)
+    {
+        Core.Scraping.SubscriptionStore.Save(_rig.Paths.SubscriptionsFile, new Core.Scraping.SubscriptionFile
+        {
+            Subscriptions =
+            [
+                new() { Id = "sub_1", Name = "@BlenderStudio", Url = "https://www.youtube.com/@BlenderStudio", Tabs = ["videos", "streams"],
+                        Filters = new() { From = "2026-09-01", MinSec = 120, MaxSec = 2700, Include = ["log"] }, Folder = "D:\\Videos",
+                        LastCheck = "2026-10-26T09:14:00-03:00", LastNew = 2 },
+                new() { Id = "sub_2", Name = "twitch.tv/nasa", Url = "https://www.twitch.tv/nasa/videos", Folder = "D:\\Videos",
+                        LastCheck = "2026-10-25T21:02:00-03:00", LastNew = 0, LastError = "HTTP Error 404" },
+                new() { Id = "sub_3", Name = "vimeo.com/blenderstudio", Url = "https://vimeo.com/blenderstudio", Enabled = false, Folder = "D:\\Videos",
+                        Profile = new() { Format = "movp", Cap = 2160 } },
+            ],
+        });
+        var (w, vm) = Open(lang, theme);
+        vm.Scraping.ShowSubscriptionsView();
+        vm.SelectedTab = MainViewModel.TabScraping;
+        Assert.Equal(3, vm.Scraping.Subscriptions.Rows.Count);
+        Save(w, $"{lang}-{theme}-suscripciones-con-datos");
+
+        var edit = new SubscriptionEditViewModel(vm.Scraping.Subscriptions.Rows[0].Sub, _ => Task.FromResult<string?>(null));
+        var dialog = new Window { Width = 780, Height = 700, Content = new ScrollViewer { Content = new Views.SubscriptionEditView { DataContext = edit } } };
+        dialog.Show();
+        Save(dialog, $"{lang}-{theme}-dialogo-suscripcion");
+        var texts = dialog.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text ?? "").ToList();
+        Assert.DoesNotContain(texts, t => LooksLikeKey().IsMatch(t));
+        dialog.Close();
+    }
+
     [AvaloniaFact]
     public void Every_table_lets_the_user_widen_its_columns()
     {

@@ -40,8 +40,6 @@ public sealed partial class ExploreViewModel : ObservableObject
     public ExploreViewModel(MainViewModel host)
     {
         _host = host;
-        foreach (var f in FormatCatalog.All) FormatChoices.Add(new FormatChoice(f.Key, f.Label));
-        SelectedFormat = FormatChoices[0];
         Loc.Instance.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName != "Item[]") return;
@@ -59,23 +57,7 @@ public sealed partial class ExploreViewModel : ObservableObject
     [ObservableProperty] private bool _tabStreams;
     [ObservableProperty] private bool _tabPlaylists;
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(FromBad))] private string _fromText = "";
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ToBad))] private string _toText = "";
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(MinBad))] private string _minText = "";
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(MaxBad))] private string _maxText = "";
-    [ObservableProperty] private string _includeText = "";
-    [ObservableProperty] private string _excludeText = "";
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(MaxCountBad))] private string _maxCountText = "";
-    [ObservableProperty] private int _orderIndex;
-    [ObservableProperty] private bool _skipLive = true;
-    [ObservableProperty] private bool _skipMembers = true;
-    [ObservableProperty] private bool _skipDone = true;
-
-    public bool FromBad => !Filters.TryParseDate(FromText, out _);
-    public bool ToBad => !Filters.TryParseDate(ToText, out _);
-    public bool MinBad => !Filters.TryParseDuration(MinText, out _);
-    public bool MaxBad => !Filters.TryParseDuration(MaxText, out _);
-    public bool MaxCountBad => MaxCountText.Trim().Length > 0 && !(int.TryParse(MaxCountText.Trim(), out var n) && n >= 0);
+    public FilterInputs Filter { get; } = new();
 
     // ---- table
     public ObservableCollection<ExploreRow> Rows { get; } = [];
@@ -85,43 +67,14 @@ public sealed partial class ExploreViewModel : ObservableObject
     [ObservableProperty] private bool _hasApproxDates;
     public string SelectedText => L.Format("sc_selected", Rows.Count(r => r.Selected), Rows.Count(r => r.CanSelect));
 
-    // ---- format for "Enviar a la cola"
-    public ObservableCollection<FormatChoice> FormatChoices { get; } = [];
-    [ObservableProperty] private FormatChoice? _selectedFormat;
-    public ObservableCollection<string> ResolutionChoices { get; } = [];
-    [ObservableProperty] private string? _selectedResolution;
+    /// <summary>Format for "Enviar a la cola".</summary>
+    public FormatPicker Format { get; } = new();
 
-    partial void OnSelectedFormatChanged(FormatChoice? value)
-    {
-        var keep = SelectedResolution;
-        ResolutionChoices.Clear();
-        foreach (var r in FormatCatalog.ResolutionChoices(value?.Key ?? "mp4")) ResolutionChoices.Add(r);
-        SelectedResolution = keep is not null && ResolutionChoices.Contains(keep) ? keep : "1080p";
-    }
+    public FilterSet? ReadFilters(out string? problem) => Filter.Read(out problem);
 
-    /// <summary>Reads the filter boxes; null (and a message) when one is not valid.</summary>
-    public FilterSet? ReadFilters(out string? problem)
-    {
-        problem = null;
-        if (!Filters.TryParseDate(FromText, out var from)) problem = L.Format("sc_bad_date", FromText.Trim());
-        else if (!Filters.TryParseDate(ToText, out var to)) problem = L.Format("sc_bad_date", ToText.Trim());
-        else if (!Filters.TryParseDuration(MinText, out var min)) problem = L.Format("sc_bad_duration", MinText.Trim());
-        else if (!Filters.TryParseDuration(MaxText, out var max)) problem = L.Format("sc_bad_duration", MaxText.Trim());
-        else if (MaxCountBad) problem = L["sc_bad_max"];
-        else
-        {
-            return new FilterSet
-            {
-                From = from, To = to, MinSec = min, MaxSec = max,
-                Include = Filters.SplitTerms(IncludeText), Exclude = Filters.SplitTerms(ExcludeText),
-                MaxCount = int.TryParse(MaxCountText.Trim(), out var n) ? n : null,
-                OldestFirst = OrderIndex == 1, SkipLive = SkipLive, SkipMembers = SkipMembers, SkipDownloaded = SkipDone,
-            };
-        }
-        return null;
-    }
+    /// <summary>The checked tabs, for "Suscribirme a esto..." too.</summary>
+    public IReadOnlyList<SourceTab> CheckedTabs()
 
-    private IReadOnlyList<SourceTab> CheckedTabs()
     {
         var tabs = new List<SourceTab>();
         if (TabVideos) tabs.Add(SourceTab.Videos);
@@ -343,8 +296,7 @@ public sealed partial class ExploreViewModel : ObservableObject
             await _host.Ui.ShowMessage(L["sc_nothing_selected"]);
             return;
         }
-        var cap = SelectedResolution is not null && FormatCatalog.Resolutions.TryGetValue(SelectedResolution, out var c) ? c : FormatCatalog.DefaultCap;
-        _host.AddToQueue(picked.Select(r => (r.Entry.Url, r.Entry.Title)), SelectedFormat?.Key ?? "mp4", cap);
+        _host.AddToQueue(picked.Select(r => (r.Entry.Url, r.Entry.Title)), Format.FormatKey, Format.Cap);
         foreach (var r in picked)
         {
             r.Selected = false;
@@ -354,13 +306,27 @@ public sealed partial class ExploreViewModel : ObservableObject
     }
 }
 
-/// <summary>The Scraping tab: Explorar (tanda A) and Suscripciones (tanda B).</summary>
-public sealed partial class ScrapingViewModel(MainViewModel host) : ObservableObject
+/// <summary>The Scraping tab: Explorar and Suscripciones.</summary>
+public sealed partial class ScrapingViewModel : ObservableObject
 {
-    public ExploreViewModel Explore { get; } = new(host);
+    public ScrapingViewModel(MainViewModel host)
+    {
+        Explore = new ExploreViewModel(host);
+        Subscriptions = new SubscriptionsViewModel(host);
+    }
 
-    /// <summary>Suscripciones is still the approved mockup until tanda B.</summary>
-    public ScrapingSampleViewModel Sample { get; } = new();
+    public ExploreViewModel Explore { get; }
+
+    public SubscriptionsViewModel Subscriptions { get; }
+
+    /// <summary>"Suscribirme a esto..." in Explorar.</summary>
+    [RelayCommand]
+    private async Task SubscribeFromExplore()
+    {
+        var before = Subscriptions.Rows.Count;
+        await Subscriptions.AddFromExplore(Explore);
+        if (Subscriptions.Rows.Count > before) ShowSubscriptionsView();
+    }
 
     /// <summary>0 = Explorar, 1 = Suscripciones.</summary>
     [ObservableProperty]

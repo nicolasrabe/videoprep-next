@@ -74,6 +74,8 @@ public sealed partial class MainViewModel : ObservableObject
         var browsers = _svc.InstalledBrowsers();
         if (browsers.Count > 0) _svc.Log.Write("Browsers found on this PC: " + string.Join(", ", browsers.Select(BrowserName)));
         if (Items.Count > 0) _svc.Log.Write($"Queue restored: {Items.Count} item(s).");
+        // "Revisar al abrir videoprep": in the background, the window stays usable.
+        _ = Scraping.Subscriptions.OnShownAsync();
 
         if (Settings.AutoUpdate && missing.Count == 0 && UpdateIsDue(Settings.LastUpdate, DateTimeOffset.Now))
         {

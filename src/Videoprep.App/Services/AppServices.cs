@@ -19,6 +19,11 @@ public sealed class AppServices
     /// <summary>Browsers with a profile folder on this PC (only the folder is checked; cookies are not read).</summary>
     public Func<IReadOnlyList<string>> InstalledBrowsers { get; init; } = () => CookieStrategy.InstalledBrowsers();
 
+    /// <summary>Pause between subscriptions in a check; tests make it instant.</summary>
+    public Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
+    /// <summary>Runs schtasks.exe; tests never touch the real Task Scheduler.</summary>
+    public Func<IReadOnlyList<string>, Task<(int Code, string Output)>> SchTasks { get; init; } = ScheduledTask.RunAsync;
+
     public static AppServices CreateDefault(Log log)
     {
         var paths = AppPaths.ForCurrentUser();

@@ -13,10 +13,13 @@ public sealed class Log
     private readonly Queue<string> _recent = new();
     private readonly int _keep;
     private readonly string? _dir;
+    private readonly string _prefix;
 
-    public Log(string? logDir = null, int keepLines = 2000)
+    /// <param name="filePrefix">Daily file name start: "videoprep" for the window, "check" for <c>videoprep --check</c>.</param>
+    public Log(string? logDir = null, int keepLines = 2000, string filePrefix = "videoprep")
     {
         _dir = logDir;
+        _prefix = filePrefix;
         _keep = keepLines;
     }
 
@@ -24,7 +27,7 @@ public sealed class Log
     public event Action<string>? LineAdded;
 
     /// <summary>Path of today's log file, or null when not writing to disk.</summary>
-    public string? FilePath => _dir is null ? null : Path.Combine(_dir, $"videoprep-{DateTime.Now:yyyyMMdd}.log");
+    public string? FilePath => _dir is null ? null : Path.Combine(_dir, $"{_prefix}-{DateTime.Now:yyyyMMdd}.log");
 
     public void Write(string line)
     {

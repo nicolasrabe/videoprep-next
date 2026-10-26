@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.SubscriptionEditView"
+             x:DataType="vm:SubscriptionEditViewModel">
+  <!-- Agregar / Editar suscripción (SCRAPING_SPEC 2): the Explorar fields + folder, format, first-run choice. -->
+  <StackPanel Spacing="10" Margin="0,0,12,0">
+    <Grid ColumnDefinitions="90,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+      <TextBlock Classes="muted" Text="{s:T sc_link}" VerticalAlignment="Center" />
+      <TextBox Grid.Column="1" Text="{Binding Url}" PlaceholderText="{s:T sc_url_ph}" />
+      <TextBlock Grid.Row="1" Classes="muted" Text="{s:T sc_name}" VerticalAlignment="Center" />
+      <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Name}" PlaceholderText="{s:T sc_name_ph}" />
+    </Grid>
+    <WrapPanel ItemSpacing="10" LineSpacing="4">
+      <TextBlock Classes="muted" Text="{s:T sc_tabs}" VerticalAlignment="Center" />
+      <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="{Binding TabVideos}" />
+      <CheckBox Content="{s:T sc_tabs_shorts}" IsChecked="{Binding TabShorts}" />
+      <CheckBox Content="{s:T sc_tabs_streams}" IsChecked="{Binding TabStreams}" />
+      <TextBlock Classes="muted" Text="{s:T sc_tabs_only_youtube}" VerticalAlignment="Center" />
+    </WrapPanel>
+
+    <Border Classes="card">
+      <StackPanel Spacing="7">
+        <WrapPanel ItemSpacing="8" LineSpacing="6">
+          <TextBlock Classes="muted" Text="{s:T sc_from}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.FromText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Filter.FromBad}" />
+          <TextBlock Classes="muted" Text="{s:T sc_to}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.ToText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Filter.ToBad}" />
+          <TextBlock Classes="muted" Text="{s:T sc_dur_min}" VerticalAlignment="Center" Margin="10,0,0,0" />
+          <TextBox Text="{Binding Filter.MinText}" Width="80" PlaceholderText="M:SS" Classes.bad="{Binding Filter.MinBad}" />
+          <TextBlock Classes="muted" Text="{s:T sc_dur_max}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.MaxText}" Width="80" PlaceholderText="H:MM:SS" Classes.bad="{Binding Filter.MaxBad}" />
+        </WrapPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="6">
+          <TextBlock Classes="muted" Text="{s:T sc_incl}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.IncludeText}" Width="170" />
+          <TextBlock Classes="muted" Text="{s:T sc_excl}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.ExcludeText}" Width="170" />
+          <TextBlock Classes="muted" Text="{s:T sc_max}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Filter.MaxCountText}" Width="70" Classes.bad="{Binding Filter.MaxCountBad}" />
+        </WrapPanel>
+        <WrapPanel ItemSpacing="10" LineSpacing="6">
+          <TextBlock Classes="muted" Text="{s:T sc_order}" VerticalAlignment="Center" />
+          <ComboBox SelectedIndex="{Binding Filter.OrderIndex}" MinWidth="170">
+            <ComboBoxItem Content="{s:T sc_order_new}" />
+            <ComboBoxItem Content="{s:T sc_order_old}" />
+          </ComboBox>
+          <CheckBox Content="{s:T sc_skip_live}" IsChecked="{Binding Filter.SkipLive}" />
+          <CheckBox Content="{s:T sc_skip_members}" IsChecked="{Binding Filter.SkipMembers}" />
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+
+    <WrapPanel ItemSpacing="8" LineSpacing="6">
+      <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+      <ComboBox ItemsSource="{Binding Format.FormatChoices}" SelectedItem="{Binding Format.SelectedFormat}" MinWidth="220" />
+      <ComboBox ItemsSource="{Binding Format.ResolutionChoices}" SelectedItem="{Binding Format.SelectedResolution}" MinWidth="90" />
+    </WrapPanel>
+    <WrapPanel ItemSpacing="10" LineSpacing="6">
+      <TextBlock Classes="muted" Text="{s:T lbl_names}" VerticalAlignment="Center" />
+      <RadioButton GroupName="subnames" Content="{s:T rad_n1}" IsChecked="{Binding NameOriginal}" />
+      <RadioButton GroupName="subnames" Content="{s:T rad_n3}" IsChecked="{Binding NameSeries}" />
+      <TextBox Text="{Binding Prefix}" Width="200" PlaceholderText="{s:T sc_prefix_ph}" IsEnabled="{Binding NameSeries}" />
+    </WrapPanel>
+    <Grid ColumnDefinitions="90,*,Auto" ColumnSpacing="8">
+      <TextBlock Classes="muted" Text="{s:T sc_folder}" VerticalAlignment="Center" />
+      <TextBox Grid.Column="1" Text="{Binding Folder}" />
+      <Button Grid.Column="2" Content="{s:T btn_browse}" Command="{Binding PickFolderCommand}" />
+    </Grid>
+    <CheckBox Content="{s:T sc_subfolder}" IsChecked="{Binding SubfolderPerSub}" />
+
+    <StackPanel Spacing="4" IsVisible="{Binding IsNew}">
+      <TextBlock Classes="muted" Text="{s:T sc_firstrun}" />
+      <RadioButton GroupName="firstrun" Content="{s:T sc_firstrun_new}" IsChecked="{Binding OnlyNew}" />
+      <RadioButton GroupName="firstrun" Content="{s:T sc_firstrun_backfill}" IsChecked="{Binding Backfill}" />
+    </StackPanel>
+    <CheckBox Content="{s:T sc_col_on}" IsChecked="{Binding Enabled}" />
+  </StackPanel>
+</UserControl>

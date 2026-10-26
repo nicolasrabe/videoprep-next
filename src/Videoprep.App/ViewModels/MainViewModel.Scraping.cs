@@ -3,6 +3,7 @@ using Videoprep.Core;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Models;
 using Videoprep.Core.Scraping;
+using Videoprep.Core.Storage;
 using Videoprep.Core.Text;
 using Videoprep.Core.Tools;
 
@@ -33,16 +34,32 @@ public sealed partial class MainViewModel
 
     internal SourceLister NewLister() => new(_svc.Runner, _svc.Log);
 
-    /// <summary>
-    /// Listings use no cookies unless the user chose one browser or a cookie file in Settings: public channels do not need
-    /// them, and many requests with a logged-in account can put it at risk (SCRAPING_SPEC 2).
-    /// </summary>
-    internal CookieSource ListingCookies() => Settings.CookieSource is "auto" or "none"
-        ? CookieSource.NoCookies
-        : CookieStrategy.Chain(Settings, _svc.InstalledBrowsers())[0];
+    internal CookieSource ListingCookies() => CookieStrategy.ForListing(Settings, _svc.InstalledBrowsers());
 
     /// <summary>The archive the downloads write (Settings "skip already downloaded"); Explorar reads it for "Ya descargado".</summary>
     internal string ArchivePath => _svc.Paths.ArchiveFile;
+
+    internal AppPaths Paths => _svc.Paths;
+
+    internal void LogLine(string line) => _svc.Log.Write(line);
+
+    /// <summary>The Download tab folder: the starting folder for a new subscription.</summary>
+    internal string CurrentFolder => Folder.Trim('"', ' ');
+
+    internal string ExePath => Environment.ProcessPath ?? "videoprep.exe";
+
+    internal Task<(int Code, string Output)> RunScheduledTask(IReadOnlyList<string> args) => _svc.SchTasks(args);
+
+    internal CheckRunner NewCheckRunner() => new(_svc.Runner, _svc.Log, _svc.Paths) { Delay = _svc.Delay };
+
+    internal CheckOptions CheckOptions(ToolPaths tools) => new()
+    {
+        Tools = tools,
+        ListingCookies = ListingCookies(),
+        DownloadCookies = CookieChain(),
+        Options = OptionsViewModel.ToDownloadOptions(Settings),
+        SessionCookieFile = _svc.Paths.SessionCookieFile,
+    };
 
     internal bool IsInQueue(string url)
     {

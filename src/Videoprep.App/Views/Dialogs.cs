@@ -95,6 +95,33 @@ internal static class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
+    /// <summary>Agregar/Editar suscripción. Aceptar only closes when the data is valid (else it says what is wrong).</summary>
+    public static async Task<bool> Subscription(Window owner, SubscriptionEditViewModel vm)
+    {
+        var view = new SubscriptionEditView { DataContext = vm };
+        var ok = Btn(Loc.Instance["btn_ok"], "g");
+        var cancel = Btn(Loc.Instance["btn_cancel"]);
+        var grid = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), RowSpacing = 16 };
+        grid.Children.Add(new ScrollViewer { Content = view, HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled });
+        var buttons = Buttons(ok, cancel);
+        Grid.SetRow(buttons, 1);
+        grid.Children.Add(buttons);
+        var w = Shell(vm.Title, grid, 780);
+        // Big form: the user can resize it; it starts at most 700 px high and scrolls.
+        w.CanResize = true;
+        w.SizeToContent = SizeToContent.Manual;
+        w.Height = Math.Min(700, owner.Bounds.Height > 0 ? owner.Bounds.Height : 700);
+        w.MinWidth = 600;
+        w.MinHeight = 400;
+        ok.Click += async (_, _) =>
+        {
+            if (vm.Build(out var problem) is not null) w.Close(true);
+            else await Message(w, problem!, warning: true);
+        };
+        cancel.Click += (_, _) => w.Close(false);
+        return await w.ShowDialog<bool>(owner);
+    }
+
     private static StackPanel Buttons(params Button[] buttons)
     {
         var p = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };

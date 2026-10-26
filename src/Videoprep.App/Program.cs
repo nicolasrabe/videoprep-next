@@ -1,7 +1,9 @@
 using Avalonia;
 using Videoprep.App.Cli;
+using Videoprep.Core.Engine;
 using Videoprep.Core.Logging;
 using Videoprep.Core.Storage;
+using Videoprep.Core.Tools;
 
 namespace Videoprep.App;
 
@@ -39,7 +41,27 @@ internal static class Program
                 return 1;
             }
         }
-        // `videoprep --check` (headless subscription check) arrives in phase 5.
+        if (args.Length > 0 && args[0] == "--check")
+        {
+            ConsoleHost.Attach();
+            var paths = AppPaths.ForCurrentUser();
+            var checkLog = new Log(paths.LogsDir, filePrefix: "check");
+            checkLog.LineAdded += line => { try { Console.WriteLine(line); } catch (IOException) { } };
+            using var cts = new CancellationTokenSource();
+            Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                return CheckCommand.RunAsync(paths, checkLog, new ProcessRunner(), new ToolManager(paths.ToolsDir, http),
+                                             () => CookieStrategy.InstalledBrowsers(), cts.Token).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                var file = checkLog.Crash(ex, "--check");
+                checkLog.Write("Unexpected error: " + ex.Message + (file is not null ? " - details in " + file : ""));
+                return 1;
+            }
+        }
 
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

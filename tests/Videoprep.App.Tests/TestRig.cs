@@ -29,6 +29,15 @@ internal sealed class FakeUi : IUiServices
     public Task<string?> PickSaveFile(string suggestedName) => Task.FromResult(FileToPick);
     public Task<string?> PickColor(string current) => Task.FromResult(ColorToPick);
     public Task<bool> ShowOptions(OptionsViewModel options) => Task.FromResult(false);
+    /// <summary>What the "user" types in the subscription dialog; null = presses Cancelar.</summary>
+    public Action<SubscriptionEditViewModel>? FillSubscription { get; set; }
+    public Task<bool> EditSubscription(SubscriptionEditViewModel subscription)
+    {
+        if (FillSubscription is null) return Task.FromResult(false);
+        FillSubscription(subscription);
+        return Task.FromResult(subscription.Build(out var problem) is not null || Fail(problem));
+    }
+    private bool Fail(string? problem) { Messages.Add(problem ?? ""); return false; }
     public Task SetClipboardText(string text) { Clipboard = text; return Task.CompletedTask; }
     public void OpenFolder(string path) => OpenedFolders.Add(path);
     public void PlayDoneSound() => Sounds++;
@@ -61,6 +70,8 @@ internal sealed class TestRig : IDisposable
     public Log Log { get; } = new();
     public AppServices Services { get; }
     public string OutFolder => Path.Combine(Dir, "out");
+    public List<IReadOnlyList<string>> SchTaskCalls { get; } = [];
+    public int SchTaskExit { get; set; }
 
     public TestRig(bool tools = false)
     {
@@ -76,6 +87,8 @@ internal sealed class TestRig : IDisposable
             Tools = new ToolManager(Paths.ToolsDir, http, exeDir: Path.Combine(Dir, "noexe"), pathVariable: ""),
             Preview = new PreviewService(runner, http, Log),
             InstalledBrowsers = () => [],
+            Delay = (_, _) => Task.CompletedTask,
+            SchTasks = args => { SchTaskCalls.Add(args); return Task.FromResult((SchTaskExit, "fake schtasks")); },
         };
     }
 

@@ -92,6 +92,8 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<bool> ShowOptions(OptionsViewModel options) => Dialogs.Options(this, options);
 
+    public Task<bool> EditSubscription(SubscriptionEditViewModel subscription) => Dialogs.Subscription(this, subscription);
+
     public async Task SetClipboardText(string text)
     {
         if (Clipboard is { } c) await c.SetTextAsync(text);

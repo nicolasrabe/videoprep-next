@@ -126,6 +126,13 @@ public sealed partial class MainViewModel
 
     private async Task RunJobsAsync(IReadOnlyList<Job> jobs, string folder)
     {
+        // Only one check/download run at a time: the scheduled "videoprep --check" may be running (SCRAPING_SPEC 2).
+        using var runLock = RunLock.TryAcquire(_svc.Paths.RunLockFile);
+        if (runLock is null)
+        {
+            await _ui.ShowMessage(L["msg_busy"], warning: true);
+            return;
+        }
         SaveSettings();
         IsRunning = true;
         RebuildQueueRows();
