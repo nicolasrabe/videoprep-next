@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Videoprep.App.ViewModels"
+        x:Class="Videoprep.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="900" Height="640" MinWidth="900" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Background="#f1f1ee">
+  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+    <TextBlock x:Name="TitleText" Text="{Binding Title}" FontSize="28" FontWeight="SemiBold"
+               Foreground="#1f1f1d" HorizontalAlignment="Center" />
+    <TextBlock x:Name="SubtitleText" Text="{Binding Subtitle}" FontSize="14"
+               Foreground="#6b6b66" HorizontalAlignment="Center" />
+  </StackPanel>
+</Window>

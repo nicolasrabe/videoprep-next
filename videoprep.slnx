@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Videoprep.Core/Videoprep.Core.csproj" />
+    <Project Path="src/Videoprep.App/Videoprep.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Videoprep.Core.Tests/Videoprep.Core.Tests.csproj" />
+    <Project Path="tests/Videoprep.App.Tests/Videoprep.App.Tests.csproj" />
+  </Folder>
+</Solution>

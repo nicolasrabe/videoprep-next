@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Engine and logic. No UI references allowed here (see docs/PORT_PLAN.md). -->
+  <PropertyGroup>
+    <RootNamespace>Videoprep.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
