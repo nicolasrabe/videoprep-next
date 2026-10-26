@@ -57,8 +57,11 @@ public static class YtDlpArgs
     /// <paramref name="archiveFile"/> is used only when <see cref="DownloadOptions.SkipDownloaded"/> is on;
     /// subscriptions pass their own archive with <paramref name="forceArchive"/>.
     /// </summary>
+    /// <param name="dumpCookiesTo">AUDIT M5: when reading a browser, also write its cookies to this file
+    /// (<c>--cookies FILE</c> both reads and saves the jar; docs/VERIFY.md).</param>
     public static IReadOnlyList<string> Download(Job job, DownloadOptions opt, ToolPaths tools, CookieSource cookies,
-                                                 string folder, bool hasClips, string? archiveFile, bool forceArchive = false)
+                                                 string folder, bool hasClips, string? archiveFile, bool forceArchive = false,
+                                                 string? dumpCookiesTo = null)
     {
         var a = new List<string>
         {
@@ -92,6 +95,7 @@ public static class YtDlpArgs
         AddTools(a, tools);
         a.AddRange(["--progress-template", ProgressTemplate, "--print", FinalPathPrint]);
         a.AddRange(cookies.Args());
+        if (dumpCookiesTo is not null && cookies.Kind == CookieKind.Browser) a.AddRange(["--cookies", dumpCookiesTo]);
         a.Add(job.Url);
         return a;
     }
