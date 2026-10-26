@@ -63,10 +63,23 @@ internal static class Ffmpeg
     {
         var raw = Path.Combine(tmpDir, Guid.NewGuid().ToString("N") + ".gray");
         Assert.Equal(0, Run("-hide_banner", "-loglevel", "error", "-y", "-i", file, "-map", "0:v:0",
-                            "-vf", "scale=1:1:flags=area,format=gray", "-f", "rawvideo", raw));
+                            // passthrough: one output frame per decoded frame, never duplicated to fill timestamp gaps
+                            // (MKV/WebM store millisecond timestamps; the default mode added a frame with Ubuntu's ffmpeg).
+                            "-vf", "scale=1:1:flags=area,format=gray", "-fps_mode", "passthrough", "-f", "rawvideo", raw));
         var bytes = File.ReadAllBytes(raw);
         File.Delete(raw);
         return bytes;
+    }
+
+    /// <summary>Frames really stored in the file, counted by ffprobe decoding it (independent of the gray decode).</summary>
+    public static long CountFrames(string file)
+    {
+        var sb = new System.Text.StringBuilder();
+        var r = new ProcessRunner().RunAsync(new ProcessSpec(Probe!, ["-v", "error", "-select_streams", "v:0", "-count_frames",
+            "-show_entries", "stream=nb_read_frames", "-of", "csv=p=0", file]), l => sb.AppendLine(l), CancellationToken.None)
+            .GetAwaiter().GetResult();
+        Assert.Equal(0, r.ExitCode);
+        return long.Parse(sb.ToString().Trim().TrimEnd(','), CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -107,6 +120,7 @@ public sealed class FrameExactCutTests : IDisposable
         Assert.Equal(0, Ffmpeg.Run([.. args]));
 
         var lumas = Ffmpeg.FrameLumas(output, _dir);
+        Assert.Equal(plan.Frames, Ffmpeg.CountFrames(output));
         Assert.Equal(plan.Frames, lumas.Length);
         Assert.Equal((int)(plan.StartFrame % 70), Ffmpeg.FrameMod70(lumas[0]));
         Assert.Equal((int)(plan.EndFrame % 70), Ffmpeg.FrameMod70(lumas[^1]));
