@@ -65,8 +65,4 @@ Final path with symbols in the title (2026-10-26, yt-dlp 2026.10.21, Windows, PY
 (Nico's report). `--print-to-file after_move:filepath FILE` writes the exact path in UTF-8. The engine now reads that
 file first; checked end to end with `videoprep --demo` on that video (file found, clip cut and verified).
 
-VERIFY (subscriptions, not run yet): creating the Windows scheduled task for real
-(`schtasks /Create /TN videoprep-check /TR "\"<exe>\" --check" /SC HOURLY /MO 6 /IT /F`, built with ArgumentList; flags read
-from `schtasks /Create /?` on Windows 10 2026-10-26: HOURLY accepts /MO 1-23, so 24 h uses DAILY /MO 1) and that the task
-really starts `videoprep.exe --check`. Needs Nico's permission because it creates a task on his PC. Also to see once on a
-real channel: a full check that downloads (only the fake yt-dlp was used so far).
+Subscriptions on Nico's PC (2026-10-26, Windows 10): a real check of @BlenderStudio downloaded the expected videos and a second check downloaded nothing (after the max-count fix). The scheduled task was created from the app's "Configurar..." button (`schtasks /Create /TN videoprep-check /TR "<exe> --check" /SC HOURLY /MO 6 /IT /F`, built with ArgumentList; HOURLY accepts /MO 1-23, so 24 h uses DAILY /MO 1), started with `schtasks /Run /TN videoprep-check`, and it ran `videoprep.exe --check`: logs/check-20261026.log shows the listing, "0 new" and "Exit code 0". Then removed.

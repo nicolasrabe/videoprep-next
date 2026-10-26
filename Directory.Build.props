@@ -11,7 +11,7 @@
 
     <!-- The one place where the version lives (CHANGELOG and README must match). -->
     <VersionPrefix>0.2.0</VersionPrefix>
-    <VersionSuffix>dev</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
     <Product>videoprep</Product>

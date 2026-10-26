@@ -204,7 +204,7 @@ public sealed class SubscriptionsTests : IDisposable
         Assert.False(Subs(vm).TaskInstalled);
     }
 
-    [Fact]
+    [AvaloniaFact]   // the class constructor changes Loc, which updates live controls: UI thread only
     public void Scheduled_task_every_24_hours_is_daily()
     {
         Assert.Equal(["/SC", "DAILY", "/MO", "1"], ScheduledTask.CreateArgs(@"C:\vp\videoprep.exe", 24).Skip(5).Take(4));

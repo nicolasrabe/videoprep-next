@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## 0.2.0 (in progress)
+## 0.2.0 - 2026-10-26
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).
 - Phase 1: project skeleton, automatic build and tests on Windows, macOS and Linux (GitHub Actions), test window showing the version.
 - Phase 2: the rules of 0.1.1 moved to tested C# code: timecode and frame math (drop-frame included), clip planning,

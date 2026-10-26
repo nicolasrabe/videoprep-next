@@ -3,13 +3,66 @@
 **[English](README.en.md)**
 
 Herramienta gratuita para editores de video: pegás un enlace (YouTube y cualquier sitio que soporte yt-dlp), elegís
-formato, fragmentos y nombres, y bajás archivos listos para editar.
+formato, fragmentos y nombres, y bajás archivos listos para editar en Premiere Pro, DaVinci Resolve o el programa que uses.
 
-> **Estado:** la versión 0.2.0 está en desarrollo (reescritura en C#/.NET). Todavía no descarga nada.
-> La versión que funciona hoy es la 0.1.1 (PowerShell), en la carpeta `legacy-ps/`.
+Versión actual: **0.2.0** (versión de prueba, para Windows). Es un solo `videoprep.exe`, no hace falta instalar nada.
 
-Usa [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://ffmpeg.org) y [Deno](https://deno.com), que se
-descargan la primera vez (no vienen incluidos en este repositorio).
+## Qué hace
+- **Descargar**: MP4 (H.264 + AAC), MOV (H.264 o ProRes 422 HQ), WebM, MKV, o solo audio (M4A, MP3, WAV, FLAC, Opus),
+  con tope de resolución. Vista previa con título, duración y calidad disponible.
+- **Fragmentos** con código de tiempo `HH:MM:SS:FF` (varios por video). El fotograma final se incluye; cada
+  fragmento se revisa con ffprobe antes de guardarlo. `-00:00:00:15` = los últimos 15 fotogramas.
+- **Nombres**: título original, título personalizado o serie (nombre + número, sigue después de lo que ya hay en la carpeta).
+- **Cola**: varios enlaces a la vez, editar, mover, quitar (tecla Supr), reintentar los que fallaron. Se guarda al cerrar.
+- **Scraping → Explorar**: pegás un canal o una lista, ves todos sus videos en una tabla, filtrás por fecha, duración,
+  palabras del título y cantidad, y mandás los que marques a la cola.
+- **Scraping → Suscripciones**: videoprep revisa los canales que elijas y baja solo lo nuevo, nunca dos veces lo mismo.
+  Puede revisar al abrirse, cada N horas, o con videoprep cerrado (tarea programada de Windows).
+- Español e inglés, seis temas de color, todas las columnas de las tablas se pueden agrandar.
+
+## Descargar y abrir
+1. En [Releases](https://github.com/nicolasrabe/videoprep-next/releases) bajá `videoprep-v0.2.0-win-x64.zip` y
+   descomprimilo en una carpeta tuya (por ejemplo `Documentos\videoprep`).
+2. Abrí `videoprep.exe`. Como el programa no está firmado, Windows puede mostrar "Windows protegió su PC":
+   hacé clic en **Más información** y después en **Ejecutar de todas formas**.
+3. La primera vez que apretás **Descargar**, videoprep baja las herramientas que necesita (yt-dlp, FFmpeg y Deno,
+   unos 200 MB, una sola vez) a `%LOCALAPPDATA%\videoprep\tools`. En **Ajustes** podés actualizar yt-dlp cuando
+   quieras (**Actualizar herramientas**) o activar "Buscar actualizaciones de yt-dlp automáticamente (una vez por semana)".
+
+Si querés comprobar que el zip no fue modificado, compará su SHA-256 con el de `SHA256SUMS.txt` en la misma página:
+en PowerShell, `Get-FileHash videoprep-v0.2.0-win-x64.zip`.
+
+## Sitios
+YouTube (videos, cortos, directos, listas), Twitch, Kick, Vimeo, X, Instagram, Facebook, TikTok y
+[cualquier sitio que soporte yt-dlp](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
+En **Explorar** y **Suscripciones** funcionan canales y listas de YouTube y perfiles de Twitch, Kick y Vimeo.
+Los perfiles de Instagram, X y TikTok hoy no se pueden listar (yt-dlp no lo permite); sus publicaciones sueltas sí se bajan.
+
+Algunos videos piden iniciar sesión. En **Ajustes** elegís de qué navegador leer las cookies (las lee yt-dlp en tu PC,
+no se mandan a ningún lado) o un archivo `cookies.txt`. Para canales públicos conviene no usar cookies: muchos pedidos
+con tu sesión iniciada pueden poner tu cuenta en riesgo.
+
+## Revisión automática sin abrir la ventana
+`videoprep.exe --check` revisa las suscripciones activas y termina. Es lo que usa la tarea programada que crea el botón
+**Configurar...** (te muestra el comando exacto antes de crearla; **Quitar tarea** la borra). Deja un registro en
+`%LOCALAPPDATA%\videoprep\logs\check-AAAAMMDD.log` y termina con código 0 (bien), 1 (algo falló), 2 (el sitio pidió
+verificación y se frenó) o 3 (había otra descarga o revisión en curso).
+
+## Dónde guarda las cosas
+- `%APPDATA%\videoprep`: ajustes, cola, suscripciones y el historial de lo descargado.
+- `%LOCALAPPDATA%\videoprep`: herramientas y registros.
+
+Para desinstalar: borrá la carpeta de `videoprep.exe`, esas dos carpetas y, si la creaste, la tarea programada
+(**Quitar tarea**).
+
+## Si algo falla
+Andá a la pestaña **Registro**, apretá **Copiar diagnóstico** y pegalo en un
+[issue](https://github.com/nicolasrabe/videoprep-next/issues). El diagnóstico no incluye cookies.
+
+## Para desarrolladores
+Hace falta el SDK de .NET 10. `dotnet build videoprep.slnx`, `dotnet test videoprep.slnx`, y para el exe:
+`dotnet publish src/Videoprep.App -c Release -r win-x64 -o dist/win-x64`. La versión vive en `Directory.Build.props`.
+La versión anterior (0.1.1, PowerShell) está en `legacy-ps/`.
 
 ## Aviso legal
 Usalo solo con contenido propio, con licencia o con permiso para usarlo. videoprep no está afiliado a YouTube, Google,

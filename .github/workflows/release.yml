@@ -24,7 +24,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           VER="${TAG#v}"
-          for RID in win-x64 osx-arm64; do
+          # Windows only for 0.2.0: nobody can test the macOS build yet (PORT_PLAN: macOS after 0.2.0).
+          for RID in win-x64; do
             dotnet publish src/Videoprep.App -c Release -r "$RID" -o "dist/$RID" -p:VersionPrefix="$VER" -p:VersionSuffix=
             (cd "dist/$RID" && zip -9 "../videoprep-$TAG-$RID.zip" *)
           done
