@@ -25,6 +25,7 @@ public sealed partial class MainViewModel
     private UpdateStager? _stager;
     private CancellationTokenSource? _updateCts;
     private bool _checkingUpdates;
+    private bool _statusWanted;
 
     private void InitUpdates()
     {
@@ -65,8 +66,15 @@ public sealed partial class MainViewModel
 
     private async Task CheckForUpdateAsync(bool manual)
     {
-        if (_svc.Updates is not { } client || _checkingUpdates || Updating) return;
+        if (_svc.Updates is not { } client || Updating) return;
+        if (_checkingUpdates)
+        {
+            // A look is already running (the one when opening): the button must still answer, with what that look finds.
+            if (manual) { _statusWanted = true; UpdateStatus = L["upd_checking"]; }
+            return;
+        }
         _checkingUpdates = true;
+        _statusWanted |= manual;
         if (manual) UpdateStatus = L["upd_checking"];
         try
         {
@@ -78,7 +86,7 @@ public sealed partial class MainViewModel
             if (found is null)
             {
                 _svc.Log.Write($"Update check: videoprep {_svc.CurrentVersion} is the newest.");
-                if (manual) UpdateStatus = L.Format("upd_uptodate", _svc.CurrentVersion);
+                UpdateStatus = L.Format("upd_uptodate", _svc.CurrentVersion);
             }
             else
             {
@@ -89,9 +97,13 @@ public sealed partial class MainViewModel
         catch (UpdateException ex)
         {
             _svc.Log.Write($"WARN  Update check failed ({ex.Failure}): {ex.Message}");
-            if (manual) UpdateStatus = L["upd_check_failed"];
+            if (_statusWanted) UpdateStatus = L["upd_check_failed"];   // the automatic look is silent; the button is not
         }
-        finally { _checkingUpdates = false; }
+        finally
+        {
+            _checkingUpdates = false;
+            _statusWanted = false;
+        }
     }
 
     [RelayCommand]
