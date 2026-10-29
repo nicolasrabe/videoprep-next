@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## Sin publicar (0.3.0, Rondas 1, 2 y 3)
+## 0.3.0 - 2026-10-29
 - "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html
   and .csv. In Word files it finds hyperlinks, HYPERLINK fields and typed links, also in headers, footers, footnotes
   and text boxes. Google Docs and Outlook redirect links are unwrapped. A review window shows every link with the text
