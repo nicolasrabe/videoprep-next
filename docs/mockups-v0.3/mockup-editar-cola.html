@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup editar la cola</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510;--desk:#c9d2dc}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8;--desk:#14151a}}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+h2{max-width:860px;margin:18px auto 8px;font-size:15px}.note{max-width:860px;margin:4px auto 10px;color:var(--mu);font-size:12px}
+.win{max-width:860px;margin:0 auto 14px;border:1px solid var(--bd);background:var(--bg);padding:10px;position:relative}
+button,select,input[type=text]{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px}input[type=text]{padding:3px 6px}
+.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd)}
+th{text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--bd)}td{padding:4px 6px;border-bottom:1px solid var(--bd)}
+tr.sel td{background:var(--ob);color:var(--ot)}tr.lock td{color:var(--mu)}
+.edit{outline:2px solid var(--ot);background:var(--card);color:var(--tx);padding:1px 4px}
+.menu{position:absolute;left:210px;top:92px;width:290px;background:var(--card);border:1px solid var(--bd);box-shadow:0 4px 14px rgba(0,0,0,.25);padding:3px 0}
+.menu div{padding:4px 14px;display:flex;justify-content:space-between}.menu div.h{background:var(--ob);color:var(--ot)}.menu hr{border:0;border-top:1px solid var(--bd);margin:3px 0}.menu .k{color:var(--mu)}
+.dlg{max-width:620px;margin:0 auto 14px;border:1px solid var(--bd);background:var(--bg);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.dlg .tt{padding:6px 10px;border-bottom:1px solid var(--bd);background:var(--card);font-weight:600}.dlg .in{padding:10px}
+.r{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}.r>span:first-child{width:130px;color:var(--mu)}
+.pill{font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)}
+</style></head><body>
+
+<h2>1. En la Cola: renombrar y editar sin salir de la pestaña</h2>
+<div class="note">Hoy existe el botón "Editar", que te manda a la pestaña Descargar de a un elemento por vez. Eso se mantiene. Se suman tres formas más rápidas: renombrar en la propia fila (doble clic o F2), menú con clic derecho, y cambiar varios elementos juntos.</div>
+<div class="win">
+  <table>
+    <tr><th style="width:28px">#</th><th>Nombre</th><th style="width:150px">Formato</th><th style="width:130px">Fragmento</th><th style="width:95px">Estado</th></tr>
+    <tr class="lock"><td>1</td><td>Big Buck Bunny 60fps 4K...</td><td>MP4 · 480p</td><td>00:10:00 → 00:12:29</td><td><span class="pill">Listo 🔒</span></td></tr>
+    <tr class="sel"><td>2</td><td><span class="edit">Entrevista al invitado - parte 1</span></td><td>MP4 · 1080p</td><td>Video completo</td><td>En cola</td></tr>
+    <tr class="sel"><td>3</td><td>Me at the zoo</td><td>MP4 · 1080p</td><td>Video completo</td><td>En cola</td></tr>
+    <tr class="sel"><td>4</td><td>Clip de la transmisión</td><td>MP4 · 1080p</td><td>Video completo</td><td>En cola</td></tr>
+    <tr><td>5</td><td>Review del equipo</td><td>MP3</td><td>Video completo</td><td>En cola</td></tr>
+    <tr class="lock"><td>6</td><td>Charla técnica</td><td>MP4 · 1080p</td><td>Video completo</td><td><span class="pill">Descargando 🔒</span></td></tr>
+  </table>
+  <div class="menu">
+    <div class="h"><span>Renombrar</span><span class="k">F2</span></div>
+    <div><span>Cambiar formato o nombres de los seleccionados...</span></div>
+    <div><span>Editar en la pestaña Descargar</span><span class="k">1 elemento</span></div>
+    <hr>
+    <div><span>Duplicar</span></div>
+    <div><span>Subir / Bajar</span></div>
+    <div><span>Volver a descargar</span><span class="k">solo "Listo"</span></div>
+    <hr>
+    <div><span>Quitar</span><span class="k">Supr</span></div>
+  </div>
+  <div class="note" style="margin:8px 0 0">Reglas: lo que está "Descargando" o "Listo" aparece con candado y no se edita (si querés repetirlo, "Volver a descargar" lo vuelve a poner en cola). Renombrar en la fila cambia el nombre base del elemento; si tiene varios fragmentos, los archivos salen como "Nombre - 1", "Nombre - 2". Escape cancela, Enter confirma.</div>
+</div>
+
+<h2>2. Cambiar varios a la vez (seleccionás filas y clic derecho)</h2>
+<div class="dlg">
+  <div class="tt">Cambiar 3 elementos de la cola</div>
+  <div class="in">
+    <div class="r"><span>Formato</span><select><option>(sin cambios)</option><option>MP4 - H.264 + AAC</option><option>MOV - ProRes 422 HQ</option><option>MP3</option></select></div>
+    <div class="r"><span>Resolución máx.</span><select><option>(sin cambios)</option><option>1080p</option><option>720p</option><option>480p</option></select></div>
+    <div class="r"><span>Nombres</span><select><option>(sin cambios)</option><option>Serie: nombre + número</option><option>Agregar texto al principio o al final</option><option>Buscar y reemplazar</option></select></div>
+    <div class="r"><span></span><span class="mu">Serie:</span><input type="text" value="Escena" style="width:150px"><span class="mu">→ Escena1, Escena2, Escena3 (sigue la numeración si ya existen)</span></div>
+    <div class="r" style="margin-top:12px"><span>Vista previa</span><span class="mu">Entrevista al invitado - parte 1 → Escena1</span></div>
+    <div class="r"><span></span><span class="mu">Me at the zoo → Escena2</span></div>
+    <div class="r"><span></span><span class="mu">Clip de la transmisión → Escena3</span></div>
+    <div class="r" style="justify-content:flex-end;margin-top:12px"><button>Cancelar</button><button class="o">Aplicar a los 3</button></div>
+  </div>
+</div>
+<div class="note">Solo se cambian los campos que elijas; "(sin cambios)" deja cada elemento como estaba. Siempre se muestra la vista previa de los nombres antes de aplicar. Si querés deshacer, hay un "Deshacer" en la Cola que revierte el último cambio.</div>
+
+<h2>3. Un extra al cargar el archivo con enlaces</h2>
+<div class="note">En la ventana "Enlaces encontrados" la columna Nombre se puede editar antes de agregar a la cola (por defecto dice "título original"). Así, si el guion ya trae nombres como "F1", "F2", los ponés ahí y no después.</div>
+</body></html>

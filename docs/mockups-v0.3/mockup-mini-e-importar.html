@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup modo mini e importar enlaces</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510;--desk:#c9d2dc}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8;--desk:#14151a}}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+h2{max-width:860px;margin:18px auto 8px;font-size:15px}
+.note{max-width:860px;margin:4px auto 10px;color:var(--mu);font-size:12px}
+.win{max-width:860px;margin:0 auto 14px;border:1px solid var(--bd);background:var(--bg);padding:8px 10px 12px}
+.card{background:var(--card);border:1px solid var(--bd);padding:9px 10px;margin-bottom:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mu{color:var(--mu)}.spread{justify-content:space-between}
+button,select,input[type=text]{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px}
+input[type=text]{padding:3px 6px}
+.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}
+.mini{width:300px;border:1px solid var(--bd);background:var(--card);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.mini .top{display:flex;align-items:center;gap:6px;padding:3px 6px;background:var(--bg);border-bottom:1px solid var(--bd);font-size:11px;color:var(--mu)}
+.mini .top .sp{flex:1}.ic{border:1px solid var(--bd);background:var(--card);padding:0 6px;font-size:11px;line-height:18px;color:var(--tx)}
+.ic.on{background:var(--ob);color:var(--ot);border-color:var(--ob)}
+.mini .body{padding:7px 8px}
+.name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.bar{height:10px;background:var(--bg);border:1px solid var(--bd);margin:5px 0 3px}.bar>i{display:block;height:100%;background:var(--gb);border-right:1px solid var(--gt)}
+.pct{display:flex;justify-content:space-between;font-size:12px;color:var(--mu)}
+.mini1{width:300px;border:1px solid var(--bd);background:var(--card);box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;gap:6px;padding:4px 6px;position:relative;overflow:hidden}
+.mini1 .fill{position:absolute;left:0;top:0;bottom:0;background:var(--gb);opacity:.55}
+.mini1 span{position:relative}.mini1 .name{flex:1;font-weight:400}
+.desk{display:flex;gap:22px;flex-wrap:wrap;max-width:860px;margin:0 auto 6px;align-items:flex-start}
+.cap{font-size:12px;color:var(--mu);margin-bottom:4px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd)}
+th{text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--bd)}td{padding:4px 6px;border-bottom:1px solid var(--bd)}
+.pill{font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)}.pill.ok{color:var(--gt);background:var(--gb);border-color:var(--gb)}.pill.warn{color:var(--ot);background:var(--ob);border-color:var(--ob)}
+.dlg{max-width:760px;margin:0 auto 14px;border:1px solid var(--bd);background:var(--bg);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.dlg .tt{padding:6px 10px;border-bottom:1px solid var(--bd);background:var(--card);font-weight:600}.dlg .in{padding:10px}
+.dim{opacity:.55}
+</style></head><body>
+
+<h2>1. Modo mini</h2>
+<div class="note">Se activa con el botón "Mini" de la ventana grande (abajo, junto a Detener). Desde la ventanita, el botón de la flecha vuelve a la ventana grande. La ventana mini se puede arrastrar a cualquier lado, recuerda su posición y su tamaño es fijo y chico.</div>
+
+<div class="win">
+  <div class="cap">Ventana grande (solo la fila de abajo, con el botón nuevo)</div>
+  <div class="row spread">
+    <div class="row"><button>📁</button><button>Examinar...</button><span class="mu">Guardar en</span><input type="text" value="C:\Users\nico\Videos" style="width:210px"></div>
+    <div class="row"><button class="o">Mini</button><button class="g"><b>Descargar</b></button><button class="r">Detener</button></div>
+  </div>
+</div>
+
+<div class="desk">
+  <div>
+    <div class="cap">Variante A - con barra (la que propongo)</div>
+    <div class="mini">
+      <div class="top"><span>videoprep</span><span class="sp"></span>
+        <span class="ic on" title="Siempre encima de las demás ventanas">📌 Encima</span>
+        <span class="ic" title="Volver a la ventana grande">⤢</span></div>
+      <div class="body">
+        <div class="name">Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film</div>
+        <div class="bar"><i style="width:62%"></i></div>
+        <div class="pct"><span>62 %  ·  3,4 MB/s</span><span>2 de 5  ·  faltan 0:41</span></div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="cap">Variante B - una sola línea (más chica todavía)</div>
+    <div class="mini1"><i class="fill" style="width:62%"></i>
+      <span class="name">Big Buck Bunny 60fps 4K - Official...</span><span>62 %</span>
+      <span class="ic on">📌</span><span class="ic">⤢</span></div>
+    <div class="cap" style="margin-top:12px">Cuando no hay nada descargando</div>
+    <div class="mini1"><span class="name mu">Todo listo · 5 de 5 terminados</span><span class="ic on">📌</span><span class="ic">⤢</span></div>
+    <div class="cap" style="margin-top:12px">Si algo falló (en rojo, se ve de reojo)</div>
+    <div class="mini1" style="border-color:var(--rt)"><span class="name" style="color:var(--rt)">Terminado: 4 bien, 1 con error</span><span class="ic on">📌</span><span class="ic">⤢</span></div>
+  </div>
+</div>
+<div class="note">Detalles: "Encima" se puede tildar y destildar en la propia ventanita y se guarda en Ajustes. Al terminar todo suena el aviso de siempre (si está activado) y la ventanita cambia a "Todo listo". Si la cola tiene varios videos, muestra el que se está bajando y "N de M". Hereda el tema y el idioma elegidos. Sin cookies ni enlaces a la vista.</div>
+
+<h2>2. Cargar archivo con enlaces (.txt, .docx y más)</h2>
+<div class="note">Hoy el botón de la Cola dice "Cargar .txt...". Pasa a "Cargar archivo..." y también se puede arrastrar el archivo a la ventana. Antes de agregar nada, aparece esta ventana para revisar.</div>
+
+<div class="dlg">
+  <div class="tt">Enlaces encontrados en "guion-video-23.docx"</div>
+  <div class="in">
+    <div class="row spread" style="margin-bottom:8px">
+      <span>Se encontraron <b>9 enlaces</b>: 7 nuevos, 1 repetido, 1 de un sitio no compatible.</span>
+      <span class="mu">Formatos que lee: .txt .docx .md .html .csv</span></div>
+    <table>
+      <tr><th style="width:26px"></th><th>Enlace</th><th>Texto donde estaba</th><th style="width:100px">Cómo estaba</th><th style="width:110px">Estado</th></tr>
+      <tr><td><input type="checkbox" checked></td><td>youtube.com/watch?v=aqz-KE-bpKQ</td><td>"Escena del conejo (F1)"</td><td>Hipervínculo</td><td><span class="pill ok">YouTube</span></td></tr>
+      <tr><td><input type="checkbox" checked></td><td>youtu.be/jNQXAC9IVRw</td><td>"mirar este clip"</td><td>Hipervínculo</td><td><span class="pill ok">YouTube</span></td></tr>
+      <tr><td><input type="checkbox" checked></td><td>youtube.com/watch?v=Qw3r7yTz9Aa</td><td>(enlace escrito en el texto)</td><td>Texto</td><td><span class="pill ok">YouTube</span></td></tr>
+      <tr><td><input type="checkbox" checked></td><td>twitch.tv/ejemplo/clip/AbCdEf</td><td>"clip de la transmisión"</td><td>Hipervínculo</td><td><span class="pill ok">Twitch</span></td></tr>
+      <tr><td><input type="checkbox" checked></td><td>x.com/usuario/status/1234567890</td><td>(enlace escrito en el texto)</td><td>Texto</td><td><span class="pill ok">X</span></td></tr>
+      <tr class="dim"><td><input type="checkbox"></td><td>youtu.be/jNQXAC9IVRw</td><td>"otra vez el mismo clip"</td><td>Hipervínculo</td><td><span class="pill warn">Repetido</span></td></tr>
+      <tr class="dim"><td><input type="checkbox"></td><td>miempresa.com/informe.pdf</td><td>"informe del cliente"</td><td>Hipervínculo</td><td><span class="pill">No compatible</span></td></tr>
+    </table>
+    <div class="note" style="margin:6px 0 0">Muestra 7 de 9 filas en este dibujo. Los enlaces que no son de video (informes, páginas web) quedan destildados y avisados. Los repetidos (dentro del archivo o ya en la cola) también.</div>
+    <div class="row spread" style="margin-top:10px">
+      <div class="row"><button>Todo</button><button>Nada</button><button>Invertir</button><span class="mu">5 seleccionados</span></div>
+      <div class="row"><span class="mu">Formato</span><select><option>El de la pestaña Descargar (MP4 · 1080p)</option></select>
+        <button>Cancelar</button><button class="o">Agregar 5 a la cola</button></div>
+    </div>
+  </div>
+</div>
+<div class="note">Cómo lo lee: en .txt, .md, .html y .csv busca enlaces escritos y, en .html y .md, también los que están detrás de un texto. En .docx lee tanto los enlaces escritos como los hipervínculos (el texto azul subrayado que esconde la dirección). El resultado se muestra siempre para que lo revises antes de agregarlo. No interpreta rangos de tiempo ni nada más del guion: solo saca enlaces.</div>
+</body></html>
