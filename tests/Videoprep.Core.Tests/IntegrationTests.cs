@@ -72,22 +72,36 @@ internal static class Ffmpeg
     }
 
     /// <summary>
-    /// Video packets stored in the file, counted by ffprobe WITHOUT decoding (independent of the gray decode, and immune
-    /// to audio decoder trouble: Ubuntu's ffprobe failed on Opus packets when asked to decode with -count_frames).
-    /// For H.264, ProRes and VP9 in these files one packet is one frame.
+    /// Frames of the video stream, counted by decoding ONLY that stream with ffmpeg (<c>-map 0:v:0 -f null</c>, passthrough:
+    /// one count per decoded frame, none added to fill timestamp gaps). The audio is never decoded here, so an audio
+    /// problem cannot hide or fake the count; the audio has its own check, <see cref="AssertAudioDecodes"/>.
+    /// (Ubuntu's ffprobe sometimes printed no number for WebM files with Opus audio: "Error parsing Opus packet header".)
     /// </summary>
     public static long CountFrames(string file)
     {
         var sb = new System.Text.StringBuilder();
-        var r = new ProcessRunner().RunAsync(new ProcessSpec(Probe!, ["-v", "error", "-select_streams", "v:0", "-count_packets",
-            "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", file]), l => sb.AppendLine(l), CancellationToken.None)
-            .GetAwaiter().GetResult();
-        Assert.Equal(0, r.ExitCode);
-        // stderr is mixed in (Ubuntu's ffprobe warns about Opus packets here): keep the line that is just the number.
-        var lines = sb.ToString().Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        var number = lines.Select(l => l.TrimEnd(',')).FirstOrDefault(l => l.All(char.IsAsciiDigit) && l.Length > 0);
-        Assert.True(number is not null, "ffprobe gave no frame count: " + sb);
-        return long.Parse(number!, CultureInfo.InvariantCulture);
+        var code = new ProcessRunner().RunAsync(new ProcessSpec(Exe!, ["-hide_banner", "-v", "error", "-nostats", "-progress", "pipe:1",
+            "-i", file, "-map", "0:v:0", "-fps_mode", "passthrough", "-f", "null", "-"]), l => { lock (sb) sb.AppendLine(l); }, CancellationToken.None)
+            .GetAwaiter().GetResult().ExitCode;
+        Assert.True(code == 0, "ffmpeg could not decode the video of " + Path.GetFileName(file) + ": " + sb);
+        // The last "frame=N" line of the progress report is the total.
+        var frames = sb.ToString().Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Where(l => l.StartsWith("frame=", StringComparison.Ordinal)).Select(l => l[6..].Trim()).LastOrDefault();
+        Assert.True(frames is { Length: > 0 } && frames.All(char.IsAsciiDigit), "ffmpeg gave no frame count: " + sb);
+        return long.Parse(frames!, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// The audio of a file decodes completely and without a single error message (<c>-map 0:a:0 -f null</c>). A damaged
+    /// audio stream (for example a cut Opus packet in a WebM) fails here instead of going unnoticed.
+    /// </summary>
+    public static void AssertAudioDecodes(string file)
+    {
+        var sb = new System.Text.StringBuilder();
+        var code = new ProcessRunner().RunAsync(new ProcessSpec(Exe!, ["-hide_banner", "-v", "error", "-nostats",
+            "-i", file, "-map", "0:a:0", "-f", "null", "-"]), l => { lock (sb) sb.AppendLine(l); }, CancellationToken.None)
+            .GetAwaiter().GetResult().ExitCode;
+        Assert.True(code == 0 && sb.ToString().Trim().Length == 0, $"the audio of {Path.GetFileName(file)} does not decode cleanly (exit {code}): {sb}");
     }
 
     /// <summary>
@@ -136,6 +150,9 @@ public sealed class FrameExactCutTests : IDisposable
         var outInfo = Ffmpeg.ProbeFile(output);
         var check = OutputVerifier.Check(outInfo, job.Kind, plan, info.FormatDuration, true);
         Assert.True(check.Ok, check.Reason);
+        // The source has a tone: every cut must still have audio, and it must decode without one error message.
+        Assert.NotNull(outInfo.Audio);
+        Ffmpeg.AssertAudioDecodes(output);
     }
 
     [Theory]
