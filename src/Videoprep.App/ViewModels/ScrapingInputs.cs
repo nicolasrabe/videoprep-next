@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Videoprep.App.Services;
+using Avalonia.Threading;
 using Videoprep.Core.Formats;
+using Videoprep.Core.Profiles;
 using Videoprep.Core.Scraping;
 
 namespace Videoprep.App.ViewModels;
@@ -89,6 +91,31 @@ public sealed partial class FormatPicker : ObservableObject
         ResolutionChoices.Clear();
         foreach (var r in FormatCatalog.ResolutionChoices(value?.Key ?? "mp4")) ResolutionChoices.Add(r);
         SelectedResolution = keep is not null && ResolutionChoices.Contains(keep) ? keep : "1080p";
+    }
+
+    // ---- profiles (F6): picking one sets the format and the resolution, then the box goes back to its hint
+    public ObservableCollection<ProfileChoice> ProfileChoices { get; } = [];
+    [ObservableProperty] private ProfileChoice? _pickedProfile;
+
+    public void SetProfiles(IEnumerable<ProfileChoice> choices)
+    {
+        ProfileChoices.Clear();
+        foreach (var c in choices) ProfileChoices.Add(c);
+    }
+
+    partial void OnPickedProfileChanged(ProfileChoice? value)
+    {
+        if (value?.Profile is not { } p) return;
+        Apply(p);
+        Dispatcher.UIThread.Post(() => PickedProfile = null);
+    }
+
+    /// <summary>The profile's format and resolution (its naming is the owner's business).</summary>
+    public void Apply(FormatProfile p)
+    {
+        SelectedFormat = FormatChoices.FirstOrDefault(f => f.Key == p.Format) ?? SelectedFormat;
+        var label = FormatCatalog.ResolutionLabel(p.Cap);
+        if (ResolutionChoices.Contains(label)) SelectedResolution = label;
     }
 
     public string FormatKey => SelectedFormat?.Key ?? "mp4";

@@ -130,12 +130,15 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(CanUndo));
     }
 
-    private string FormatText(QueueItem it)
+    /// <summary>"MP4 - H.264 + AAC · 1080p" (audio formats without a resolution).</summary>
+    private static string FormatLabel(QueueItem it)
     {
         var f = FormatCatalog.Get(it.Format);
-        var label = f.Kind == MediaKind.Audio ? f.Label : $"{f.Label} · {FormatCatalog.ResolutionLabel(it.Cap)}";
-        return it.SubFolder.Length > 0 ? $"{label} · {it.SubFolder}{Path.DirectorySeparatorChar}" : label;
+        return f.Kind == MediaKind.Audio ? f.Label : $"{f.Label} · {FormatCatalog.ResolutionLabel(it.Cap)}";
     }
+
+    private string FormatText(QueueItem it) =>
+        it.SubFolder.Length > 0 ? $"{FormatLabel(it)} · {it.SubFolder}{Path.DirectorySeparatorChar}" : FormatLabel(it);
 
     /// <summary>The video title when known: from the preview (YouTube) or from an opened row's card (other sites).</summary>
     private string? TitleOf(QueueItem it)
@@ -244,7 +247,7 @@ public sealed partial class MainViewModel
         OpenLinkCommand = new RelayCommand(() => OpenLink(row.Url)),
         CopyLinkCommand = new AsyncRelayCommand(async () =>
         {
-            await _ui.SetClipboardText(row.Url);
+            await CopyToClipboardAsync(row.Url);
             StatusText = L["st_copied"];
         }),
         RetryCommand = new RelayCommand(() =>
@@ -408,7 +411,7 @@ public sealed partial class MainViewModel
             await _ui.ShowMessage(selected.Count == 0 ? L["msg_sel_one"] : L["msg_locked"]);
             return;
         }
-        var vm = new BatchEditViewModel(editable, selected.Count - editable.Count, TitleOf, FirstSeriesNumber)
+        var vm = new BatchEditViewModel(editable, selected.Count - editable.Count, TitleOf, FirstSeriesNumber, ProfileList())
         {
             Prefix = SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video",
         };
@@ -605,7 +608,7 @@ public sealed partial class MainViewModel
             await _ui.ShowMessage(L["msg_nolinks"]);
             return;
         }
-        var review = new ImportReviewViewModel(path, candidates, SelectedFormatKey, SelectedCap);
+        var review = new ImportReviewViewModel(path, candidates, SelectedFormatKey, SelectedCap, ProfileList());
         if (!await _ui.ReviewImport(review)) return;
         var chosen = review.Chosen();
         if (chosen.Count == 0) return;
@@ -613,12 +616,15 @@ public sealed partial class MainViewModel
         PushUndo();
         var fmt = review.SelectedFormat;
         var prefix = SafeName.Make(SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video", "Video");
+        // A profile brings its own naming; without one the Download tab's choice counts, as before.
+        var series = fmt.Profile is { } prof ? prof.IsSeries : NameSeries;
+        if (fmt.Profile is { IsSeries: true, Prefix.Length: > 0 } sp) prefix = sp.Prefix;
         foreach (var (url, name) in chosen)
         {
             Items.Add(new QueueItem
             {
                 Id = _nextItemId++, Url = url, Format = fmt.Key, Cap = fmt.Cap,
-                Naming = name.Length > 0 ? NamingMode.Custom : NameSeries ? NamingMode.Series : NamingMode.Original,
+                Naming = name.Length > 0 ? NamingMode.Custom : series ? NamingMode.Series : NamingMode.Original,
                 Custom = name, Prefix = prefix, SubFolder = review.UseSubfolder ? review.SubfolderName : "",
             });
         }

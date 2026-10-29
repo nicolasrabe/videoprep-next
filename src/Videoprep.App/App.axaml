@@ -208,6 +208,36 @@
       <Setter Property="TextDecorations" Value="Underline" />
     </Style>
 
+    <!-- Mini window (F4): progress as a filled background, small icon buttons, red frame and text for problems -->
+    <Style Selector="ProgressBar.mini">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource Gb}" />
+      <Setter Property="Height" Value="26" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Opacity" Value="0.7" />
+    </Style>
+    <Style Selector="ProgressBar.mini /template/ Border#PART_Indicator">
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Border.mini.problem">
+      <Setter Property="BorderBrush" Value="{DynamicResource Rt}" />
+    </Style>
+    <Style Selector="TextBlock.problem">
+      <Setter Property="Foreground" Value="{DynamicResource Rt}" />
+    </Style>
+    <Style Selector="Button.miniicon, ToggleButton.miniicon">
+      <Setter Property="Padding" Value="5,0" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="20" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="ToggleButton.miniicon:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />
+    </Style>
+
     <!-- Right-click menu in the theme colors -->
     <Style Selector="ContextMenu">
       <Setter Property="Background" Value="{DynamicResource Card}" />

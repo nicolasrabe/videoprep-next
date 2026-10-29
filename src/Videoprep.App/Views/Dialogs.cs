@@ -54,6 +54,36 @@ internal static class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
+    /// <summary>A question with the buttons named by the caller ("Continuar" / "Cancelar"); true = the first.</summary>
+    public static async Task<bool> Choice(Window owner, string title, string text, string yes, string no)
+    {
+        var go = Btn(yes, "o");
+        var stop = Btn(no);
+        var panel = new StackPanel { Spacing = 16, Children = { Text(text), Buttons(go, stop) } };
+        var w = Shell(title, panel, 520);
+        go.Click += (_, _) => w.Close(true);
+        stop.Click += (_, _) => w.Close(false);
+        return await w.ShowDialog<bool>(owner);
+    }
+
+    /// <summary>One line of text asked from the user; Enter accepts, null = Cancelar.</summary>
+    public static async Task<string?> Text(Window owner, string title, string prompt, string initial)
+    {
+        var box = new TextBox { Text = initial, MinWidth = 320 };
+        var ok = Btn(Loc.Instance["btn_ok"], "g");
+        var cancel = Btn(Loc.Instance["btn_cancel"]);
+        var panel = new StackPanel { Spacing = 12, Children = { Text(prompt), box, Buttons(ok, cancel) } };
+        var w = Shell(title, panel, 440);
+        ok.Click += (_, _) => w.Close(box.Text ?? "");
+        cancel.Click += (_, _) => w.Close(null);
+        box.KeyDown += (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.Enter) { e.Handled = true; w.Close(box.Text ?? ""); }
+        };
+        w.Opened += (_, _) => { box.Focus(); box.SelectAll(); };
+        return await w.ShowDialog<string?>(owner);
+    }
+
     public static async Task<string?> Color(Window owner, string current)
     {
         var box = new TextBox { Text = current, Width = 140 };

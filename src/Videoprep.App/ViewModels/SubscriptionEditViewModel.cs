@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Videoprep.App.Services;
+using Videoprep.Core.Profiles;
 using Videoprep.Core.Scraping;
 
 namespace Videoprep.App.ViewModels;
@@ -14,10 +15,14 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
     private readonly Subscription? _original;
     private readonly Func<string?, Task<string?>> _pickFolder;
 
-    public SubscriptionEditViewModel(Subscription? original, Func<string?, Task<string?>> pickFolder)
+    private readonly bool _ready;
+    private bool _applyingProfile;
+
+    public SubscriptionEditViewModel(Subscription? original, Func<string?, Task<string?>> pickFolder, IReadOnlyList<ProfileChoice>? profiles = null)
     {
         _original = original;
         _pickFolder = pickFolder;
+        Profiles = [new ProfileChoice(null, Loc.Instance["prof_own"]), .. profiles ?? []];
         var s = original ?? new Subscription();
         Name = s.Name;
         Url = s.Url;
@@ -32,7 +37,41 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         SubfolderPerSub = s.SubfolderPerSub;
         Backfill = s.FirstRun == Subscription.FirstRunBackfill;
         Enabled = s.Enabled;
+        // F6: the profile it follows (if it still exists); a change of format or names by hand means "own values".
+        SelectedProfile = s.Profile.ProfileId is { } id ? Profiles.FirstOrDefault(c => c.Profile?.Id == id) ?? Profiles[0] : Profiles[0];
+        Format.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(FormatPicker.SelectedFormat) or nameof(FormatPicker.SelectedResolution)) FollowOwnValues();
+        };
+        _ready = true;
     }
+
+    /// <summary>"(valores propios)" first, then the profiles.</summary>
+    public IReadOnlyList<ProfileChoice> Profiles { get; }
+    [ObservableProperty] private ProfileChoice? _selectedProfile;
+
+    partial void OnSelectedProfileChanged(ProfileChoice? value)
+    {
+        if (!_ready || value?.Profile is not { } p) return;
+        _applyingProfile = true;
+        try
+        {
+            Format.Apply(p);
+            NameSeries = p.IsSeries;
+            if (p.IsSeries && p.Prefix.Length > 0) Prefix = p.Prefix;
+        }
+        finally
+        {
+            _applyingProfile = false;
+        }
+    }
+
+    private void FollowOwnValues()
+    {
+        if (_ready && !_applyingProfile && SelectedProfile?.Profile is not null) SelectedProfile = Profiles[0];
+    }
+
+    partial void OnNameSeriesChanged(bool value) => FollowOwnValues();
 
     /// <summary>New subscriptions ask what to do the first time; existing ones already did it.</summary>
     public bool IsNew => _original is null;
@@ -73,6 +112,10 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         return url.Trim();
     }
 
+    /// <summary>The profile it follows: only when the values on screen are still exactly the profile's.</summary>
+    private string? FollowedProfileId() =>
+        SelectedProfile?.Profile is { } p && p.Format == Format.FormatKey && p.Cap == Format.Cap && p.IsSeries == NameSeries ? p.Id : null;
+
     /// <summary>The subscription to save, or null and a message for the user.</summary>
     public Subscription? Build(out string? problem)
     {
@@ -98,6 +141,7 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
             {
                 Format = Format.FormatKey, Cap = Format.Cap, Naming = NameSeries ? "series" : "orig",
                 Prefix = NameSeries ? (Prefix.Trim().Length > 0 ? Prefix.Trim() : name) : "",
+                ProfileId = FollowedProfileId(),
             },
             Folder = Folder.Trim().Trim('"'), SubfolderPerSub = SubfolderPerSub,
             FirstRun = IsNew ? (Backfill ? Subscription.FirstRunBackfill : Subscription.FirstRunMarkSeen) : baseSub.FirstRun,

@@ -27,6 +27,7 @@ public sealed partial class MainViewModel
     {
         NotifySelection();
         OnPropertyChanged(nameof(CanUndo));
+        RefreshMini();
     }
 
     [ObservableProperty] private string _statusText = "";
@@ -156,6 +157,7 @@ public sealed partial class MainViewModel
             return;
         }
         SaveSettings();
+        ResetMiniRun();
         IsRunning = true;
         _runFolder = folder;
         RebuildQueueRows();
@@ -205,8 +207,11 @@ public sealed partial class MainViewModel
         StatusText = result.Cancelled
             ? L["st_stopped"]
             : string.Format(L.Culture, L["st_done"], result.Ok, result.Warn, result.Fail);
+        MiniRunFinished(result);
+        RememberSources(jobs, result, folder);
         if (!result.Cancelled)
         {
+            WriteSourceListAfterBatch();
             if (Settings.Sound) _ui.PlayDoneSound();
             if (Settings.OpenDone && Directory.Exists(folder)) _ui.OpenFolder(folder);
         }
@@ -233,11 +238,13 @@ public sealed partial class MainViewModel
                 }
                 break;
             case StepEvent { Step: EngineStep.Downloading } st:
+                MiniJobStarted(st.Job, st.Number, st.Total);
                 ProgressIndeterminate = false;
                 Progress = 0;
                 StatusText = string.Format(L.Culture, L["st_starting"], st.Number, st.Total);
                 break;
             case StepEvent { Step: EngineStep.Processing or EngineStep.Verifying } st:
+                MiniJobStarted(st.Job, st.Number, st.Total);
                 ProgressIndeterminate = true;
                 StatusText = string.Format(L.Culture, L["st_cutting"], st.Number, st.Total);
                 break;

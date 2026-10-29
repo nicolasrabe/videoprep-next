@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Videoprep.App.Services;
 using Videoprep.Core.Formats;
 using Videoprep.Core.Import;
+using Videoprep.Core.Profiles;
 using Videoprep.Core.Text;
 
 namespace Videoprep.App.ViewModels;
@@ -29,7 +30,7 @@ public sealed partial class ImportRow : ObservableObject
 }
 
 /// <summary>A choice in the review window's "Formato" box: the Download tab's choice first, then every format.</summary>
-public sealed record ImportFormat(string Key, int Cap, string Label)
+public sealed record ImportFormat(string Key, int Cap, string Label, FormatProfile? Profile = null)
 {
     public override string ToString() => Label;
 }
@@ -52,7 +53,8 @@ public sealed partial class ImportReviewViewModel : ObservableObject
     public string SubfolderName { get; }
     public string SubfolderText => L.Format("imp_subfolder", SubfolderName);
 
-    public ImportReviewViewModel(string filePath, IReadOnlyList<ImportCandidate> candidates, string tabFormatKey, int tabCap)
+    public ImportReviewViewModel(string filePath, IReadOnlyList<ImportCandidate> candidates, string tabFormatKey, int tabCap,
+                                 IReadOnlyList<ProfileChoice>? profiles = null)
     {
         FileName = Path.GetFileName(filePath);
         SubfolderName = SafeName.Make(Path.GetFileNameWithoutExtension(filePath), "enlaces");
@@ -105,6 +107,9 @@ public sealed partial class ImportReviewViewModel : ObservableObject
             new(tab.Key, tabCap, L.Format("imp_fmt_tab", FormatLabel(tab.Key, tabCap))),
         };
         formats.AddRange(FormatCatalog.All.Select(f => new ImportFormat(f.Key, f.Kind == MediaKind.Video ? Math.Min(tabCap, MaxCap(f.Key)) : tabCap, f.Label)));
+        // F6: the profiles come first after "the one in the Download tab": they bring format, resolution and names.
+        formats.InsertRange(1, (profiles ?? []).Where(c => c.Profile is not null)
+            .Select(c => new ImportFormat(c.Profile!.Format, c.Profile.Cap, L.Format("imp_profile_fmt", c.Label), c.Profile)));
         Formats = formats;
         _selectedFormat = formats[0];
     }

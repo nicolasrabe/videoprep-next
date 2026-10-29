@@ -112,6 +112,8 @@
             <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
             <ComboBox ItemsSource="{Binding Explore.Format.FormatChoices}" SelectedItem="{Binding Explore.Format.SelectedFormat}" MinWidth="200" />
             <ComboBox ItemsSource="{Binding Explore.Format.ResolutionChoices}" SelectedItem="{Binding Explore.Format.SelectedResolution}" MinWidth="90" />
+            <ComboBox ItemsSource="{Binding Explore.Format.ProfileChoices}" SelectedItem="{Binding Explore.Format.PickedProfile}"
+                      PlaceholderText="{s:T ph_profile}" MinWidth="170" AutomationProperties.Name="{s:T lbl_profile}" />
             <Button Classes="o" Content="{s:T sc_to_queue}" Command="{Binding Explore.SendToQueueCommand}" IsEnabled="{Binding Explore.IsIdle}" />
             <Button Classes="g" Content="{s:T sc_subscribe}" Command="{Binding SubscribeFromExploreCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </StackPanel>
@@ -138,6 +140,7 @@
           </DataGridTemplateColumn>
           <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="170" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding FiltersText}" Width="*" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_profile}" Binding="{Binding ProfileText}" Width="140" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding FormatText}" Width="120" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding LastText}" Width="110" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding NewText}" Width="90" IsReadOnly="True" />

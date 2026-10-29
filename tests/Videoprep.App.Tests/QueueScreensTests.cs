@@ -228,7 +228,7 @@ public sealed partial class QueueScreensTests : IDisposable
         var items = grid.ContextMenu!.Items.OfType<MenuItem>().Select(m => m.Header as string).ToList();
         Assert.Equal(
             ["Renombrar (F2)", "Cambiar formato o nombres de los seleccionados...", "Editar en la pestaña Descargar", "Duplicar", "Subir", "Bajar",
-             "Volver a descargar", "Mostrar en carpeta", "Quitar (Supr)"],
+             "Volver a descargar", "Mostrar en carpeta", "Exportar lista de fuentes...", "Quitar (Supr)"],
             items);
         Assert.Equal("Cargar archivo...", w.GetVisualDescendants().OfType<Button>().Select(b => b.Content as string).First(t => t?.StartsWith("Cargar", StringComparison.Ordinal) == true));
     }

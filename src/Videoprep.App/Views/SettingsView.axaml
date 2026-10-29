@@ -46,6 +46,51 @@
         </StackPanel>
       </Border>
 
+      <!-- F4 / F5: mini window and clipboard -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <CheckBox Content="{s:T set_miniontop}" IsChecked="{Binding MiniOnTop}" />
+          <CheckBox Content="{s:T chk_clipwatch}" IsChecked="{Binding ClipboardWatch}" />
+          <!-- The privacy note sits right under the option -->
+          <TextBlock Classes="muted" Text="{s:T txt_clipprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- F7: list of sources -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="title" Text="{s:T grp_sources}" />
+          <CheckBox Content="{s:T chk_sources}" IsChecked="{Binding SourceListOn}" />
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="26,0,0,0">
+            <TextBlock Classes="muted" Text="{s:T lbl_sources_fmt}" VerticalAlignment="Center" />
+            <ComboBox ItemsSource="{Binding SourceListFormats}" SelectedIndex="{Binding SourceListFormatIndex}" MinWidth="200"
+                      IsEnabled="{Binding SourceListOn}" />
+          </StackPanel>
+          <TextBlock Classes="muted" Text="{s:T txt_sources_help}" TextWrapping="Wrap" Margin="26,0,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- F6: profiles -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="title" Text="{s:T grp_profiles}" />
+          <TextBlock Classes="muted" Text="{s:T txt_profiles_help}" TextWrapping="Wrap" />
+          <DataGrid ItemsSource="{Binding ManagedProfiles}" SelectedItem="{Binding SelectedManagedProfile}" SelectionMode="Single"
+                    HeadersVisibility="None" IsReadOnly="True" MaxHeight="190" CanUserSortColumns="False">
+            <DataGrid.Columns>
+              <DataGridTextColumn Binding="{Binding Label}" Width="2*" />
+              <DataGridTextColumn Binding="{Binding Detail}" Width="3*" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <WrapPanel ItemSpacing="8" LineSpacing="8">
+            <Button Content="{s:T btn_prof_rename}" Command="{Binding RenameProfileCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{s:T btn_prof_delete}" Command="{Binding DeleteProfileCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{s:T btn_prof_export}" Command="{Binding ExportProfilesCommand}" />
+            <Button Content="{s:T btn_prof_import}" Command="{Binding ImportProfilesCommand}" />
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+
       <!-- Appearance -->
       <Border Classes="card">
         <WrapPanel ItemSpacing="10" LineSpacing="8">

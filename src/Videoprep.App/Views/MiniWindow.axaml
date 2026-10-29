@@ -1,0 +1,37 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Videoprep.App.ViewModels"
+        xmlns:s="using:Videoprep.App.Services"
+        x:Class="Videoprep.App.Views.MiniWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{s:T mini_title}"
+        Width="300" Height="28" CanResize="False" SizeToContent="Manual"
+        SystemDecorations="None" ShowInTaskbar="False" ShowActivated="False"
+        Topmost="{Binding MiniOnTop}">
+  <!-- F4, variante B: one line. The progress is the filled background behind the text; a red frame means something failed.
+       It never takes the keyboard focus (see MiniWindow.axaml.cs). -->
+  <Border x:Name="Frame" Classes="mini" Classes.problem="{Binding MiniIsProblem}" BorderThickness="1"
+          Background="{DynamicResource Card}" BorderBrush="{DynamicResource Bd}">
+    <Border.ContextMenu>
+      <ContextMenu x:Name="Menu">
+        <MenuItem Header="{s:T mnu_mini_close}" Command="{Binding CloseMiniCommand}" />
+        <MenuItem x:Name="OnTopItem" Header="{s:T mnu_mini_ontop}" ToggleType="CheckBox" IsChecked="{Binding MiniOnTop}" />
+        <Separator />
+        <MenuItem Header="{s:T mnu_mini_quit}" Command="{Binding QuitFromMiniCommand}" />
+      </ContextMenu>
+    </Border.ContextMenu>
+    <Panel>
+      <ProgressBar Classes="mini" Minimum="0" Maximum="100" Value="{Binding MiniPercent}" IsHitTestVisible="False" />
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="6,0,2,0" VerticalAlignment="Center">
+        <TextBlock Text="{Binding MiniText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                   Classes.problem="{Binding MiniIsProblem}" />
+        <TextBlock Grid.Column="1" Text="{Binding MiniPercentText}" VerticalAlignment="Center" Margin="8,0,0,0" />
+        <TextBlock Grid.Column="2" Text="{Binding MiniCounter}" Classes="muted" VerticalAlignment="Center" Margin="8,0,0,0" />
+        <ToggleButton Grid.Column="3" x:Name="PinButton" Classes="miniicon" Content="📌" IsChecked="{Binding MiniOnTop}"
+                      ToolTip.Tip="{s:T mini_ontop_tip}" AutomationProperties.Name="{s:T mnu_mini_ontop}" Margin="8,0,0,0" />
+        <Button Grid.Column="4" x:Name="BackButton" Classes="miniicon" Content="⤢" Command="{Binding CloseMiniCommand}"
+                ToolTip.Tip="{s:T mini_close_tip}" AutomationProperties.Name="{s:T mnu_mini_close}" Margin="3,0,0,0" />
+      </Grid>
+    </Panel>
+  </Border>
+</Window>

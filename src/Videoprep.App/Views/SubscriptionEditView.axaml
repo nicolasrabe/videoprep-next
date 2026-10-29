@@ -53,6 +53,12 @@
     </Border>
 
     <WrapPanel ItemSpacing="8" LineSpacing="6">
+      <TextBlock Classes="muted" Text="{s:T sc_profile}" VerticalAlignment="Center" />
+      <ComboBox ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" MinWidth="220"
+                AutomationProperties.Name="{s:T sc_profile}" />
+      <TextBlock Classes="muted" Text="{s:T sc_profile_note}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="470" />
+    </WrapPanel>
+    <WrapPanel ItemSpacing="8" LineSpacing="6">
       <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
       <ComboBox ItemsSource="{Binding Format.FormatChoices}" SelectedItem="{Binding Format.SelectedFormat}" MinWidth="220" />
       <ComboBox ItemsSource="{Binding Format.ResolutionChoices}" SelectedItem="{Binding Format.SelectedResolution}" MinWidth="90" />

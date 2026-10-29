@@ -1,8 +1,10 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using Videoprep.App.Services;
 using Videoprep.App.ViewModels;
+using Videoprep.Core.Models;
 
 namespace Videoprep.App.Views;
 
@@ -10,11 +12,19 @@ namespace Videoprep.App.Views;
 public partial class MainWindow : Window, IUiServices
 {
     private bool _closeConfirmed;
+    private MiniWindow? _mini;
 
     public MainWindow()
     {
         InitializeComponent();
         Closing += OnClosing;
+        Closed += (_, _) => _mini?.CloseForReal();
+        // F4: the big window comes back from the taskbar -> the mini closes; F5: a question that waited can be asked now.
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == WindowStateProperty && WindowState != WindowState.Minimized && DataContext is MainViewModel { IsMiniActive: true } vm) vm.CloseMini();
+        };
+        Activated += (_, _) => (DataContext as MainViewModel)?.OnMainActivated();
         Opened += async (_, _) =>
         {
             try
@@ -56,9 +66,16 @@ public partial class MainWindow : Window, IUiServices
         await Dialogs.Message(this, string.Format(Loc.Instance.Culture, Loc.Instance["msg_error"], nl, file ?? ""), warning: true);
     }
 
-    public Task ShowMessage(string text, bool warning = false) => Dialogs.Message(this, text, warning);
+    /// <summary>The window a question belongs to: the mini one while the big window is minimized, else the big one.</summary>
+    private Window DialogOwner => _mini is { IsVisible: true } m && WindowState == WindowState.Minimized ? m : this;
 
-    public Task<bool> AskYesNo(string title, string text) => Dialogs.YesNo(this, title, text);
+    public Task ShowMessage(string text, bool warning = false) => Dialogs.Message(DialogOwner, text, warning);
+
+    public Task<bool> AskYesNo(string title, string text) => Dialogs.YesNo(DialogOwner, title, text);
+
+    public Task<bool> AskChoice(string title, string text, string yes, string no) => Dialogs.Choice(DialogOwner, title, text, yes, no);
+
+    public Task<string?> AskText(string title, string prompt, string initial) => Dialogs.Text(DialogOwner, title, prompt, initial);
 
     public async Task<string?> PickFolder(string? start)
     {
@@ -123,6 +140,71 @@ public partial class MainWindow : Window, IUiServices
     }
 
     public void OpenFolder(string path) => Platform.OpenFolder(path);
+
+    // ---------------- F4: mini window ----------------
+
+    public void ShowMini()
+    {
+        if (_mini is not null || DataContext is not MainViewModel vm) return;
+        _mini = new MiniWindow { DataContext = vm };
+        var scale = Screens.ScreenFromWindow(this)?.Scaling ?? 1.0;
+        var areas = Screens.All.OrderByDescending(sc => sc.IsPrimary)
+            .Select(sc => new PixelBox(sc.WorkingArea.X, sc.WorkingArea.Y, sc.WorkingArea.Width, sc.WorkingArea.Height)).ToList();
+        var (x, y) = MiniPlacement.Place(vm.MiniX, vm.MiniY, (int)(_mini.Width * scale), (int)(_mini.Height * scale), areas);
+        _mini.WindowStartupLocation = WindowStartupLocation.Manual;
+        _mini.Position = new PixelPoint(x, y);
+        _mini.Show();   // ShowActivated="false": the program where the user is typing keeps the keyboard
+        WindowState = WindowState.Minimized;   // one taskbar button (this one) and a way back
+    }
+
+    public void CloseMini()
+    {
+        var mini = _mini;
+        _mini = null;
+        mini?.CloseForReal();
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
+    }
+
+    public void CloseApp() => Close();
+
+    public bool IsMainActive => _mini is null && IsVisible && WindowState != WindowState.Minimized && IsActive;
+
+    // ---------------- F5: clipboard ----------------
+
+    public long ClipboardSequence => Platform.ClipboardSequence();
+
+    public async Task<string?> ReadClipboardTextAsync()
+    {
+        try { return Clipboard is { } c ? await c.TryGetTextAsync() : null; }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException or IOException)
+        {
+            return null;   // busy clipboard: the next check tries again
+        }
+    }
+
+    // ---------------- file pickers of this round ----------------
+
+    public async Task<string?> PickSaveFileAs(string suggestedName, string label, IReadOnlyList<string> patterns)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = [new FilePickerFileType(label) { Patterns = patterns }],
+            DefaultExtension = patterns.Count > 0 ? patterns[0].TrimStart('*', '.') : null,
+        });
+        return file?.TryGetLocalPath();
+    }
+
+    public async Task<string?> PickOpenFileAs(string label, IReadOnlyList<string> patterns)
+    {
+        var picked = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            AllowMultiple = false,
+            FileTypeFilter = [new FilePickerFileType(label) { Patterns = patterns }, FilePickerFileTypes.All],
+        });
+        return picked.FirstOrDefault()?.TryGetLocalPath();
+    }
 
     public void PlayDoneSound() => Platform.PlayDoneSound();
 }

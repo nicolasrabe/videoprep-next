@@ -43,6 +43,7 @@ public sealed partial class MainViewModel
         Sound = Settings.Sound;
         OpenDone = Settings.OpenDone;
         SelectedLanguageIndex = L.Language == "es" ? 0 : 1;
+        InitExtrasSettings();
         RebuildSettingsLists();
         _loadingSettings = false;
         StatusText = L["st_ready"];
@@ -192,7 +193,7 @@ public sealed partial class MainViewModel
     }
 
     [RelayCommand]
-    private Task CopyLog() => _ui.SetClipboardText(LogText);
+    private Task CopyLog() => CopyToClipboardAsync(LogText);
 
     [RelayCommand]
     private async Task SaveLog()
@@ -268,7 +269,7 @@ public sealed partial class MainViewModel
         var tools = new[] { ("yt-dlp", _tools.YtDlp), ("ffmpeg", _tools.Ffmpeg), ("ffprobe", _tools.Ffprobe), ("deno", _tools.Deno) }
             .Select(t => (t.Item1, t.Item2, versions.FirstOrDefault(v => v.Name == t.Item1).Version ?? "")).ToList();
         var text = Core.Logging.Diagnostics.Build(Core.AppInfo.Version, tools, _svc.InstalledBrowsers(), _svc.Log.Recent(200));
-        await _ui.SetClipboardText(text);
+        await CopyToClipboardAsync(text);
         await _ui.ShowMessage(L["msg_diag_copied"]);
     }
 }

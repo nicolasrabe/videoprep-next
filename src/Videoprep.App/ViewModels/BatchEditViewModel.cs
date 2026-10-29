@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Videoprep.App.Services;
 using Videoprep.Core.Formats;
 using Videoprep.Core.Models;
+using Videoprep.Core.Profiles;
 
 namespace Videoprep.App.ViewModels;
 
@@ -33,6 +34,28 @@ public sealed partial class BatchEditViewModel : ObservableObject
     public IReadOnlyList<Choice<string>> Resolutions { get; }
     public IReadOnlyList<Choice<string>> NameModes { get; }
 
+    /// <summary>"(sin cambios)" first, then the profiles (F6): picking one fills Formato, Resolución and Nombres below.</summary>
+    public IReadOnlyList<ProfileChoice> Profiles { get; }
+    [ObservableProperty] private ProfileChoice _selectedProfile;
+    public bool HasProfiles => Profiles.Count > 1;
+
+    partial void OnSelectedProfileChanged(ProfileChoice value)
+    {
+        if (value.Profile is not { } p) return;
+        SelectedFormat = Formats.FirstOrDefault(f => f.Value == p.Format) ?? SelectedFormat;
+        SelectedResolution = Resolutions.FirstOrDefault(r => r.Value is { } v && FormatCatalog.Resolutions[v] == p.Cap) ?? SelectedResolution;
+        if (p.IsSeries)
+        {
+            SelectedNames = NameModes.First(m => m.Value == nameof(NameChange.Series));
+            if (p.Prefix.Length > 0) Prefix = p.Prefix;
+        }
+        else
+        {
+            // "Title of the video" in a profile must not wipe the names already typed in the queue: names stay as they are.
+            SelectedNames = NameModes[0];
+        }
+    }
+
     [ObservableProperty] private Choice<string> _selectedFormat;
     [ObservableProperty] private Choice<string> _selectedResolution;
     [ObservableProperty]
@@ -55,7 +78,8 @@ public sealed partial class BatchEditViewModel : ObservableObject
     /// <param name="items">The unlocked selected items, in queue order.</param>
     /// <param name="title">Video title when known.</param>
     /// <param name="firstSeriesNumber">First free number for a series prefix in the item's folder (1 when none).</param>
-    public BatchEditViewModel(IReadOnlyList<QueueItem> items, int locked, Func<QueueItem, string?> title, Func<QueueItem, int> firstSeriesNumber)
+    public BatchEditViewModel(IReadOnlyList<QueueItem> items, int locked, Func<QueueItem, string?> title, Func<QueueItem, int> firstSeriesNumber,
+                              IReadOnlyList<ProfileChoice>? profiles = null)
     {
         _items = items;
         _title = title;
@@ -70,7 +94,10 @@ public sealed partial class BatchEditViewModel : ObservableObject
             new(nameof(NameChange.Series), L["batch_series"]),
             new(nameof(NameChange.AddText), L["batch_add"]),
             new(nameof(NameChange.Replace), L["batch_replace"]),
+            new(nameof(NameChange.Original), L["batch_original"]),
         ];
+        Profiles = [new ProfileChoice(null, same), .. profiles ?? []];
+        _selectedProfile = Profiles[0];
         _selectedFormat = Formats[0];
         _selectedResolution = Resolutions[0];
         _selectedNames = NameModes[0];

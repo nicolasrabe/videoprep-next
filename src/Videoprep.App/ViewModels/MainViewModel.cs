@@ -59,7 +59,10 @@ public sealed partial class MainViewModel : ObservableObject
 
         InitDownload();
         InitSettings();
+        InitClipboard();
+        InitProfiles();
         Scraping = new ScrapingViewModel(this);
+        RebuildProfileChoices();   // the Scraping boxes get the profiles too
         RebuildQueueRows();
         Loc.Instance.PropertyChanged += (_, e) => { if (e.PropertyName == "Item[]") OnLanguageChanged(); };
     }
@@ -103,6 +106,7 @@ public sealed partial class MainViewModel : ObservableObject
         _svc.Preview.CancelDetails();
         StopTitleLookup();
         _svc.Info.Stop();
+        _clipboard.Stop();
         SaveSettings();
         SaveQueue();
         try
@@ -139,6 +143,9 @@ public sealed partial class MainViewModel : ObservableObject
         RebuildFormatLists();
         RebuildSettingsLists();
         RebuildQueueRows();
+        RebuildProfileChoices();
+        RefreshMini();
+        OnPropertyChanged(nameof(SourceListFormats));
         UpdateExample();
         ShowPreview();
         if (!IsRunning) StatusText = L["st_ready"];

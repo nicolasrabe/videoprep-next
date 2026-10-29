@@ -6,13 +6,14 @@ using CommunityToolkit.Mvvm.Input;
 using Videoprep.App.Services;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Formats;
+using Videoprep.Core.Profiles;
 using Videoprep.Core.Scraping;
 using Videoprep.Core.Storage;
 
 namespace Videoprep.App.ViewModels;
 
 /// <summary>One row of the Suscripciones table.</summary>
-public sealed partial class SubscriptionRow(Subscription sub, Action<SubscriptionRow> enabledChanged) : ObservableObject
+public sealed partial class SubscriptionRow(Subscription sub, Action<SubscriptionRow> enabledChanged, Func<string?, string?>? profileName = null) : ObservableObject
 {
     public Subscription Sub { get; set; } = sub;
     [ObservableProperty] private bool _enabled = sub.Enabled;
@@ -43,6 +44,9 @@ public sealed partial class SubscriptionRow(Subscription sub, Action<Subscriptio
             return parts.Count > 0 ? string.Join(", ", parts) : L["sc_nofilters"];
         }
     }
+
+    /// <summary>The profile it follows ("Premiere 1080p"), or "(valores propios)" (also when its profile was deleted).</summary>
+    public string ProfileText => profileName?.Invoke(Sub.Profile.ProfileId) ?? L["prof_own"];
 
     public string FormatText => FormatCatalog.Get(Sub.Profile.Format).Label.Split(" - ")[0] + " " + FormatCatalog.ResolutionLabel(Sub.Profile.Cap);
 
@@ -118,7 +122,7 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
         _loading = false;
         var selectedId = Selected?.Sub.Id;
         Rows.Clear();
-        foreach (var s in _file.Subscriptions) Rows.Add(new SubscriptionRow(s, OnRowEnabledChanged));
+        foreach (var s in _file.Subscriptions) Rows.Add(new SubscriptionRow(s, OnRowEnabledChanged, _host.ProfileNameOf));
         Selected = Rows.FirstOrDefault(r => r.Sub.Id == selectedId);
     }
 
@@ -157,7 +161,43 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
         }
     }
 
-    private SubscriptionEditViewModel NewEditor(Subscription? s) => new(s, start => _host.Ui.PickFolder(start));
+    private SubscriptionEditViewModel NewEditor(Subscription? s) => new(s, start => _host.Ui.PickFolder(start), _host.ProfileList());
+
+    // ---- profiles (F6): which subscriptions follow a profile, and what happens to them when it changes
+
+    /// <summary>Names of the subscriptions that follow this profile (rows in memory, the ones the user sees).</summary>
+    public IReadOnlyList<string> NamesUsing(string profileId) =>
+        ProfileLinks.Using(profileId, Rows.Select(r => r.Sub)).Select(s => s.Name).ToList();
+
+    /// <summary>The profile was edited: the subscriptions that follow it keep its new values as their own too.</summary>
+    public void SyncProfile(FormatProfile profile)
+    {
+        var changed = false;
+        foreach (var r in Rows.Where(r => r.Sub.Profile.ProfileId == profile.Id).ToList())
+        {
+            r.Refresh(ProfileLinks.Sync(r.Sub, profile));
+            changed = true;
+        }
+        if (changed) Save();
+    }
+
+    /// <summary>The profile is being deleted: its subscriptions stop following it and keep the values they have.</summary>
+    public void DetachProfile(string profileId)
+    {
+        var changed = false;
+        foreach (var r in Rows.Where(r => r.Sub.Profile.ProfileId == profileId).ToList())
+        {
+            r.Refresh(ProfileLinks.Detach(r.Sub));
+            changed = true;
+        }
+        if (changed) Save();
+    }
+
+    /// <summary>A profile was renamed or deleted: the table shows the current names.</summary>
+    public void RefreshProfileNames()
+    {
+        foreach (var r in Rows) r.Refresh(r.Sub);
+    }
 
     [RelayCommand]
     private async Task Add()
@@ -185,7 +225,7 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
     private async Task AddWith(SubscriptionEditViewModel vm)
     {
         if (!await _host.Ui.EditSubscription(vm) || vm.Build(out _) is not { } sub) return;
-        var row = new SubscriptionRow(sub, OnRowEnabledChanged);
+        var row = new SubscriptionRow(sub, OnRowEnabledChanged, _host.ProfileNameOf);
         Rows.Add(row);
         Selected = row;
         Save();

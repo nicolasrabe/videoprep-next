@@ -99,6 +99,14 @@ public sealed class ProfileStore
                || (extraReserved?.Any(r => string.Equals(r, n, StringComparison.CurrentCultureIgnoreCase)) ?? false);
     }
 
+    /// <summary>True when the name is one of the three examples (in any language given), which nobody can take.</summary>
+    public static bool BuiltInNameTaken(string name, IEnumerable<string>? extraReserved = null)
+    {
+        var n = FormatProfile.CleanName(name);
+        return BuiltIns.Any(p => string.Equals(p.Name, n, StringComparison.CurrentCultureIgnoreCase))
+               || (extraReserved?.Any(r => string.Equals(r, n, StringComparison.CurrentCultureIgnoreCase)) ?? false);
+    }
+
     /// <summary>"Name", else "Name (2)", "Name (3)"... never an existing name.</summary>
     public string UniqueName(string name, IEnumerable<string>? extraReserved = null)
     {

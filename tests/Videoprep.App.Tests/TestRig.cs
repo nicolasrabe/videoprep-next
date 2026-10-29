@@ -38,7 +38,7 @@ internal sealed class FakeUi : IUiServices
         return Task.FromResult(subscription.Build(out var problem) is not null || Fail(problem));
     }
     private bool Fail(string? problem) { Messages.Add(problem ?? ""); return false; }
-    public Task SetClipboardText(string text) { Clipboard = text; return Task.CompletedTask; }
+    public Task SetClipboardText(string text) { Clipboard = text; UserCopies(text); return Task.CompletedTask; }
     public void OpenFolder(string path) => OpenedFolders.Add(path);
     public Task<string?> PickLinkFile() => Task.FromResult(FileToPick);
     /// <summary>What the "user" does in "Enlaces encontrados"; null = presses Cancelar.</summary>
@@ -53,6 +53,36 @@ internal sealed class FakeUi : IUiServices
     public List<string> OpenedUrls { get; } = [];
     public void OpenUrl(string url) => OpenedUrls.Add(url);
     public void PlayDoneSound() => Sounds++;
+
+    // ---- 0.3 round 2
+    public List<string> TextAnswers { get; } = [];
+    public Queue<string?> Texts { get; } = new();
+    public Task<string?> AskText(string title, string prompt, string initial) { TextAnswers.Add(prompt); return Task.FromResult(Texts.Count > 0 ? Texts.Dequeue() : null); }
+    public List<string> Choices { get; } = [];
+    public Queue<bool> ChoiceAnswers { get; } = new();
+    public Task<bool> AskChoice(string title, string text, string yes, string no)
+    {
+        Choices.Add(text);
+        return Task.FromResult(ChoiceAnswers.Count > 0 && ChoiceAnswers.Dequeue());
+    }
+    public string? SavePath { get; set; }
+    public string? OpenPath { get; set; }
+    public Task<string?> PickSaveFileAs(string suggestedName, string label, IReadOnlyList<string> patterns) => Task.FromResult(SavePath);
+    public Task<string?> PickOpenFileAs(string label, IReadOnlyList<string> patterns) => Task.FromResult(OpenPath);
+    public bool MiniShown { get; private set; }
+    public int MiniShows { get; private set; }
+    public int AppClosed { get; private set; }
+    public bool MainActive { get; set; } = true;
+    public bool IsMainActive => MainActive && !MiniShown;
+    public void ShowMini() { MiniShown = true; MiniShows++; }
+    public void CloseMini() => MiniShown = false;
+    public void CloseApp() => AppClosed++;
+    // The "user" copies something: the text and the change number go together.
+    public long ClipboardSequence { get; private set; } = 1;
+    private string? _copied;
+    public void UserCopies(string text) { _copied = text; ClipboardSequence++; }
+    public int ClipboardReads { get; private set; }
+    public Task<string?> ReadClipboardTextAsync() { ClipboardReads++; return Task.FromResult(_copied); }
 }
 
 /// <summary>No internet: oEmbed answers for one video, everything else is 404.</summary>
@@ -107,6 +137,7 @@ internal sealed class TestRig : IDisposable
             Preview = new PreviewService(runner, http, Log),
             Info = new VideoInfoService(runner, http, Log) { Debounce = TimeSpan.Zero },
             InstalledBrowsers = () => [],
+            ClipboardTimer = false,
             Delay = (t, _) => { lock (Pauses) Pauses.Add(t); return Task.CompletedTask; },
             SchTasks = args => { SchTaskCalls.Add(args); return Task.FromResult((SchTaskExit, "fake schtasks")); },
         };

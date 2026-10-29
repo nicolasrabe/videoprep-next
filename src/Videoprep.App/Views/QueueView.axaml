@@ -21,6 +21,7 @@
           <MenuItem Header="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanChangeSelection}" />
           <MenuItem Header="{s:T mnu_requeue}" Command="{Binding RequeueCommand}" IsEnabled="{Binding CanRequeue}" />
           <MenuItem Header="{s:T mnu_showfolder}" Command="{Binding ShowInFolderCommand}" IsEnabled="{Binding CanShowInFolder}" />
+          <MenuItem Header="{s:T mnu_exportsources}" Command="{Binding ExportSourcesCommand}" />
           <Separator />
           <MenuItem Header="{s:T mnu_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding CanChangeSelection}" />
         </ContextMenu>

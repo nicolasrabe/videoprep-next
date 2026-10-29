@@ -98,6 +98,15 @@ public sealed class ProfileTests : IDisposable
         Assert.Equal("a b", FormatProfile.CleanName("a\n\tb"));
     }
 
+    [Theory]
+    [InlineData("mp4", 2160, 1080)]       // H.264 stops at 1080p
+    [InlineData("mp4", 720, 720)]
+    [InlineData("m4a", 1440, 1080)]
+    [InlineData("movp", 2160, 2160)]
+    [InlineData("movp", 480, 720)]        // ProRes offers 720p at the lowest
+    public void A_profile_never_keeps_a_resolution_its_format_does_not_offer(string fmt, int cap, int expected) =>
+        Assert.Equal(expected, new FormatProfile { Name = "x", Format = fmt, Cap = cap }.Normalized().Cap);
+
     [Fact]
     public void Rename_replace_and_remove()
     {
