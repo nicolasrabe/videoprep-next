@@ -271,6 +271,15 @@ try {
   $miniGone = -not ([W]::IsWindow($miniH) -and [W]::IsWindowVisible($miniH))
   Check '"Cerrar modo mini" closes the mini' $miniGone
   Check 'the big window is back' (-not [W]::IsIconic($mainH) -and [W]::IsWindowVisible($mainH))
+
+  # ---------- the other way back: restoring the big window from the taskbar closes the mini ----------
+  Uia-Invoke (Uia-Find $mainH 'Mini' $CT::Button)
+  $miniH2 = WaitUntil { foreach ($h in [W]::TopWindows($app.Id)) { if ((Title $h) -eq 'videoprep mini' -and [W]::IsWindowVisible($h)) { return $h } } } 8000
+  Check 'the mini opens a second time' ($null -ne $miniH2)
+  Start-Sleep -Milliseconds 800
+  [void][W]::ShowWindow($mainH, 9)   # SW_RESTORE: what a click on the taskbar button does
+  Start-Sleep -Seconds 1
+  Check 'restoring the big window from the taskbar closes the mini' (-not ($miniH2 -and [W]::IsWindow($miniH2) -and [W]::IsWindowVisible($miniH2)))
 }
 finally {
   Write-Output ("RESULT  " + $(if ($script:fails -eq 0) { 'ALL PASSED' } else { "$($script:fails) FAILED" }))
