@@ -161,5 +161,60 @@
     <Style Selector="DataGridRow:selected DataGridCell">
       <Setter Property="Foreground" Value="{DynamicResource Ot}" />
     </Style>
+
+    <!-- Small state labels ("YouTube", "Repetido"...) in the import window -->
+    <Style Selector="Border.pill">
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="7,1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Border.pill TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Border.pill.ok">
+      <Setter Property="Background" Value="{DynamicResource Gb}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Gb}" />
+    </Style>
+    <Style Selector="Border.pill.ok TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Gt}" />
+    </Style>
+    <Style Selector="Border.pill.warn">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />
+    </Style>
+    <Style Selector="Border.pill.warn TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+    </Style>
+
+    <!-- Expanded queue row: gray bars while the card loads, the link as underlined text -->
+    <Style Selector="Border.sk">
+      <Setter Property="Background" Value="{DynamicResource Bd}" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+    </Style>
+    <Style Selector="Button.link">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.link TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+      <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+
+    <!-- Right-click menu in the theme colors -->
+    <Style Selector="ContextMenu">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
   </Application.Styles>
 </Application>

@@ -40,15 +40,31 @@ internal sealed class FakeUi : IUiServices
     private bool Fail(string? problem) { Messages.Add(problem ?? ""); return false; }
     public Task SetClipboardText(string text) { Clipboard = text; return Task.CompletedTask; }
     public void OpenFolder(string path) => OpenedFolders.Add(path);
+    public Task<string?> PickLinkFile() => Task.FromResult(FileToPick);
+    /// <summary>What the "user" does in "Enlaces encontrados"; null = presses Cancelar.</summary>
+    public Func<ImportReviewViewModel, bool>? Review { get; set; }
+    public ImportReviewViewModel? LastReview { get; private set; }
+    public Task<bool> ReviewImport(ImportReviewViewModel review) { LastReview = review; return Task.FromResult(Review?.Invoke(review) ?? false); }
+    /// <summary>What the "user" does in "Cambiar N elementos"; null = presses Cancelar.</summary>
+    public Func<BatchEditViewModel, bool>? Batch { get; set; }
+    public Task<bool> EditBatch(BatchEditViewModel edit) => Task.FromResult(Batch?.Invoke(edit) ?? false);
+    public List<string> ShownFiles { get; } = [];
+    public void ShowInFolder(string file) => ShownFiles.Add(file);
+    public List<string> OpenedUrls { get; } = [];
+    public void OpenUrl(string url) => OpenedUrls.Add(url);
     public void PlayDoneSound() => Sounds++;
 }
 
 /// <summary>No internet: oEmbed answers for one video, everything else is 404.</summary>
 internal sealed class FakeWeb : HttpMessageHandler
 {
+    /// <summary>Every URL asked for, in order (tests check that nothing is asked for without a reason).</summary>
+    public List<string> Requests { get; } = [];
+
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
         var url = request.RequestUri!.ToString();
+        lock (Requests) Requests.Add(url);
         if (url.StartsWith("https://www.youtube.com/oembed", StringComparison.Ordinal))
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -72,6 +88,9 @@ internal sealed class TestRig : IDisposable
     public string OutFolder => Path.Combine(Dir, "out");
     public List<IReadOnlyList<string>> SchTaskCalls { get; } = [];
     public int SchTaskExit { get; set; }
+    public FakeWeb Web { get; } = new();
+    /// <summary>Pauses asked for by the app (title lookups, scraping); tests do not wait.</summary>
+    public List<TimeSpan> Pauses { get; } = [];
 
     public TestRig(bool tools = false)
     {
@@ -80,14 +99,15 @@ internal sealed class TestRig : IDisposable
         SettingsStore.Save(Paths.SettingsFile, new Settings { Lang = "es" });
         if (tools) InstallFakeTools(Paths.ToolsDir);
         var runner = new ProcessRunner();
-        var http = new HttpClient(new FakeWeb());
+        var http = new HttpClient(Web);
         Services = new AppServices
         {
             Paths = Paths, Log = Log, Runner = runner, Http = http,
             Tools = new ToolManager(Paths.ToolsDir, http, exeDir: Path.Combine(Dir, "noexe"), pathVariable: ""),
             Preview = new PreviewService(runner, http, Log),
+            Info = new VideoInfoService(runner, http, Log) { Debounce = TimeSpan.Zero },
             InstalledBrowsers = () => [],
-            Delay = (_, _) => Task.CompletedTask,
+            Delay = (t, _) => { lock (Pauses) Pauses.Add(t); return Task.CompletedTask; },
             SchTasks = args => { SchTaskCalls.Add(args); return Task.FromResult((SchTaskExit, "fake schtasks")); },
         };
     }

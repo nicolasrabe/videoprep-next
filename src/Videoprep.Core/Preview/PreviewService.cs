@@ -102,40 +102,20 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
     }
 
     /// <summary>
-    /// Titles of YouTube links added from a file, in the background: oEmbed only (no yt-dlp, no cookies), one request
-    /// at a time with <paramref name="pause"/> between requests, stopped by <paramref name="ct"/>. Links already known
-    /// are skipped. <paramref name="progress"/> gets (done, total), first with done = 0.
+    /// Title of one YouTube link added from a file, found in the background: oEmbed only (no yt-dlp, no cookies), no
+    /// picture. Returns true when it asked the network (the caller pauses between requests); links already known or
+    /// not from YouTube return false without asking.
     /// </summary>
-    public async Task LookupTitlesAsync(IReadOnlyList<string> urls, TimeSpan pause, Func<TimeSpan, CancellationToken, Task> delay,
-                                        Action<int, int>? progress, CancellationToken ct)
+    public async Task<bool> LookupTitleAsync(string url, CancellationToken ct)
     {
-        var keys = urls.Select(UrlParser.LinkKey).Where(k => UrlParser.IsYoutubeKey(k) && Get(k) is not { Meta: MetaState.Ready })
-                       .Distinct().ToList();
-        progress?.Invoke(0, keys.Count);
-        for (var i = 0; i < keys.Count; i++)
-        {
-            try
-            {
-                if (i > 0) await delay(pause, ct).ConfigureAwait(false);
-                ct.ThrowIfCancellationRequested();
-                var key = keys[i];
-                if (Get(key) is not { Meta: MetaState.Ready })
-                {
-                    var (title, author) = await OEmbedAsync(key, ct).ConfigureAwait(false);
-                    if (title.Length > 0)
-                    {
-                        var info = new PreviewInfo { Key = key, Url = UrlParser.CanonicalYoutube(key), Meta = MetaState.Ready, Title = title, Author = author };
-                        _cache.AddOrUpdate(key, info, (_, old) => old.Meta == MetaState.Ready ? old : old with { Meta = MetaState.Ready, Title = title, Author = author });
-                        Changed?.Invoke(key);
-                    }
-                }
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                return;
-            }
-            progress?.Invoke(i + 1, keys.Count);
-        }
+        var key = UrlParser.LinkKey(UrlParser.ToYoutubeUrl(url, allowBareId: false) ?? url);
+        if (!UrlParser.IsYoutubeKey(key) || Get(key) is { Meta: MetaState.Ready }) return false;
+        var (title, author) = await OEmbedAsync(key, ct).ConfigureAwait(false);
+        if (title.Length == 0) return true;
+        var info = new PreviewInfo { Key = key, Url = UrlParser.CanonicalYoutube(key), Meta = MetaState.Ready, Title = title, Author = author };
+        _cache.AddOrUpdate(key, info, (_, old) => old.Meta == MetaState.Ready ? old : old with { Meta = MetaState.Ready, Title = title, Author = author });
+        Changed?.Invoke(key);
+        return true;
     }
 
     private async Task<(string Title, string Author)> OEmbedAsync(string key, CancellationToken ct)

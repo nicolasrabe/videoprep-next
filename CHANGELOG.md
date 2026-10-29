@@ -2,6 +2,22 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
+## Unreleased (0.3.0, round 1: the queue)
+- "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html
+  and .csv. In Word files it finds hyperlinks, HYPERLINK fields and typed links, also in headers, footers, footnotes
+  and text boxes. Google Docs and Outlook redirect links are unwrapped. A review window shows every link with the text
+  around it, marks repeats, links already queued, channels and non-video links, lets you type a name per link and save
+  into a subfolder named after the file. Always whole videos. Files are only read (size limits, zip-bomb guard, no
+  external XML entities, nothing fetched). YouTube titles are filled in afterwards, one at a time, with the public
+  oEmbed address only (at most 100 per file).
+- Queue editing: rename in the row (double-click or F2), right-click menu, "Cambiar N elementos" (format, resolution,
+  names: series, add text, find and replace, with a preview), Duplicate, Undo (Ctrl+Z), "Volver a descargar" and
+  "Mostrar en carpeta". Rows being downloaded or done are locked; finished rows are not downloaded again by Download.
+- Clip times beyond the video length turn red with "El video dura 38:12" (only a warning).
+- Expandable queue rows: a click (or the arrow keys) opens the row with thumbnail, title, channel, date, views,
+  description, the link (open/copy) and the planned file name. Data is asked for only for the row that is opened, one
+  request at a time.
+
 ## 0.2.0 - 2026-10-26
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).
 - Phase 1: project skeleton, automatic build and tests on Windows, macOS and Linux (GitHub Actions), test window showing the version.

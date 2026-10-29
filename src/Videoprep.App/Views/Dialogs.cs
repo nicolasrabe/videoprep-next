@@ -122,6 +122,34 @@ internal static class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
+    /// <summary>"Enlaces encontrados en ..." (F1): a big resizable window; true = "Agregar N a la cola".</summary>
+    public static async Task<bool> ImportReview(Window owner, ImportReviewViewModel vm)
+    {
+        var view = new ImportReviewView { DataContext = vm };
+        var w = Shell(vm.Title, view, 980);
+        w.CanResize = true;
+        w.SizeToContent = SizeToContent.Manual;
+        w.Height = Math.Min(620, owner.Bounds.Height > 0 ? owner.Bounds.Height : 620);
+        w.MinWidth = 760;
+        w.MinHeight = 380;
+        view.AddButton.Click += (_, _) => w.Close(true);
+        view.CancelButton.Click += (_, _) => w.Close(false);
+        return await w.ShowDialog<bool>(owner);
+    }
+
+    /// <summary>"Cambiar N elementos de la cola" (F2); true = "Aplicar a los N".</summary>
+    public static async Task<bool> BatchEdit(Window owner, BatchEditViewModel vm)
+    {
+        var view = new BatchEditView { DataContext = vm };
+        var apply = Btn(vm.ApplyText, "o");
+        var cancel = Btn(Loc.Instance["btn_cancel"]);
+        var panel = new StackPanel { Spacing = 16, Children = { view, Buttons(cancel, apply) } };
+        var w = Shell(vm.Title, panel, 640);
+        apply.Click += (_, _) => w.Close(true);
+        cancel.Click += (_, _) => w.Close(false);
+        return await w.ShowDialog<bool>(owner);
+    }
+
     private static StackPanel Buttons(params Button[] buttons)
     {
         var p = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };

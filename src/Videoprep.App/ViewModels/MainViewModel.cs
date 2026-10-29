@@ -47,6 +47,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         _svc.Log.LineAdded += line => _post(() => AppendLog(line));
         _svc.Preview.Changed += key => _post(() => OnPreviewChanged(key));
+        _svc.Info.Changed += key => _post(() => OnInfoChanged(key));
 
         var saved = QueueStore.Load(_svc.Paths.QueueFile, out var qProblem);
         foreach (var it in saved)
@@ -100,6 +101,8 @@ public sealed partial class MainViewModel : ObservableObject
             _runCts?.Cancel();
         }
         _svc.Preview.CancelDetails();
+        StopTitleLookup();
+        _svc.Info.Stop();
         SaveSettings();
         SaveQueue();
         try

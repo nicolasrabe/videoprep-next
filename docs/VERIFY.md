@@ -66,3 +66,10 @@ Final path with symbols in the title (2026-10-26, yt-dlp 2026.10.21, Windows, PY
 file first; checked end to end with `videoprep --demo` on that video (file found, clip cut and verified).
 
 Subscriptions on Nico's PC (2026-10-26, Windows 10): a real check of @BlenderStudio downloaded the expected videos and a second check downloaded nothing (after the max-count fix). The scheduled task was created from the app's "Configurar..." button (`schtasks /Create /TN videoprep-check /TR "<exe> --check" /SC HOURLY /MO 6 /IT /F`, built with ArgumentList; HOURLY accepts /MO 1-23, so 24 h uses DAILY /MO 1), started with `schtasks /Run /TN videoprep-check`, and it ran `videoprep.exe --check`: logs/check-20261026.log shows the listing, "0 new" and "Exit code 0". Then removed.
+
+## 0.3 round 1 (2026-10-28, yt-dlp 2026.10.21, Windows 10)
+
+| What | Result | Used for |
+|---|---|---|
+| Queue row card: `--ignore-config --no-playlist --no-warnings --skip-download --ignore-no-formats-error --js-runtimes deno:<abs> --print "INFO\|%(.{title,channel,uploader,upload_date,view_count,duration,duration_string,description,thumbnail,webpage_url})j" <url>` on `aqz-KE-bpKQ` (Big Buck Bunny, CC BY) | One line `INFO\|{"title": "Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film", "channel": "Blender", "uploader": "Blender", "upload_date": "20141110", "view_count": 23481387, "duration": 635, "duration_string": "10:35", "description": "...", "thumbnail": "https://i.ytimg.com/vi_webp/.../maxresdefault.webp", ...}`, exit 0. A `WARNING: Unknown codec iamf...` line goes to stderr even with `--no-warnings`; it does not matter. | `VideoInfoService` (F3). The YouTube picture is taken from `i.ytimg.com/vi/<id>/hqdefault.jpg` (JPEG) instead of the WebP given here. Checked end to end by `NetworkTests` (opt-in, `VIDEOPREP_NETWORK_TESTS=1`): one yt-dlp run, card and picture in about 4 s. |
+| Background titles: `https://www.youtube.com/oembed?format=json&url=<watch url>` | Title and author, no cookies, no yt-dlp. | Titles of YouTube links loaded from a file (one at a time, 1.5 s apart, at most 100 per file). Checked by `NetworkTests`. |

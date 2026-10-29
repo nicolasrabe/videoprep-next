@@ -18,5 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Videoprep.Core.Tests\Fixtures\listing\**" LinkBase="Fixtures\listing" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Word files for the import tests are built in code (no user documents in the repo). -->
+    <Compile Include="..\Videoprep.Core.Tests\DocxBuilder.cs" Link="DocxBuilder.cs" />
   </ItemGroup>
 </Project>

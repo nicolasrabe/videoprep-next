@@ -40,9 +40,11 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
     /// Where a job's files go: the batch folder, or a subfolder of it. The subfolder name is cleaned again here, so a
     /// queue file edited by hand cannot point outside the batch folder ("..", "C:\", "\\server").
     /// </summary>
-    public static string FolderFor(string batchFolder, Job job)
+    public static string FolderFor(string batchFolder, Job job) => FolderFor(batchFolder, job.SubFolder);
+
+    public static string FolderFor(string batchFolder, string subFolder)
     {
-        var sub = Text.SafeName.Make(job.SubFolder, "");
+        var sub = Text.SafeName.Make(subFolder, "");
         return sub.Length > 0 ? Path.Combine(batchFolder, sub) : batchFolder;
     }
 

@@ -10,13 +10,16 @@
 //   slow          prints progress for 60 s (to test Stop); starts a child process too (to test killing the tree)
 //   noformat      "Requested format is not available", exit 1
 //   hang          prints nothing for 60 s (to test the preview time limit)
-// With --print "DET|..." (preview) the ok scenarios print one DET line instead of downloading.
+// With --print "DET|..." (preview) the ok scenarios print one DET line instead of downloading;
+// with --print "INFO|..." (queue row card) one INFO json line.
 // Environment:
 //   FAKE_YTDLP_SOURCE  media file to copy as the "download" (else a few dummy bytes)
 //   FAKE_YTDLP_CALLS   file where each call's arguments are appended (one call per line, args separated by \u001f)
 using System.Diagnostics;
 
 var argv = args.ToList();
+// Like the real yt-dlp with PYTHONUTF8=1: UTF-8 on every Windows code page.
+Console.OutputEncoding = new System.Text.UTF8Encoding(false);
 string? Opt(string name)
 {
     var i = argv.IndexOf(name);
@@ -124,6 +127,17 @@ switch (scenario)
             }
         }
         return 0;
+}
+
+// Queue row card (F3): one INFO json line. FAKE_YTDLP_INFO_DELAY_MS makes it slow (to test one-at-a-time).
+if (Opt("--print") is { } infoPrint && infoPrint.StartsWith("INFO|", StringComparison.Ordinal))
+{
+    if (Environment.GetEnvironmentVariable("FAKE_YTDLP_INFO_DELAY_MS") is { Length: > 0 } ms) Thread.Sleep(int.Parse(ms));
+    var desc = "Una película corta animada, hecha con software libre.\\n\\nLicencia Creative Commons.";
+    Console.WriteLine("INFO|{\"title\": \"Fake video " + id + "\", \"channel\": \"Fake channel\", \"upload_date\": \"20141110\", " +
+                      "\"view_count\": 8100000, \"duration\": 2292, \"duration_string\": \"38:12\", \"description\": \"" + desc + "\", " +
+                      "\"thumbnail\": \"https://fake.test/thumb/" + id + ".jpg\"}");
+    return 0;
 }
 
 if (Opt("--print") is { } print && print.StartsWith("DET|", StringComparison.Ordinal))

@@ -14,12 +14,20 @@ public sealed partial class MainViewModel
     private CancellationTokenSource? _runCts;
     private IReadOnlyList<Job> _lastJobs = [];
     private IReadOnlyDictionary<string, JobStatus> _lastStatuses = new Dictionary<string, JobStatus>();
+    /// <summary>Destination of the run in progress (for the exact path of each finished file).</summary>
+    private string? _runFolder;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle), nameof(ResolutionEnabled), nameof(CustomEnabled), nameof(SeriesEnabled), nameof(CanRetry))]
     private bool _isRunning;
 
     public bool IsIdle => !IsRunning;
+
+    partial void OnIsRunningChanged(bool value)
+    {
+        NotifySelection();
+        OnPropertyChanged(nameof(CanUndo));
+    }
 
     [ObservableProperty] private string _statusText = "";
     [ObservableProperty] private double _progress;
@@ -79,23 +87,37 @@ public sealed partial class MainViewModel
             return;
         }
 
-        // Series numbering continues after the files already in the folder (asks first; never overwrites).
-        var next = new Dictionary<string, int>();
-        var existing = Directory.EnumerateFiles(folder).Select(f => Path.GetFileName(f)).ToList();
-        foreach (var prefix in JobPlanner.SeriesPrefixes(Items))
+        // Rows already finished ("Listo") are not downloaded again; "Volver a descargar" puts them back.
+        bool Done(string key) => _rowStatus.TryGetValue(key, out var st) && st == JobStatus.OK;
+        var todo = Items.Where(it => Enumerable.Range(0, Math.Max(1, it.Clips.Count)).Any(i => !Done($"{it.Id}|{i}"))).ToList();
+        if (todo.Count == 0)
         {
+            await _ui.ShowMessage(L["msg_all_done"]);
+            return;
+        }
+
+        // Series numbering continues after the files already in each folder (asks first; never overwrites).
+        var next = new Dictionary<string, int>();
+        foreach (var (sub, prefix) in JobPlanner.SeriesTargets(todo))
+        {
+            var dir = JobEngine.FolderFor(folder, sub);
+            var existing = Directory.Exists(dir) ? Directory.EnumerateFiles(dir).Select(f => Path.GetFileName(f)).ToList() : [];
             var max = FileNames.HighestSeriesNumber(prefix, existing);
             if (max > 0)
             {
                 var text = string.Format(L.Culture, L["msg_exists"], prefix, max, Environment.NewLine, max + 1);
                 if (!await _ui.AskYesNo(L["msg_exists_title"], text)) return;
             }
-            next[prefix] = max + 1;
+            next[JobPlanner.SeriesKey(new QueueItem { Url = "", Prefix = prefix, SubFolder = sub })] = max + 1;
         }
 
-        var jobs = JobPlanner.Build(Items, next);
-        _rowStatus.Clear();
-        _rowFile.Clear();
+        var jobs = JobPlanner.WithoutDone(JobPlanner.Build(todo, next), Done);
+        foreach (var key in _rowStatus.Keys.Where(k => !Done(k)).ToList())
+        {
+            _rowStatus.Remove(key);
+            _rowFile.Remove(key);
+            _rowPath.Remove(key);
+        }
         await RunJobsAsync(jobs, folder);
     }
 
@@ -135,6 +157,7 @@ public sealed partial class MainViewModel
         }
         SaveSettings();
         IsRunning = true;
+        _runFolder = folder;
         RebuildQueueRows();
         Progress = 0;
         _runCts = new CancellationTokenSource();
@@ -163,8 +186,13 @@ public sealed partial class MainViewModel
         // Port of Complete-Batch.
         _lastJobs = jobs;
         _lastStatuses = result.Statuses;
+        var byKey = jobs.ToDictionary(j => j.Key);
         foreach (var (key, status) in result.Statuses) _rowStatus[key] = status;
-        foreach (var (key, file) in result.Files) _rowFile[key] = file;
+        foreach (var (key, file) in result.Files)
+        {
+            _rowFile[key] = file;
+            if (byKey.TryGetValue(key, out var job)) _rowPath[key] = Path.Combine(JobEngine.FolderFor(folder, job), file);
+        }
         if (engine.PreferredBrowser is { } browser)
         {
             Settings.PreferredBrowser = browser;
@@ -190,12 +218,18 @@ public sealed partial class MainViewModel
         {
             case StatusEvent s:
                 _rowStatus[s.Job.Key] = s.Status;
-                if (s.File.Length > 0) _rowFile[s.Job.Key] = s.File;
+                if (s.File.Length > 0)
+                {
+                    _rowFile[s.Job.Key] = s.File;
+                    if (_runFolder is not null) _rowPath[s.Job.Key] = Path.Combine(JobEngine.FolderFor(_runFolder, s.Job), s.File);
+                }
                 var row = QueueRows.FirstOrDefault(r => r.Key == s.Job.Key);
                 if (row is not null)
                 {
-                    row.Status = L["rs_" + s.Status];
+                    row.Status = RowStatusText(s.Job.Key);
                     if (s.File.Length > 0) row.File = s.File;
+                    var locked = IsLockedStatus(s.Status);
+                    foreach (var r in QueueRows.Where(r => r.ItemId == row.ItemId)) r.IsLocked |= locked;
                 }
                 break;
             case StepEvent { Step: EngineStep.Downloading } st:

@@ -184,6 +184,7 @@ public sealed class MainViewModelTests : IDisposable
         var file = Path.Combine(_rig.Dir, "links.txt");
         File.WriteAllText(file, "jNQXAC9IVRw\r\nhttps://vimeo.com/5\r\nuna línea sin enlace\r\n");
         _rig.Ui.FileToPick = file;
+        _rig.Ui.Review = _ => true;   // 0.3: a review window comes first; the user presses "Agregar"
         var vm = _rig.Create();
         await vm.LoadTxtCommand.ExecuteAsync(null);
         Assert.Equal([Zoo, "https://vimeo.com/5"], vm.Items.Select(i => i.Url));
@@ -284,7 +285,7 @@ public sealed class DownloadRunTests : IDisposable
 
         Assert.False(vm.IsRunning);
         Assert.Equal("Terminado: 1 bien, 0 para revisar, 1 con error", vm.StatusText);
-        Assert.Equal(["Listo", "Error"], vm.QueueRows.Select(r => r.Status));
+        Assert.Equal(["Listo 🔒", "Error"], vm.QueueRows.Select(r => r.Status));   // 0.3: finished rows are locked
         Assert.Equal("Fake video a1.mp4", vm.QueueRows[0].File);
         Assert.True(File.Exists(Path.Combine(_rig.OutFolder, "Fake video a1.mp4")));
         Assert.True(vm.CanRetry);

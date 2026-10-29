@@ -16,6 +16,8 @@ public sealed class AppServices
     public required HttpClient Http { get; init; }
     public required ToolManager Tools { get; init; }
     public required PreviewService Preview { get; init; }
+    /// <summary>Card data of the queue row the user opens (F3).</summary>
+    public required VideoInfoService Info { get; init; }
     /// <summary>Browsers with a profile folder on this PC (only the folder is checked; cookies are not read).</summary>
     public Func<IReadOnlyList<string>> InstalledBrowsers { get; init; } = () => CookieStrategy.InstalledBrowsers();
 
@@ -38,6 +40,7 @@ public sealed class AppServices
             Http = http,
             Tools = new ToolManager(paths.ToolsDir, http),
             Preview = new PreviewService(runner, http, log),
+            Info = new VideoInfoService(runner, http, log),
         };
     }
 }

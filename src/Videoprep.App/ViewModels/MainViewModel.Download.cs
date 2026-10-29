@@ -18,6 +18,8 @@ public sealed partial class MainViewModel
     private string _draftUrl = "";
     private string _draftKey = "";
     private int _editId;
+    /// <summary>Subfolder of the item being edited (kept when it goes back to the queue).</summary>
+    private string _editSubFolder = "";
 
     public bool HasDraft => _draftUrl.Length > 0;
 
@@ -197,6 +199,7 @@ public sealed partial class MainViewModel
     private void AddClipRow(string start, string end)
     {
         var row = new ClipRowViewModel(r => Clips.Remove(r)) { Start = start, End = end };
+        row.SetDuration(_clipDuration, _clipDurationText, _clipFps);
         row.PropertyChanged += (_, _) => UpdateExample();
         Clips.Add(row);
     }
@@ -243,6 +246,7 @@ public sealed partial class MainViewModel
         _draftUrl = url;
         _draftKey = UrlParser.LinkKey(url);
         _editId = 0;
+        _editSubFolder = "";
         OnPropertyChanged(nameof(HasDraft));
         RequestPreview(url);
     }
@@ -307,10 +311,12 @@ public sealed partial class MainViewModel
             Url = _draftUrl, Format = SelectedFormatKey, Cap = SelectedCap, Naming = naming, Custom = CustomText.Trim(),
             Prefix = SafeName.Make(prefix.Length > 0 ? prefix : "Video", "Video"), Clips = clips,
             Fps = _svc.Preview.Get(_draftKey)?.Detail?.Fps,
+            SubFolder = _editId > 0 ? _editSubFolder : "",
         };
         var index = _editId > 0 ? Items.ToList().FindIndex(i => i.Id == _editId) : -1;
         if (index >= 0)
         {
+            PushUndo();
             Items[index] = item with { Id = _editId };
             SaveQueue();
             RebuildQueueRows();
@@ -323,6 +329,7 @@ public sealed partial class MainViewModel
         _draftUrl = "";
         _draftKey = "";
         _editId = 0;
+        _editSubFolder = "";
         OnPropertyChanged(nameof(HasDraft));
         LinkText = "";
         ResetDraftFields();
@@ -345,26 +352,7 @@ public sealed partial class MainViewModel
         UpdateExample();
     }
 
-    /// <summary>Port of Import-LinksFromFile (Load .txt and dropping a file).</summary>
-    public async Task ImportLinksFromFileAsync(string path)
-    {
-        string text;
-        try { text = await File.ReadAllTextAsync(path); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _svc.Log.Write($"could not read {path}: {ex.Message}");
-            text = "";
-        }
-        var urls = UrlParser.LinksFromText(text);
-        if (urls.Count == 0)
-        {
-            await _ui.ShowMessage(L["msg_nolinks"]);
-            return;
-        }
-        foreach (var u in urls) AddDefaultItem(u);
-    }
-
-    /// <summary>Something dropped on the Download tab: text with links, or .txt files.</summary>
+    /// <summary>Something dropped on the Download tab: text with links, or files with links (F1).</summary>
     public async Task DropAsync(string? text, IReadOnlyList<string> files)
     {
         foreach (var f in files) await ImportLinksFromFileAsync(f);
@@ -400,10 +388,25 @@ public sealed partial class MainViewModel
     }
 
     private string? _shownImageKey;
+    private double? _clipDuration;
+    private string _clipDurationText = "";
+    private double? _clipFps;
+
+    /// <summary>Fragment warning (F2): the clip rows learn the video duration once the preview knows it.</summary>
+    private void UpdateClipDuration(PreviewInfo? p)
+    {
+        var d = p?.Detail;
+        _clipDurationText = d?.Duration ?? "";
+        _clipDuration = d is null ? null : QueueEdits.ParseDuration(d.Duration);
+        _clipFps = d?.Fps;
+        foreach (var c in Clips) c.SetDuration(_clipDuration, _clipDurationText, _clipFps);
+    }
 
     private void ShowPreview()
     {
-        if (_draftKey.Length == 0 || _svc.Preview.Get(_draftKey) is not { } p)
+        var current = _draftKey.Length > 0 ? _svc.Preview.Get(_draftKey) : null;
+        UpdateClipDuration(current);
+        if (current is not { } p)
         {
             ClearPreviewPanel();
             return;

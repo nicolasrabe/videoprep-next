@@ -78,6 +78,29 @@ public partial class MainWindow : Window, IUiServices
         return picked.FirstOrDefault()?.TryGetLocalPath();
     }
 
+    public async Task<string?> PickLinkFile()
+    {
+        var picked = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            AllowMultiple = false,
+            Title = Loc.Instance["btn_loadtxt"].TrimEnd('.'),
+            FileTypeFilter =
+            [
+                new FilePickerFileType(Loc.Instance["imp_formats"]) { Patterns = ["*.txt", "*.docx", "*.md", "*.html", "*.htm", "*.csv"] },
+                FilePickerFileTypes.All,
+            ],
+        });
+        return picked.FirstOrDefault()?.TryGetLocalPath();
+    }
+
+    public Task<bool> ReviewImport(ImportReviewViewModel review) => Dialogs.ImportReview(this, review);
+
+    public Task<bool> EditBatch(BatchEditViewModel edit) => Dialogs.BatchEdit(this, edit);
+
+    public void ShowInFolder(string file) => Platform.ShowInFolder(file);
+
+    public void OpenUrl(string url) => Platform.OpenUrl(url);
+
     public async Task<string?> PickSaveFile(string suggestedName)
     {
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions

@@ -29,3 +29,8 @@ public partial class SubscriptionEditView : UserControl
 {
     public SubscriptionEditView() => InitializeComponent();
 }
+
+public partial class BatchEditView : UserControl
+{
+    public BatchEditView() => InitializeComponent();
+}

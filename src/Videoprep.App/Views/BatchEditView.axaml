@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Videoprep.App.ViewModels"
+             xmlns:s="using:Videoprep.App.Services"
+             x:Class="Videoprep.App.Views.BatchEditView"
+             x:DataType="vm:BatchEditViewModel">
+  <!-- "Cambiar N elementos de la cola" (F2, mockup-editar-cola.html part 2) -->
+  <StackPanel Spacing="10">
+    <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+      <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+      <ComboBox Grid.Column="1" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" MinWidth="260" />
+      <TextBlock Grid.Row="1" Classes="muted" Text="{s:T lbl_res}" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" MinWidth="160" />
+      <TextBlock Grid.Row="2" Classes="muted" Text="{s:T batch_names}" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding NameModes}" SelectedItem="{Binding SelectedNames}" MinWidth="300" />
+      <StackPanel Grid.Row="3" Grid.Column="1" Spacing="6">
+        <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSeries}">
+          <TextBlock Classes="muted" Text="{s:T batch_prefix}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Prefix}" Width="170" />
+          <TextBlock Classes="muted" Text="{s:T batch_series_note}" VerticalAlignment="Center" />
+        </StackPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsAddText}">
+          <TextBlock Classes="muted" Text="{s:T batch_before}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Before}" Width="150" />
+          <TextBlock Classes="muted" Text="{s:T batch_after}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding After}" Width="150" />
+        </WrapPanel>
+        <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsReplace}">
+          <TextBlock Classes="muted" Text="{s:T batch_find}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding Find}" Width="150" />
+          <TextBlock Classes="muted" Text="{s:T batch_with}" VerticalAlignment="Center" />
+          <TextBox Text="{Binding ReplaceWith}" Width="150" />
+        </WrapPanel>
+      </StackPanel>
+    </Grid>
+
+    <Border Classes="card">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="title" Text="{s:T batch_preview}" />
+        <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding Preview}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <TextBlock Classes="muted" Text="{Binding}" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+    </Border>
+    <TextBlock Classes="muted" Text="{Binding LockedNote}" IsVisible="{Binding HasLockedNote}" />
+  </StackPanel>
+</UserControl>
