@@ -80,6 +80,10 @@ public static class VfrDetector
         if (average <= 0 && longest is { Count: >= 2 })
             average = (longest.Count - 1) / (longest.Max() - longest.Min());
         var target = FrameRates.Snap(average > 0 ? average : nominal);
+        // A screen recording that stands still for seconds averages far below its real speed: a video that says it is 30 fps or
+        // slower never needed more, so keep that speed (nothing is dropped) instead of the average's nearest one.
+        if (nominal is > 0 and <= 30.01 && nominal > target.Value && FrameRates.Snap(nominal).Value is var snapped && Math.Abs(snapped - nominal) < 0.01)
+            target = FrameRates.Snap(nominal);
 
         if (frames < MinFrames)
             return new FrameRateAnalysis(false, $"only {frames} frames to look at", average, nominal, intervals, irregular, target);

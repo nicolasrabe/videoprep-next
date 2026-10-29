@@ -61,6 +61,70 @@ public sealed class ConstantRateIntegrationTests : IDisposable
         Assert.False(control.IsVariable, control.Reason);
     }
 
+    [Theory]
+    [InlineData("mp4")]
+    [InlineData("webm")]
+    public async Task Audio_that_outlasts_the_video_is_kept_whole(string format)
+    {
+        // Real recordings often have audio half a second longer than the video: a time limit at the video's end would cut it.
+        Ffmpeg.SkipIfMissing();
+        var vfr = Ffmpeg.MakeVfrSource(_dir, 6, "long-audio.mp4", audioSeconds: 6.5);
+        var original = Ffmpeg.ProbeFile(vfr);
+        Assert.True(original.Audio!.Duration > original.Video!.Duration + 0.3, original.Summary);
+        using var rig = new FakeYtDlpRig(vfr);
+
+        var r = await new JobEngine(new ProcessRunner(), rig.Log).RunAsync(Jobs(format), Ctx(rig), TestContext.Current.CancellationToken);
+
+        Assert.True((r.Ok, r.Warn, r.Fail) == (1, 0, 0), rig.LogText);
+        var stats = await PacketProbe.StatsAsync(new ProcessRunner(), Ffmpeg.Probe!, Path.Combine(rig.Folder, r.Files["1|0"]), TestContext.Current.CancellationToken);
+        Assert.InRange(stats.AudioEnd!.Value - stats.AudioFirst!.Value, original.Audio.Duration!.Value - 0.06, original.Audio.Duration.Value + 0.06);
+    }
+
+    // ---------------- a real clip, only when VIDEOPREP_REAL_CLIP points at one (never in the CI) ----------------
+
+    /// <summary>
+    /// Runs a clip from outside the repository through the real engine (MP4 and ProRes MOV, whole) and writes what the engine
+    /// answered to <c>VIDEOPREP_REAL_CLIP_OUT</c> (a folder) so it can be opened in an editor. Without the variable it passes at once.
+    /// </summary>
+    [Fact]
+    public async Task A_real_clip_from_the_user_goes_through_the_engine()
+    {
+        var clip = Environment.GetEnvironmentVariable("VIDEOPREP_REAL_CLIP");
+        if (string.IsNullOrEmpty(clip) || !File.Exists(clip)) return;
+        Ffmpeg.SkipIfMissing();
+        var report = new List<string>();
+        foreach (var (format, ext) in new[] { ("mp4", ".mp4"), ("movp", ".mov") })
+        {
+            var work = Directory.CreateTempSubdirectory("videoprep-real-").FullName;
+            try
+            {
+                var src = Path.Combine(work, "src.mp4");
+                File.Copy(clip, src);
+                using var rig = new FakeYtDlpRig(src);
+                var before = Ffmpeg.Sha256(src);
+                var r = await new JobEngine(new ProcessRunner(), rig.Log).RunAsync(Jobs(format), Ctx(rig), TestContext.Current.CancellationToken);
+                report.Add($"== {format}: ok={r.Ok} warn={r.Warn} fail={r.Fail}");
+                report.Add(rig.LogText);
+                Assert.True((r.Ok, r.Warn, r.Fail) == (1, 0, 0), rig.LogText);
+                var outFile = Path.Combine(rig.Folder, r.Files["1|0"]);
+                var info = Ffmpeg.ProbeFile(outFile);
+                var analysis = VfrDetector.Analyze(info, await Sample(outFile));
+                report.Add($"result: {info.Summary}; variable now: {analysis.IsVariable}");
+                Assert.False(analysis.IsVariable, analysis.Reason);
+                var dest = Environment.GetEnvironmentVariable("VIDEOPREP_REAL_CLIP_OUT");
+                if (!string.IsNullOrEmpty(dest))
+                {
+                    Directory.CreateDirectory(dest);
+                    File.Copy(outFile, Path.Combine(dest, "resultado-" + format + ext), true);
+                }
+                Assert.Equal(before, Ffmpeg.Sha256(src));
+            }
+            finally { try { Directory.Delete(work, true); } catch (IOException) { } }
+        }
+        var outDir = Environment.GetEnvironmentVariable("VIDEOPREP_REAL_CLIP_OUT");
+        if (!string.IsNullOrEmpty(outDir)) File.WriteAllLines(Path.Combine(outDir, "informe.txt"), report);
+    }
+
     // ---------------- a whole video, every format ----------------
 
     [Theory]
@@ -199,7 +263,7 @@ public sealed class ConstantRateIntegrationTests : IDisposable
     }
 
     [Theory]
-    [InlineData("mp4", "-t|4", "the result lasts 4")]                          // far too short: the usual check of the engine
+    [InlineData("mp4", "-t|4", "the result has 120 frames")]                        // far too short: the usual check of the engine
     [InlineData("mp4", "-an", "the result has no audio stream")]               // the audio vanished
     [InlineData("webm", "-af|asetpts=PTS+0.5/TB", "audio and video are out of step")]  // the audio drifted half a second: the F8 check
     public async Task When_a_check_fails_the_original_stays_intact_and_the_row_goes_to_review(string format, string spoil, string reason)

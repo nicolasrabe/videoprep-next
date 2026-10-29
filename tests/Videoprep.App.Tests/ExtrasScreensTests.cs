@@ -81,7 +81,7 @@ public sealed partial class ExtrasScreensTests : IDisposable
     [MemberData(nameof(Combos))]
     public void Mini_window_in_its_states(string lang, string theme)
     {
-        var (_, vm) = Open(lang, theme);
+        var (main, vm) = Open(lang, theme);
         var states = new (string Name, Action Set)[]
         {
             ("descargando", () => (vm.MiniKind, vm.MiniText, vm.MiniPercent, vm.MiniPercentText, vm.MiniCounter) =
@@ -105,12 +105,15 @@ public sealed partial class ExtrasScreensTests : IDisposable
             NoRawKeys(mini);
             mini.Close();
         }
+        // Nothing stays open when the test ends: on macOS a window left behind made the headless session fail while cleaning up.
+        main.Close();
+        Dispatcher.UIThread.RunJobs();
     }
 
     [AvaloniaFact]
     public void Mini_has_its_menu_with_close_mode_always_on_top_and_quit_and_the_always_on_top_changes_live()
     {
-        var (_, vm) = Open("es", "light");
+        var (main, vm) = Open("es", "light");
         var mini = new MiniWindow { DataContext = vm };
         mini.Show();
         var menu = mini.GetVisualDescendants().OfType<Border>().Select(b => b.ContextMenu).First(m => m is not null)!;
@@ -121,6 +124,8 @@ public sealed partial class ExtrasScreensTests : IDisposable
         vm.MiniOnTop = true;
         Assert.True(mini.Topmost);
         mini.Close();
+        main.Close();
+        Dispatcher.UIThread.RunJobs();
     }
 
     [AvaloniaTheory]

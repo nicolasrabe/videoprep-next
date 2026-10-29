@@ -144,3 +144,14 @@ Detection: frame times of the first 600 packets and, for videos over 20 s, 300 p
 intervals and 1 % of them are irregular (more than 1.5 ms or 2 % away from the usual one; MKV/WebM round to the millisecond), or when ffprobe's two rates disagree by more than 1 %
 and one interval is irregular. Constant tests: exact times, an MP4 clock (1/30000), MKV/WebM milliseconds (33/34 ms, 16/17 ms), an MPEG-TS clock, frames out of order from B-frames.
 Not decided by detection alone: fewer than 12 frames to look at, a single freeze in an otherwise constant video.
+
+### F8 with a real clip (2026-10-29)
+Clip: "How to Upload an Image to Wikimedia Commons (A Beginner's Guide 2025).webm" (CC0, 1920x1080 VP9/Opus, 119 s). It is **constant** (30 fps, intervals of 33/34 ms, the
+rounding of WebM): the engine says "constant ... left as it is" and touches nothing. A second small clip (CC BY-SA, 25 fps) is constant too. To have real content that is
+variable, the first 60 s were turned into a variable copy with ffmpeg (frames dropped in three stretches: intervals 33/67/200 ms, average 16.7 fps, nominal 30 fps).
+Running it through the real engine showed two things the synthetic clip had hidden, both fixed:
+- The audio (60.0 s) outlasts the video (59.5 s), and the time limit at the video's end cut the audio by 0.49 s. The limit is now the longest of the two.
+  ffmpeg stretches the video to the audio end for some files and not for others, so the check accepts a result between the video's own length and the longest one.
+- The target was 23.976 (nearest to the 16.7 average) although the video says 30 fps: a video whose own rate is 30 or less keeps that rate (nothing is dropped).
+Result (MP4 and ProRes MOV): 1800 frames, every interval 33 ms, 30/1 in both rates, audio 60.0 s. Original untouched (same SHA-256). A test with audio longer than the video
+(`Audio_that_outlasts_the_video_is_kept_whole`) keeps this from coming back. `A_real_clip_from_the_user_goes_through_the_engine` runs any file given in `VIDEOPREP_REAL_CLIP`.

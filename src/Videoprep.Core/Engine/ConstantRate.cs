@@ -5,12 +5,16 @@ namespace Videoprep.Core.Engine;
 
 /// <summary>
 /// What F8 decided for one downloaded video: it has a variable frame rate and becomes constant at <see cref="Target"/>.
-/// <see cref="SourceSeconds"/> is the length of the original video; whole-file output is limited to it (without that limit
+/// <see cref="SourceSeconds"/> is the length of the original (the longer of its video and its audio); whole-file output is limited to it (without that limit
 /// ffmpeg's constant-rate mode added 5 frames at the end of a test clip and the video outlasted the audio).
 /// </summary>
-public sealed record CfrPlan(Rational Target, double SourceSeconds, FrameRateAnalysis Analysis, StreamPackets? Source = null)
+public sealed record CfrPlan(Rational Target, double SourceSeconds, FrameRateAnalysis Analysis, StreamPackets? Source = null,
+                             double? VideoSeconds = null)
 {
     public double Fps => Target.Value;
+
+    /// <summary>How long the original video alone was (ffmpeg may stretch the result up to <see cref="SourceSeconds"/>, never beyond).</summary>
+    public double VideoLength => Math.Min(VideoSeconds ?? SourceSeconds, SourceSeconds);
 }
 
 /// <summary>Frame times of the video stream and the ends of the audio stream of a finished file (for the F8 checks).</summary>
@@ -114,18 +118,21 @@ public static class CfrVerifier
         var frame = 1 / rate;
         if (s.VideoCount < 1) return new(false, "the result has no video frames");
 
-        // 1. Number of frames: exact for a clip, the expected one (one more or less) for a whole video.
-        long expected = plan is not null ? plan.Frames : (long)Math.Round(cfr.SourceSeconds * rate);
+        // 1. Number of frames: exact for a clip. A whole video is never shorter than the original video nor longer than the longest
+        //    stream of the original (ffmpeg stretches a video that ends before its audio, or not, depending on the file), one frame apart.
+        long minFrames = plan is not null ? plan.Frames : (long)Math.Round(cfr.VideoLength * rate);
+        long maxFrames = plan is not null ? plan.Frames : (long)Math.Round(cfr.SourceSeconds * rate);
         var slack = plan is not null ? 0 : 1;
-        if (Math.Abs(s.VideoCount - expected) > slack)
-            return new(false, $"the result has {s.VideoCount} frames, expected {expected}");
+        if (s.VideoCount < minFrames - slack || s.VideoCount > maxFrames + slack)
+            return new(false, $"the result has {s.VideoCount} frames, expected {(minFrames == maxFrames ? minFrames.ToString(CultureInfo.InvariantCulture) : $"{minFrames}-{maxFrames}")}");
 
-        // 2. Length: at most one frame different from the original (whole video) or from the planned frames (clip).
+        // 2. Length: the same bounds in seconds (a clip: the planned frames).
         var videoSeconds = s.VideoLast - s.VideoFirst + frame;
-        var expectedSeconds = plan is not null ? plan.Frames / rate : cfr.SourceSeconds;
-        if (Math.Abs(videoSeconds - expectedSeconds) > frame + 0.001)
+        var minSeconds = plan is not null ? plan.Frames / rate : cfr.VideoLength;
+        var maxSeconds = plan is not null ? plan.Frames / rate : cfr.SourceSeconds;
+        if (videoSeconds < minSeconds - frame - 0.001 || videoSeconds > maxSeconds + frame + 0.001)
             return new(false, string.Create(CultureInfo.InvariantCulture,
-                $"the video lasts {videoSeconds:0.###} s, expected {expectedSeconds:0.###} s (more than one frame of difference)"));
+                $"the video lasts {videoSeconds:0.###} s, expected {minSeconds:0.###} s (more than one frame of difference)"));
 
         // 3. Audio still in step: it starts where it did relative to the video, and it is as long as it was.
         var audio = CheckAudio(s, cfr, plan, frame);

@@ -400,7 +400,9 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 _log.Write("    frame rate: could not be read, the video is left as it is");
                 return null;
             }
-            var seconds = info.Video.Duration ?? info.FormatDuration;
+            // The longest of video and audio: ffmpeg's constant-rate mode stretches the video to the end of the audio, and a
+            // recording's audio often outlasts its video; a limit at the video's own end would cut the audio.
+            var seconds = new[] { info.Video.Duration, info.Audio?.Duration, info.FormatDuration }.Where(d => d is > 0).Max();
             var windows = await PacketProbe.SampleVideoAsync(engine._runner, ctx.Tools.Ffprobe, file, seconds, CancellationToken.None).ConfigureAwait(false);
             var analysis = VfrDetector.Analyze(info, windows);
             _log.Write("    " + analysis.LogText);
@@ -412,7 +414,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             }
             // What the original looks like (frame times, audio start and end): the result is compared with it.
             var source = await PacketProbe.StatsAsync(engine._runner, ctx.Tools.Ffprobe, file, CancellationToken.None).ConfigureAwait(false);
-            return g.Cfr = new CfrPlan(analysis.Target, seconds.Value, analysis, source);
+            return g.Cfr = new CfrPlan(analysis.Target, seconds.Value, analysis, source, info.Video.Duration ?? info.FormatDuration);
         }
 
         private async Task PostAsync(Job job, string file, VideoGroup g, bool isRange, CfrPlan? cfr)
@@ -488,7 +490,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             var outInfo = await ProbeAsync(tmp).ConfigureAwait(false);
             var check = outInfo is null
                 ? new VerifyResult(false, "ffprobe could not read the result")
-                : OutputVerifier.Check(outInfo, job.Kind, plan, src.FormatDuration, src.Audio is not null);
+                : OutputVerifier.Check(outInfo, job.Kind, plan, cfr is not null && plan is null ? null : src.FormatDuration, src.Audio is not null);   // a constant-rate video: CfrVerifier measures the length (WebM and MP4 report it differently)
             var seconds = outInfo is null ? null : job.Kind == MediaKind.Video ? outInfo.Video?.Duration ?? outInfo.FormatDuration : outInfo.FormatDuration;
             // F8: the made-constant file must have the right frames, the same length, audio in step and a really constant rate.
             if (check.Ok && cfr is not null && job.Kind == MediaKind.Video)
