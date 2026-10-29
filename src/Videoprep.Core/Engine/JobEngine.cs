@@ -36,6 +36,16 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             .ToList();
     }
 
+    /// <summary>
+    /// Where a job's files go: the batch folder, or a subfolder of it. The subfolder name is cleaned again here, so a
+    /// queue file edited by hand cannot point outside the batch folder ("..", "C:\", "\\server").
+    /// </summary>
+    public static string FolderFor(string batchFolder, Job job)
+    {
+        var sub = Text.SafeName.Make(job.SubFolder, "");
+        return sub.Length > 0 ? Path.Combine(batchFolder, sub) : batchFolder;
+    }
+
     public async Task<BatchResult> RunAsync(IReadOnlyList<Job> jobs, EngineContext ctx, CancellationToken ct)
     {
         var run = new Run(this, jobs, ctx, ct);
@@ -163,6 +173,12 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 return new DownloadResult(DownloadOutcome.Error);
             }
             var fmt = FormatCatalog.Get(job.Format);
+            try { Directory.CreateDirectory(FolderFor(ctx.Folder, job)); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+            {
+                _log.Write($"ERROR  could not create the folder {FolderFor(ctx.Folder, job)}: {ex.Message}");
+                return new DownloadResult(DownloadOutcome.Error);
+            }
             for (var attempt = 0; attempt < _chain.Count; attempt++)
             {
                 var src = _chain[attempt];
@@ -179,12 +195,13 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
 
                 var dump = ctx.SessionCookieFile is not null && src.Kind == CookieKind.Browser ? ctx.SessionCookieFile : null;
                 var pathFile = Path.Combine(Path.GetTempPath(), $"videoprep-final-{Guid.NewGuid():N}.txt");
-                var args = YtDlpArgs.Download(job, ctx.Options, ctx.Tools, src, ctx.Folder, g.HasClips, ctx.ArchiveFile,
+                var folder = FolderFor(ctx.Folder, job);
+                var args = YtDlpArgs.Download(job, ctx.Options, ctx.Tools, src, folder, g.HasClips, ctx.ArchiveFile,
                                               ctx.ForceArchive, dump, pathFile);
-                var before = SnapshotFolder(ctx.Folder);
+                var before = SnapshotFolder(folder);
                 var output = new StringBuilder();
                 var printed = new List<string>();
-                var r = await engine._runner.RunAsync(new ProcessSpec(ctx.Tools.YtDlp, args, ctx.Folder), line =>
+                var r = await engine._runner.RunAsync(new ProcessSpec(ctx.Tools.YtDlp, args, folder), line =>
                 {
                     if (ProgressLine.TryParse(line) is { } p)
                     {

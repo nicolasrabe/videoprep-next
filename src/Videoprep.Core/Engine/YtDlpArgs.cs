@@ -133,6 +133,27 @@ public static class YtDlpArgs
         return a;
     }
 
+    /// <summary>
+    /// Queue row card (F3): one JSON line with the fields the card shows. "%(.{a,b})j" prints a JSON object with those
+    /// fields; no format is chosen or checked (VERIFIED 2026-10-28 with yt-dlp 2026.10.21, docs/VERIFY.md).
+    /// </summary>
+    public const string InfoTemplate =
+        "INFO|%(.{title,channel,uploader,upload_date,view_count,duration,duration_string,description,thumbnail,webpage_url})j";
+
+    /// <summary>Card data of one link (F3). Nothing is downloaded.</summary>
+    public static IReadOnlyList<string> Info(string url, ToolPaths tools, CookieSource cookies)
+    {
+        var a = new List<string>
+        {
+            "--ignore-config", "--no-playlist", "--no-warnings", "--skip-download", "--ignore-no-formats-error",
+            "--print", InfoTemplate,
+        };
+        AddTools(a, tools, ffmpeg: false);
+        a.AddRange(cookies.Args());
+        a.Add(url);
+        return a;
+    }
+
     /// <summary>yt-dlp self-update (port of Start-UpdateRun).</summary>
     public static IReadOnlyList<string> Update() => ["-U"];
 

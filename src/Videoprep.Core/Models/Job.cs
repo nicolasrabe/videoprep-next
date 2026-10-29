@@ -27,4 +27,6 @@ public sealed record Job
     public bool IsRange => Start.Length > 0 || End.Length > 0;
     public bool Download { get; init; }
     public double? Fps { get; init; }
+    /// <summary>Folder inside the batch folder ("" = the batch folder itself).</summary>
+    public string SubFolder { get; init; } = "";
 }

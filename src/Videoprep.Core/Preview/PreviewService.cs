@@ -29,6 +29,8 @@ public sealed record PreviewInfo
     public string FailReason { get; init; } = "";
     /// <summary>The format group the details were checked for ("h264" or "any"); a change re-runs the check.</summary>
     public string DetailGroup { get; init; } = "";
+    /// <summary>The thumbnail was asked for already (titles found in the background come without one).</summary>
+    public bool ThumbTried { get; init; }
 }
 
 /// <summary>What the details run needs from the Download tab.</summary>
@@ -73,8 +75,18 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
             created = true;
             return new PreviewInfo { Key = k, Url = url };
         });
-        if (created && info.IsYoutube) _ = FetchYoutubeMetaAsync(key, details);
-        else if (details is not null) EnsureDetails(key, details);
+        if (created && info.IsYoutube)
+        {
+            _ = FetchYoutubeMetaAsync(key, details);
+            return info;
+        }
+        // A title found in the background (or from Scraping) has no picture yet: ask for it now that it is shown.
+        if (info.IsYoutube && info.Thumbnail is null && !info.ThumbTried)
+        {
+            Update(key, i => i with { ThumbTried = true });
+            _ = FetchThumbnailAsync(key, $"https://i.ytimg.com/vi/{key}/mqdefault.jpg");
+        }
+        if (details is not null) EnsureDetails(key, details);
         return info;
     }
 
@@ -87,6 +99,61 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
         if (title.Length == 0) return;
         var key = UrlParser.LinkKey(url);
         if (_cache.TryAdd(key, new PreviewInfo { Key = key, Url = url, Meta = MetaState.Ready, Title = title })) Changed?.Invoke(key);
+    }
+
+    /// <summary>
+    /// Titles of YouTube links added from a file, in the background: oEmbed only (no yt-dlp, no cookies), one request
+    /// at a time with <paramref name="pause"/> between requests, stopped by <paramref name="ct"/>. Links already known
+    /// are skipped. <paramref name="progress"/> gets (done, total), first with done = 0.
+    /// </summary>
+    public async Task LookupTitlesAsync(IReadOnlyList<string> urls, TimeSpan pause, Func<TimeSpan, CancellationToken, Task> delay,
+                                        Action<int, int>? progress, CancellationToken ct)
+    {
+        var keys = urls.Select(UrlParser.LinkKey).Where(k => UrlParser.IsYoutubeKey(k) && Get(k) is not { Meta: MetaState.Ready })
+                       .Distinct().ToList();
+        progress?.Invoke(0, keys.Count);
+        for (var i = 0; i < keys.Count; i++)
+        {
+            try
+            {
+                if (i > 0) await delay(pause, ct).ConfigureAwait(false);
+                ct.ThrowIfCancellationRequested();
+                var key = keys[i];
+                if (Get(key) is not { Meta: MetaState.Ready })
+                {
+                    var (title, author) = await OEmbedAsync(key, ct).ConfigureAwait(false);
+                    if (title.Length > 0)
+                    {
+                        var info = new PreviewInfo { Key = key, Url = UrlParser.CanonicalYoutube(key), Meta = MetaState.Ready, Title = title, Author = author };
+                        _cache.AddOrUpdate(key, info, (_, old) => old.Meta == MetaState.Ready ? old : old with { Meta = MetaState.Ready, Title = title, Author = author });
+                        Changed?.Invoke(key);
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                return;
+            }
+            progress?.Invoke(i + 1, keys.Count);
+        }
+    }
+
+    private async Task<(string Title, string Author)> OEmbedAsync(string key, CancellationToken ct)
+    {
+        try
+        {
+            var watch = UrlParser.CanonicalYoutube(key);
+            var json = await http.GetStringAsync("https://www.youtube.com/oembed?format=json&url=" + Uri.EscapeDataString(watch), ct).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(json);
+            var title = doc.RootElement.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "";
+            var author = doc.RootElement.TryGetProperty("author_name", out var a) ? a.GetString() ?? "" : "";
+            return (title, author);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or JsonException || (ex is TaskCanceledException && !ct.IsCancellationRequested))
+        {
+            log.Write($"Titles: no oEmbed data for {key} ({ex.GetType().Name}: {ex.Message})");
+            return ("", "");
+        }
     }
 
     /// <summary>Format or resolution changed: check again if the format group changed (port of Reset-Details).</summary>
@@ -154,7 +221,7 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
         {
             // No thumbnail is fine.
         }
-        Update(key, i => i with { Meta = title.Length > 0 ? MetaState.Ready : MetaState.NotFound, Title = title, Author = author, Thumbnail = thumb });
+        Update(key, i => i with { Meta = title.Length > 0 ? MetaState.Ready : MetaState.NotFound, Title = title, Author = author, Thumbnail = thumb, ThumbTried = true });
         if (title.Length > 0 && details is not null) EnsureDetails(key, details);
     }
 
