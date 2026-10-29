@@ -31,4 +31,6 @@ public sealed record QueueItem
     public double? Fps { get; init; }
     /// <summary>Folder inside the destination ("" = the destination itself). Set by "Guardar en una subcarpeta" (F1).</summary>
     public string SubFolder { get; init; } = "";
+    /// <summary>F8: make the video constant-rate (only a video that really is variable is touched). Default off.</summary>
+    public bool ConstantRate { get; init; }
 }

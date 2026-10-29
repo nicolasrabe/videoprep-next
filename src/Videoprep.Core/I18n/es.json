@@ -423,5 +423,13 @@
   "msg_sources_none": "No hay filas \"Listo\" para exportar. Elegí filas de la cola que ya se hayan descargado.",
   "msg_sources_saved": "Lista de fuentes guardada: {0}",
   "msg_sources_failed": "No se pudo guardar la lista de fuentes. Los detalles están en el Registro.",
-  "msg_prof_none_own": "Todavía no guardaste perfiles propios. Los de ejemplo no se exportan."
+  "msg_prof_none_own": "Todavía no guardaste perfiles propios. Los de ejemplo no se exportan.",
+  "chk_cfr": "Velocidad constante",
+  "tip_cfr": "Si un video tiene velocidad variable (Twitch, X, capturas de pantalla), lo convierte a velocidad constante para que Premiere lo lea bien. Solo toca los videos que de verdad son de velocidad variable; los demás quedan como están. Vuelve a codificar el video, así que tarda más.",
+  "opt_cfr": "Normalizar a velocidad constante los videos de velocidad variable (para Premiere)",
+  "opt_cfr_note": "Solo se toca un video si de verdad es de velocidad variable. Se vuelve a codificar (más lento). Si algo no se comprueba bien (fotogramas, duración, audio), el original queda como estaba y la fila pasa a Revisar. Es lo que traen tildado los elementos nuevos.",
+  "fmt_cfr": "velocidad constante",
+  "batch_cfr": "Velocidad constante",
+  "batch_cfr_yes": "Sí",
+  "batch_cfr_no": "No"
 }

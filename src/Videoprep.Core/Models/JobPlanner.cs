@@ -35,7 +35,7 @@ public static class JobPlanner
                 {
                     GroupId = it.Id, Index = i, Count = total, Url = it.Url, Site = it.Site, Format = it.Format,
                     Cap = it.Cap, Label = label, Start = outs[i].Start, End = outs[i].End, Download = i == 0, Fps = it.Fps,
-                    SubFolder = it.SubFolder,
+                    SubFolder = it.SubFolder, ConstantRate = it.ConstantRate,
                 });
             }
         }

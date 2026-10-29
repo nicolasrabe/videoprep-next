@@ -423,5 +423,13 @@
   "msg_sources_none": "There are no \"Done\" rows to export. Select queue rows that were already downloaded.",
   "msg_sources_saved": "List of sources saved: {0}",
   "msg_sources_failed": "The list of sources could not be saved. Details are in the Log.",
-  "msg_prof_none_own": "You have not saved profiles of your own yet. The examples are not exported."
+  "msg_prof_none_own": "You have not saved profiles of your own yet. The examples are not exported.",
+  "chk_cfr": "Constant frame rate",
+  "tip_cfr": "If a video has a variable frame rate (Twitch, X, screen recordings), it is converted to a constant one so Premiere reads it well. Only videos that really are variable are touched; the others stay as they are. The video is re-encoded, so it takes longer.",
+  "opt_cfr": "Make variable-frame-rate videos constant (for Premiere)",
+  "opt_cfr_note": "A video is only touched if it really has a variable frame rate. It is re-encoded (slower). If a check fails (frames, length, audio), the original stays as it was and the row goes to Review. New items start with this setting.",
+  "fmt_cfr": "constant frame rate",
+  "batch_cfr": "Constant frame rate",
+  "batch_cfr_yes": "Yes",
+  "batch_cfr_no": "No"
 }

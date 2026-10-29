@@ -58,6 +58,8 @@ public sealed class Settings
     [JsonPropertyName("miniY")] public int? MiniY { get; set; }
     /// <summary>F5: add the video links I copy to the queue (off by default; videoprep reads the clipboard only while on).</summary>
     [JsonPropertyName("clipboardWatch")] public bool ClipboardWatch { get; set; }
+    /// <summary>F8: new queue items start with "velocidad constante" on (off by default; it re-encodes, only variable-rate videos are touched).</summary>
+    [JsonPropertyName("constantRate")] public bool ConstantRate { get; set; }
     /// <summary>F7: write a list of sources when a batch ends (off by default).</summary>
     [JsonPropertyName("sourceList")] public bool SourceList { get; set; }
     /// <summary>"csv" or "txt".</summary>

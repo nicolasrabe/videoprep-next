@@ -11,6 +11,8 @@ public sealed record BatchEdit
 {
     public string? Format { get; init; }
     public int? Cap { get; init; }
+    /// <summary>F8: turn "velocidad constante" on or off for the videos; null = leave as it is.</summary>
+    public bool? ConstantRate { get; init; }
     public NameChange Names { get; init; }
     public string Prefix { get; init; } = "";
     public string Before { get; init; } = "";
@@ -51,6 +53,7 @@ public static class QueueEdits
         var r = it;
         if (e.Format is { } f && FormatCatalog.IsKnown(f)) r = r with { Format = f };
         if (e.Cap is { } cap && FormatCatalog.Get(r.Format).Kind == MediaKind.Video) r = r with { Cap = cap };
+        if (e.ConstantRate is { } cfr) r = r with { ConstantRate = cfr && FormatCatalog.Get(r.Format).Kind == MediaKind.Video };
         switch (e.Names)
         {
             case NameChange.Series when e.Prefix.Trim().Length > 0:

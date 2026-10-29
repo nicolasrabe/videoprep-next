@@ -24,6 +24,12 @@ public sealed class VideoGroup(int total, bool hasClips)
     /// <summary>Something went wrong with an output: keep the full file so the user can redo it.</summary>
     public bool Keep { get; private set; }
 
+    /// <summary>F8: the frame-rate check was already made for this video (once, however many clips come from it).</summary>
+    public bool CfrChecked { get; set; }
+
+    /// <summary>F8: set when the video really is variable-rate and has to be made constant.</summary>
+    public CfrPlan? Cfr { get; set; }
+
     public void SetDownloaded(string path, bool preExisting)
     {
         FullPath = path;

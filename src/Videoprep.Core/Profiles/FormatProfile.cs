@@ -29,7 +29,7 @@ public sealed record FormatProfile
 
     /// <summary>The same choices (name and id aside).</summary>
     public bool SameChoices(FormatProfile o) =>
-        Format == o.Format && Cap == o.Cap && Naming == o.Naming && (Naming != "series" || Prefix == o.Prefix);
+        Format == o.Format && Cap == o.Cap && Naming == o.Naming && ConstantRate == o.ConstantRate && (Naming != "series" || Prefix == o.Prefix);
 
     /// <summary>Fixes anything odd (a file from anywhere): known format, known resolution, clean name and prefix.</summary>
     public FormatProfile Normalized()

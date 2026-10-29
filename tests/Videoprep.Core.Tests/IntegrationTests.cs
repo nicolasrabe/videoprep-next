@@ -58,6 +58,43 @@ internal static class Ffmpeg
         return path;
     }
 
+    /// <summary>
+    /// A video whose frame times are REALLY irregular (F8): frames numbered by brightness at <paramref name="baseRate"/> with
+    /// frames dropped by <paramref name="select"/> (default: about 50 fps, then 30, then 10, in 2-second stretches of a 6 second
+    /// video), and a tone as long as the video (or <paramref name="audioSeconds"/>). The video and the tone are muxed apart so
+    /// their lengths match exactly: the last frame of a variable video lasts as long as the gap before it.
+    /// </summary>
+    public static string MakeVfrSource(string dir, double seconds = 6, string name = "vfr.mp4", double? audioSeconds = null,
+                                       string baseRate = "60", string? select = null)
+    {
+        select ??= "if(lt(t,2),mod(n,6)-1,if(lt(t,4),mod(n,2),not(mod(n,6))))";
+        var d = seconds.ToString(CultureInfo.InvariantCulture);
+        var videoOnly = Path.Combine(dir, "vfr-video-" + name);
+        Assert.Equal(0, Run("-hide_banner", "-loglevel", "error", "-y",
+            "-f", "lavfi", "-i", $"color=c=gray:s=64x64:r={baseRate}:d={d},geq=lum='16+mod(N,70)*3':cb=128:cr=128",
+            "-vf", $"select='{select}'", "-fps_mode", "passthrough",
+            "-c:v", "libx264", "-crf", "14", "-pix_fmt", "yuv420p", "-g", "30", videoOnly));
+        var videoSeconds = ProbeFile(videoOnly).Video!.Duration ?? seconds;
+        var a = (audioSeconds ?? videoSeconds).ToString(CultureInfo.InvariantCulture);
+        var path = Path.Combine(dir, name);
+        Assert.Equal(0, Run("-hide_banner", "-loglevel", "error", "-y", "-i", videoOnly,
+            "-f", "lavfi", "-i", $"sine=frequency=440:sample_rate=48000:duration={a}",
+            "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", path));
+        File.Delete(videoOnly);
+        return path;
+    }
+
+    /// <summary>One field of a stream as ffprobe prints it ("time_base" gives "1/30000").</summary>
+    public static string StreamField(string file, string stream, string field)
+    {
+        var sb = new System.Text.StringBuilder();
+        new ProcessRunner().RunAsync(new ProcessSpec(Probe!, ["-v", "error", "-select_streams", stream, "-show_entries", "stream=" + field, "-of", "csv=p=0", file]),
+            l => sb.AppendLine(l), CancellationToken.None).GetAwaiter().GetResult();
+        return sb.ToString().Trim().TrimEnd(',');
+    }
+
+    public static string Sha256(string file) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file)));
+
     /// <summary>Every frame of a file, decoded to one gray byte (frame brightness).</summary>
     public static byte[] FrameLumas(string file, string tmpDir)
     {

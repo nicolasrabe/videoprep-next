@@ -15,13 +15,17 @@ public static class FfmpegArgs
 {
     private static string Sec(double v) => v.ToString("0.######", CultureInfo.InvariantCulture);
 
-    public static IReadOnlyList<string> Encode(Job job, CutPlan? plan, SourceTiming timing, int crf, string src, string tmp)
+    /// <param name="cfr">F8: make the video constant-rate in this same pass (the cut, if any, counts on the new frame grid).</param>
+    public static IReadOnlyList<string> Encode(Job job, CutPlan? plan, SourceTiming timing, int crf, string src, string tmp,
+                                               CfrPlan? cfr = null)
     {
         var isRange = plan is not null;
         var a = new List<string> { "-hide_banner", "-loglevel", "error", "-nostats", "-y" };
         if (isRange) a.AddRange(["-ss", Sec(plan!.T0)]);
         a.AddRange(["-i", src]);
         if (isRange) a.AddRange(["-t", Sec(plan!.Duration)]);
+        // Whole video made constant: never longer than the original (ffmpeg's constant-rate mode adds frames at the end).
+        else if (cfr is not null && job.Kind == MediaKind.Video) a.AddRange(["-t", Sec(cfr.SourceSeconds)]);
 
         if (job.Kind == MediaKind.Audio)
         {
@@ -40,6 +44,8 @@ public static class FfmpegArgs
         {
             a.AddRange(["-map", "0:v:0", "-map", "0:a:0?"]);
             if (isRange) a.AddRange(["-frames:v", plan!.Frames.ToString(CultureInfo.InvariantCulture)]);
+            // -fps_mode, not the deprecated -vsync. It forces a re-encode of the video (no stream copy below).
+            if (cfr is not null) a.AddRange(["-fps_mode", "cfr", "-r", FrameRates.ForFfmpeg(cfr.Target)]);
             switch (job.Format)
             {
                 case "movp":
@@ -51,7 +57,7 @@ public static class FfmpegArgs
                                 "-cpu-used", "2", "-pix_fmt", "yuv420p", "-c:a", "libopus", "-b:a", "192k"]);
                     break;
                 default:
-                    if (!isRange && timing.VideoCodec == "h264") a.AddRange(["-c:v", "copy"]);
+                    if (!isRange && cfr is null && timing.VideoCodec == "h264") a.AddRange(["-c:v", "copy"]);
                     else a.AddRange(["-c:v", "libx264", "-preset", "medium", "-crf", crf.ToString(CultureInfo.InvariantCulture),
                                      "-pix_fmt", "yuv420p"]);
                     if (!isRange && timing.AudioCodec == "aac") a.AddRange(["-c:a", "copy"]);
@@ -59,6 +65,9 @@ public static class FfmpegArgs
                     break;
             }
             if (job.Format is "mp4" or "movh" or "movp") a.AddRange(["-movflags", "+faststart"]);
+            // NTSC rates (30000/1001...) are exact in MP4/MOV only when the track clock is the numerator (30000 ticks a second).
+            if (cfr is { Target.Den: 1001 } && job.Format is "mp4" or "movh" or "movp")
+                a.AddRange(["-video_track_timescale", cfr.Target.Num.ToString(CultureInfo.InvariantCulture)]);
         }
         a.Add(tmp);
         return a;

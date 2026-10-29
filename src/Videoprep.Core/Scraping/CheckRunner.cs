@@ -170,7 +170,7 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
         var prefix = SafeName.Make(profile.Prefix.Trim().Length > 0 ? profile.Prefix.Trim() : sub.Name, "Video");
         var items = take.Select((v, n) => new QueueItem
         {
-            Id = n + 1, Url = v.Url, Format = profile.Format, Cap = profile.Cap,
+            Id = n + 1, Url = v.Url, Format = profile.Format, Cap = profile.Cap, ConstantRate = profile.ConstantRate,
             Naming = series ? NamingMode.Series : NamingMode.Original, Prefix = prefix,
         }).ToList();
         var next = new Dictionary<string, int>();

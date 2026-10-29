@@ -51,6 +51,8 @@ public sealed record SubscriptionProfile
     /// The profile this subscription follows (F6), or null for its own values. The values above are always kept too:
     /// they are what is used when the profile is deleted.
     /// </summary>
+    /// <summary>F8: make variable-rate videos constant (off unless a profile or the dialog asks for it).</summary>
+    [JsonPropertyName("constantRate")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)] public bool ConstantRate { get; init; }
     [JsonPropertyName("profileId")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ProfileId { get; init; }
     [JsonPropertyName("kind")] public string Kind => FormatCatalog.Get(Format).Kind == MediaKind.Audio ? "audio" : "video";
 }

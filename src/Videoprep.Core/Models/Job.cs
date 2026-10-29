@@ -29,4 +29,6 @@ public sealed record Job
     public double? Fps { get; init; }
     /// <summary>Folder inside the batch folder ("" = the batch folder itself).</summary>
     public string SubFolder { get; init; } = "";
+    /// <summary>F8: make the video constant-rate when it really is variable.</summary>
+    public bool ConstantRate { get; init; }
 }

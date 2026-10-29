@@ -353,6 +353,9 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
         {
             var fmt = FormatCatalog.Get(job.Format);
             var needPost = job.IsRange;
+            // F8: only a video that really has a variable frame rate is ever touched.
+            var cfr = await CfrForAsync(job, file, g).ConfigureAwait(false);
+            if (cfr is not null) needPost = true;
             if (!needPost)
             {
                 if (job.Format == "movp") needPost = true;
@@ -373,7 +376,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             {
                 if (ctx.Tools.Ffmpeg is not null && ctx.Tools.Ffprobe is not null)
                 {
-                    await PostAsync(job, file, g, job.IsRange).ConfigureAwait(false);
+                    await PostAsync(job, file, g, job.IsRange, cfr).ConfigureAwait(false);
                     return;
                 }
                 _log.Write("WARN  ffmpeg not found - cannot cut or convert. The downloaded file was kept.");
@@ -382,7 +385,37 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             await FinishJobAsync(job, file).ConfigureAwait(false);
         }
 
-        private async Task PostAsync(Job job, string file, VideoGroup g, bool isRange)
+        /// <summary>
+        /// F8: looks at the frame times of the downloaded video once (clips of the same video share the answer) and says
+        /// whether it must be made constant. Constant-rate videos get null: they are never re-encoded for this.
+        /// </summary>
+        private async Task<CfrPlan?> CfrForAsync(Job job, string file, VideoGroup g)
+        {
+            if (!job.ConstantRate || job.Kind != MediaKind.Video || ctx.Tools.Ffprobe is null) return null;
+            if (g.CfrChecked) return g.Cfr;
+            g.CfrChecked = true;
+            var info = await ProbeAsync(file).ConfigureAwait(false);
+            if (info?.Video is null)
+            {
+                _log.Write("    frame rate: could not be read, the video is left as it is");
+                return null;
+            }
+            var seconds = info.Video.Duration ?? info.FormatDuration;
+            var windows = await PacketProbe.SampleVideoAsync(engine._runner, ctx.Tools.Ffprobe, file, seconds, CancellationToken.None).ConfigureAwait(false);
+            var analysis = VfrDetector.Analyze(info, windows);
+            _log.Write("    " + analysis.LogText);
+            if (!analysis.IsVariable) return null;
+            if (seconds is not > 0)
+            {
+                _log.Write("    the length of the video is not known: it is left as it is");
+                return null;
+            }
+            // What the original looks like (frame times, audio start and end): the result is compared with it.
+            var source = await PacketProbe.StatsAsync(engine._runner, ctx.Tools.Ffprobe, file, CancellationToken.None).ConfigureAwait(false);
+            return g.Cfr = new CfrPlan(analysis.Target, seconds.Value, analysis, source);
+        }
+
+        private async Task PostAsync(Job job, string file, VideoGroup g, bool isRange, CfrPlan? cfr)
         {
             var fmt = FormatCatalog.Get(job.Format);
             var dir = Path.GetDirectoryName(file)!;
@@ -395,7 +428,9 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 SkipPost(job, file, g, "ffprobe could not read the downloaded file");
                 return;
             }
-            var timing = job.Kind == MediaKind.Audio ? SourceTiming.FromAudio(src, job.Fps) : SourceTiming.FromVideo(src);
+            var timing = job.Kind == MediaKind.Audio ? SourceTiming.FromAudio(src, job.Fps)
+                : cfr is not null ? SourceTiming.ForConstantRate(src, cfr.Target, cfr.SourceSeconds)
+                : SourceTiming.FromVideo(src);
             CutPlan? plan = null;
             var note = "";
             if (isRange)
@@ -417,11 +452,16 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 return;
             }
 
-            _log.Write(isRange ? "    cutting " + note : $"    converting to {fmt.Label}...");
+            if (cfr is not null)
+            {
+                var what = $"variable -> {FrameRates.Label(cfr.Target)} fps constant";
+                note = note.Length > 0 ? note + "  (" + what + ")" : what;
+            }
+            _log.Write(isRange ? "    cutting " + note : $"    converting to {fmt.Label}..." + (cfr is null ? "" : "  (" + note + ")"));
             SetStatus(job, JobStatus.Cutting);
             engine.Raise(new StepEvent(job, Number, Total, EngineStep.Processing, note, plan));
 
-            var args = FfmpegArgs.Encode(job, plan, timing, ctx.Options.Crf, file, tmp);
+            var args = FfmpegArgs.Encode(job, plan, timing, ctx.Options.Crf, file, tmp, cfr);
             var r = await engine._runner.RunAsync(new ProcessSpec(ctx.Tools.Ffmpeg!, args, dir), _log.Write, ct).ConfigureAwait(false);
             if (r.Cancelled)
             {
@@ -450,6 +490,9 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 ? new VerifyResult(false, "ffprobe could not read the result")
                 : OutputVerifier.Check(outInfo, job.Kind, plan, src.FormatDuration, src.Audio is not null);
             var seconds = outInfo is null ? null : job.Kind == MediaKind.Video ? outInfo.Video?.Duration ?? outInfo.FormatDuration : outInfo.FormatDuration;
+            // F8: the made-constant file must have the right frames, the same length, audio in step and a really constant rate.
+            if (check.Ok && cfr is not null && job.Kind == MediaKind.Video)
+                check = CfrVerifier.Check(await PacketProbe.StatsAsync(engine._runner, ctx.Tools.Ffprobe!, tmp, CancellationToken.None).ConfigureAwait(false), cfr, plan);
             engine.Raise(new VerifiedEvent(job, tmp, outInfo?.Video?.FrameCount, seconds, check.Ok, check.Reason));
             if (!check.Ok)
             {
@@ -476,11 +519,38 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 return;
             }
 
+            // A whole video that replaces the file it came from (an MP4 made constant is still an MP4): only now, verified and in
+            // place, the original goes, and then the result takes the clean name instead of "Name_2".
+            var clean = Path.Combine(dir, baseName + fmt.Extension);
+            var sourceGone = false;
+            if (!isRange && !string.Equals(final, clean, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(clean, g.FullPath, StringComparison.OrdinalIgnoreCase) && g.ShouldDeleteFull(ctx.Options.KeepFull))
+            {
+                if (TryDelete(g.FullPath!))
+                {
+                    sourceGone = true;
+                    _log.Write("      the downloaded video was replaced: " + Path.GetFileName(g.FullPath));
+                    try
+                    {
+                        File.Move(final, clean);
+                        final = clean;
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        _log.Write($"      could not give the result the original name ({ex.Message}); it stays as {Path.GetFileName(final)}");
+                    }
+                }
+            }
+
             await FinishJobAsync(job, final, outInfo).ConfigureAwait(false);
             if (note.Length > 0) _log.Write("      " + note);
 
             // Only now, with the result verified and in place, may the source go (and never a file the user already had).
-            if (g.ShouldDeleteFull(ctx.Options.KeepFull))
+            if (sourceGone)
+            {
+                // already replaced above
+            }
+            else if (g.ShouldDeleteFull(ctx.Options.KeepFull))
             {
                 if (TryDelete(g.FullPath!)) _log.Write("      the downloaded full video was deleted: " + Path.GetFileName(g.FullPath));
             }

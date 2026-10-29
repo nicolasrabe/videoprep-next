@@ -12,7 +12,7 @@ public static class ProfileLinks
     public static SubscriptionProfile Effective(SubscriptionProfile own, ProfileStore profiles)
     {
         if (profiles.Find(own.ProfileId) is not { } p) return own;
-        return own with { Format = p.Format, Cap = p.Cap, Naming = p.Naming, Prefix = p.IsSeries ? p.Prefix : "" };
+        return own with { Format = p.Format, Cap = p.Cap, Naming = p.Naming, Prefix = p.IsSeries ? p.Prefix : "", ConstantRate = p.ConstantRate };
     }
 
     /// <summary>Subscriptions that follow this profile.</summary>
@@ -22,7 +22,7 @@ public static class ProfileLinks
     /// <summary>The same subscriptions with the profile's values copied in (after the profile was edited), so a later delete keeps them.</summary>
     public static Subscription Sync(Subscription s, FormatProfile p) => s with
     {
-        Profile = s.Profile with { Format = p.Format, Cap = p.Cap, Naming = p.Naming, Prefix = p.IsSeries ? p.Prefix : "", ProfileId = p.Id },
+        Profile = s.Profile with { Format = p.Format, Cap = p.Cap, Naming = p.Naming, Prefix = p.IsSeries ? p.Prefix : "", ConstantRate = p.ConstantRate, ProfileId = p.Id },
     };
 
     /// <summary>The subscription stops following the profile and keeps the values it has.</summary>

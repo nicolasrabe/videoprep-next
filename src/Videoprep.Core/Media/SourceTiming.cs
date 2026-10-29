@@ -39,6 +39,18 @@ public sealed record SourceTiming(bool Ok, string Error, int Num, int Den, int F
     }
 
     /// <summary>
+    /// A variable-rate video that is being made constant (F8): timecodes count on the NEW frame grid, so the total is the
+    /// length times the new rate (the source's own frame count means nothing on a variable-rate file).
+    /// </summary>
+    public static SourceTiming ForConstantRate(MediaInfo info, Rational target, double seconds)
+    {
+        var total = (long)Math.Round(seconds * target.Num / target.Den);
+        if (total < 1) return Fail("the video has no frames", info.Video?.Codec ?? "", info.Audio?.Codec ?? "");
+        return new SourceTiming(true, "", target.Num, target.Den, (int)Math.Round(target.Value), target.Den == 1001, total,
+                                info.Video?.Codec ?? "", info.Audio?.Codec ?? "", false);
+    }
+
+    /// <summary>
     /// Audio-only file: timecodes are typed against the video's frame rate (from the preview).
     /// <paramref name="fps"/> null or 0 means unknown; 30 is used and <see cref="FpsWasGuessed"/> tells the caller (AUDIT X4).
     /// </summary>
