@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## Sin publicar (0.3.0, Ronda 1: la cola)
+## Sin publicar (0.3.0, Rondas 1 y 2)
 - "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html
   and .csv. In Word files it finds hyperlinks, HYPERLINK fields and typed links, also in headers, footers, footnotes
   and text boxes. Google Docs and Outlook redirect links are unwrapped. A review window shows every link with the text
@@ -17,6 +17,25 @@ Versions below 1.0.0 are early releases: things can change between them.
 - Expandable queue rows: a click (or the arrow keys) opens the row with thumbnail, title, channel, date, views,
   description, the link (open/copy) and the planned file name. Data is asked for only for the row that is opened, one
   request at a time.
+
+- **Modo mini** (Ronda 2): el botón "Mini" de Descargar achica videoprep a una línea (nombre del archivo, porcentaje
+  como barra de fondo, "N/M"), en cualquier lugar de la pantalla, siempre encima si querés (se prende y apaga en vivo; se
+  guarda en Ajustes) y **sin quitarle el teclado al programa donde estás escribiendo**. La ventana grande se minimiza (queda un
+  solo botón en la barra de tareas) y vuelve al hacer clic en ese botón. Clic derecho: "Cerrar modo mini", "Siempre encima",
+  "Cerrar videoprep" (pregunta si hay algo descargando). Nunca muestra enlaces. Probado en el escritorio real de Windows
+  (`tests/desktop/mini-focus-check.ps1`).
+- **Enlaces copiados** (Ronda 2, apagado por defecto, en Ajustes): agrega a la cola los enlaces de video claros que copiás,
+  mientras la opción esté activada y nada más. Ignora lo que copia el propio programa y los repetidos; más de 20 enlaces de
+  una vez quedan esperando tu respuesta (la mini avisa). El contenido copiado nunca se guarda ni se anota en el Registro.
+- **Perfiles de formato** (Ronda 2): guardá el formato, la resolución y los nombres con un nombre ("Guardar como perfil...").
+  Se usan en Descargar, en "Cambiar N elementos", en la ventana de enlaces encontrados y en Scraping (Explorar y
+  suscripciones, con una columna "Perfil" en la tabla). Tres perfiles de ejemplo de solo lectura. Se administran en Ajustes
+  (renombrar, borrar, exportar e importar `.json`). Antes de cambiar o borrar un perfil que siguen suscripciones, un cartel
+  muestra sus nombres (Cancelar / Continuar). Se guardan en `profiles.json` (guardado atómico, con versión).
+- **Lista de fuentes** (Ronda 2, apagada por defecto, en Ajustes): al terminar cada tanda escribe `fuentes-AAAAMMDD-HHmm.csv`
+  (o `.txt`) en la carpeta de destino con título, canal, enlace, nombre exacto del archivo, ruta, formato, fecha y estado. CSV
+  con BOM y con el separador del idioma de Windows; sin cookies ni datos de sesión en los enlaces; los textos que Excel
+  tomaría por una fórmula llevan un apóstrofe. También "Exportar lista de fuentes..." en el menú de la cola.
 
 ## 0.2.0 - 2026-10-26
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).

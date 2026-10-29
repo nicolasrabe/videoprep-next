@@ -6,6 +6,7 @@ using Videoprep.Core.Engine;
 using Videoprep.Core.Import;
 using Videoprep.Core.Models;
 using Videoprep.Core.Sources;
+using Videoprep.Core.Text;
 
 namespace Videoprep.App.ViewModels;
 
@@ -79,7 +80,19 @@ public sealed partial class MainViewModel
     private void AddClipboardLinks(IReadOnlyList<string> urls)
     {
         PushUndo();
-        foreach (var u in urls) AddDefaultItem(u);
+        // Whole videos, with what the Download tab has chosen now (format, resolution, names).
+        var prefix = SafeName.Make(SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video", "Video");
+        foreach (var u in urls)
+        {
+            Items.Add(new QueueItem
+            {
+                Id = _nextItemId++, Url = u, Format = SelectedFormatKey, Cap = SelectedCap,
+                Naming = NameSeries ? NamingMode.Series : NamingMode.Original, Prefix = prefix,
+            });
+            _svc.Preview.Request(u, null);   // the title, like a pasted link
+        }
+        SaveQueue();
+        RebuildQueueRows();
         _svc.Log.Write($"Clipboard: {urls.Count} link(s) added to the queue.");   // how many, never what
         ShowNotice(urls.Count == 1 ? L["clip_added_one"] : L.Format("clip_added_many", urls.Count));
     }

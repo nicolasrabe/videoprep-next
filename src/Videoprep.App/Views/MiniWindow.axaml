@@ -15,7 +15,7 @@
     <Border.ContextMenu>
       <ContextMenu x:Name="Menu">
         <MenuItem Header="{s:T mnu_mini_close}" Command="{Binding CloseMiniCommand}" />
-        <MenuItem x:Name="OnTopItem" Header="{s:T mnu_mini_ontop}" ToggleType="CheckBox" IsChecked="{Binding MiniOnTop}" />
+        <MenuItem x:Name="OnTopItem" Header="{s:T mnu_mini_ontop}" ToggleType="CheckBox" IsChecked="{Binding MiniOnTop, Mode=TwoWay}" />
         <Separator />
         <MenuItem Header="{s:T mnu_mini_quit}" Command="{Binding QuitFromMiniCommand}" />
       </ContextMenu>

@@ -141,9 +141,11 @@ public sealed class ExtrasFeatureTests : IDisposable
         Assert.Empty(vm.Items);
 
         vm.ToggleMiniCommand.Execute(null);
+        vm.IsAudio = true;                                   // what the Download tab has chosen now is what the copied links get
+        vm.SelectedFormat = vm.FormatChoices.First(f => f.Key == "mp3");
         await Copy(vm, "mirá esto " + Bunny + "&t=30 está buenísimo");
         var item = Assert.Single(vm.Items);
-        Assert.Equal((Bunny, NamingMode.Original, 0), (item.Url, item.Naming, item.Clips.Count));   // whole video, default choices
+        Assert.Equal((Bunny, NamingMode.Original, 0, "mp3"), (item.Url, item.Naming, item.Clips.Count, item.Format));   // whole video
         Assert.Equal("Se agregó 1 enlace a la cola", vm.StatusText);
         Assert.Equal(("Se agregó 1 enlace a la cola", MiniKind.Notice), (vm.MiniText, vm.MiniKind));
         Assert.Contains(_rig.Log.Recent(), l => l == "Clipboard: 1 link(s) added to the queue.");

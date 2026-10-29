@@ -101,14 +101,10 @@ public partial class MiniWindow : Window
         _menuWatch = null;
     }
 
-    private bool CursorOverMenu()
-    {
-        if (Platform.CursorPosition() is not { } cur) return false;
-        if (TopLevel.GetTopLevel(Menu) is not { } root || ReferenceEquals(root, this)) return false;
-        var origin = root.PointToScreen(new Point(0, 0));
-        var scale = root.RenderScaling;
-        var w = root.Bounds.Width * scale;
-        var h = root.Bounds.Height * scale;
-        return cur.X >= origin.X && cur.X < origin.X + w && cur.Y >= origin.Y && cur.Y < origin.Y + h;
-    }
+    /// <summary>
+    /// Is the mouse pointer on the menu? Avalonia marks the elements under the pointer, also for a window that is never
+    /// activated, so a click on an item is left alone (the item runs) and only a click elsewhere closes the menu.
+    /// </summary>
+    private bool CursorOverMenu() =>
+        Menu.IsPointerOver || Menu.GetVisualDescendants().OfType<InputElement>().Any(e => e.IsPointerOver);
 }

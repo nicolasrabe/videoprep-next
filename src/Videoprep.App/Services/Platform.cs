@@ -112,8 +112,11 @@ internal static partial class Platform
     /// </summary>
     public static long ClipboardSequence() => OperatingSystem.IsWindows() ? GetClipboardSequenceNumber() : 0;
 
-    /// <summary>Is this key or mouse button down right now, in any program? (A no-activate window gets no key events.)</summary>
-    public static bool IsKeyDown(int virtualKey) => OperatingSystem.IsWindows() && (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
+    /// <summary>
+    /// Is this key or mouse button down right now, or was it pressed since the last time we asked, in any program?
+    /// (A no-activate window gets no key events of its own; the second part also catches a very short press.)
+    /// </summary>
+    public static bool IsKeyDown(int virtualKey) => OperatingSystem.IsWindows() && (GetAsyncKeyState(virtualKey) & 0x8001) != 0;
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
