@@ -16,11 +16,12 @@ public sealed partial class OptionsViewModel : ObservableObject
     [ObservableProperty] private decimal _crf = 14;
     [ObservableProperty] private decimal _limit;
     [ObservableProperty] private decimal _sleep = 1;
+    [ObservableProperty] private bool _constantRate;
 
     public static OptionsViewModel From(Settings s) => new()
     {
         Subs = s.Subs, SubLangs = s.SubLangs, Thumbs = s.Thumbs, Archive = s.Archive, Fallback = s.Fallback,
-        KeepFull = s.KeepFull, Crf = s.Crf, Limit = s.Limit, Sleep = s.Sleep,
+        KeepFull = s.KeepFull, Crf = s.Crf, Limit = s.Limit, Sleep = s.Sleep, ConstantRate = s.ConstantRate,
     };
 
     public void ApplyTo(Settings s)
@@ -34,6 +35,7 @@ public sealed partial class OptionsViewModel : ObservableObject
         s.Crf = (int)Math.Clamp(Crf, 10, 28);
         s.Limit = (int)Math.Clamp(Limit, 0, 500);
         s.Sleep = (int)Math.Clamp(Sleep, 0, 30);
+        s.ConstantRate = ConstantRate;
     }
 
     public static DownloadOptions ToDownloadOptions(Settings s) => new()

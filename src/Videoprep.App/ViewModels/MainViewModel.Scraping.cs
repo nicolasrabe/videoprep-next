@@ -68,7 +68,7 @@ public sealed partial class MainViewModel
     }
 
     /// <summary>Adds whole videos to the queue with the naming chosen in Download; titles come from the listing.</summary>
-    internal void AddToQueue(IEnumerable<(string Url, string Title)> videos, string format, int cap)
+    internal void AddToQueue(IEnumerable<(string Url, string Title)> videos, string format, int cap, bool constantRate = false)
     {
         var prefix = SafeName.Make(SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video", "Video");
         foreach (var (url, title) in videos)
@@ -79,6 +79,7 @@ public sealed partial class MainViewModel
             {
                 Id = _nextItemId++, Url = url, Format = format, Cap = cap,
                 Naming = NameSeries ? NamingMode.Series : NamingMode.Original, Prefix = prefix,
+                ConstantRate = constantRate && Core.Formats.FormatCatalog.Get(format).Kind == Core.Formats.MediaKind.Video,
             });
         }
         SaveQueue();

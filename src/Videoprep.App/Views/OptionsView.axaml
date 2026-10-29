@@ -15,6 +15,11 @@
     <CheckBox Content="{s:T opt_skip}" IsChecked="{Binding Archive}" />
     <CheckBox Content="{s:T opt_conv}" IsChecked="{Binding Fallback}" />
     <CheckBox Content="{s:T opt_keep}" IsChecked="{Binding KeepFull}" />
+    <!-- F8 -->
+    <StackPanel Spacing="2">
+      <CheckBox Content="{s:T opt_cfr}" IsChecked="{Binding ConstantRate}" />
+      <TextBlock Classes="muted" Text="{s:T opt_cfr_note}" TextWrapping="Wrap" Margin="26,0,0,0" MaxWidth="520" />
+    </StackPanel>
     <Grid ColumnDefinitions="*,120" ColumnSpacing="8">
       <TextBlock Text="{s:T opt_crf}" VerticalAlignment="Center" TextWrapping="Wrap" />
       <NumericUpDown Grid.Column="1" Value="{Binding Crf}" Minimum="10" Maximum="28" Increment="1" FormatString="0" />

@@ -6,7 +6,7 @@
              x:DataType="vm:BatchEditViewModel">
   <!-- "Cambiar N elementos de la cola" (F2, mockup-editar-cola.html part 2) -->
   <StackPanel Spacing="10">
-    <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+    <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
       <!-- F6: a profile fills the three boxes below -->
       <TextBlock Classes="muted" Text="{s:T batch_profile}" VerticalAlignment="Center" IsVisible="{Binding HasProfiles}" />
       <ComboBox Grid.Column="1" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" MinWidth="260"
@@ -15,9 +15,12 @@
       <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" MinWidth="260" />
       <TextBlock Grid.Row="2" Classes="muted" Text="{s:T lbl_res}" VerticalAlignment="Center" />
       <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" MinWidth="160" />
-      <TextBlock Grid.Row="3" Classes="muted" Text="{s:T batch_names}" VerticalAlignment="Center" />
-      <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding NameModes}" SelectedItem="{Binding SelectedNames}" MinWidth="300" />
-      <StackPanel Grid.Row="4" Grid.Column="1" Spacing="6">
+      <TextBlock Grid.Row="3" Classes="muted" Text="{s:T batch_cfr}" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ConstantChoices}" SelectedItem="{Binding SelectedConstant}" MinWidth="160"
+                ToolTip.Tip="{s:T tip_cfr}" AutomationProperties.Name="{s:T batch_cfr}" />
+      <TextBlock Grid.Row="4" Classes="muted" Text="{s:T batch_names}" VerticalAlignment="Center" />
+      <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding NameModes}" SelectedItem="{Binding SelectedNames}" MinWidth="300" />
+      <StackPanel Grid.Row="5" Grid.Column="1" Spacing="6">
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSeries}">
           <TextBlock Classes="muted" Text="{s:T batch_prefix}" VerticalAlignment="Center" />
           <TextBox Text="{Binding Prefix}" Width="170" />

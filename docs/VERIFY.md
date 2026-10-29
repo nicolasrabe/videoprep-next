@@ -116,3 +116,31 @@ The CI failed on the WebM cut once the audio of every cut had to decode with no 
   take a newer one) and sets `VIDEOPREP_FFMPEG_DIR`; the Ubuntu package is no longer installed. The strict audio check, the frame count
   and every other test are unchanged. Not proven: what exactly in apt 8.0.1's parser rejects the packet (it was not looked into further);
   if a user ever reports damaged Opus audio in WebM clips this table is the first place to look.
+
+## 0.3 round 3, F8 "Velocidad constante" (2026-10-29, ffmpeg N-128097 on Windows, N-128170 in the CI)
+Test clip (made in code, `Ffmpeg.MakeVfrSource`): 6 s at 60 fps with the frame number in the brightness, frames dropped in three stretches
+(~50, ~30 and ~10 fps) and a tone of exactly the same length, muxed apart. ffprobe says `r_frame_rate=60/1`, `avg_frame_rate=5400/173`
+(31.2 fps), intervals of 16.7, 33.3 and 100 ms: really irregular, not just two numbers that differ.
+
+| Question | What the real ffmpeg did | What the code does |
+|---|---|---|
+| `-fps_mode cfr -r 30` on the whole video | 178 frames, 5.933 s while the audio lasts 5.767 s: the video came out 5 frames longer than the audio (the last frame of a variable video lasts as long as the gap before it) | Whole videos get `-t <length of the original>`: 174 frames, 5.800 s (one frame more) |
+| `-fps_mode cfr` + `-shortest` | 172 frames (one less) | not used |
+| `fps` filter with `eof_action=round` | 178 frames, same problem | not used |
+| Clip frames 30-59 in the same pass (`-ss 0.991667 -t 1 -frames:v 30 -fps_mode cfr -r 30`) | exactly 30 frames, video and audio 1.000 s | same arguments |
+| NTSC `-r 30000/1001` | `r_frame_rate = avg_frame_rate = 30000/1001`; with `-video_track_timescale 30000` the track clock is `1/30000` (exact) | the timescale is added for MP4/MOV |
+| WebM / ProRes MOV | WebM `30/1`, no duration in the container (packets are counted); ProRes `30/1`, PCM audio | WebM checks use packet times with a 1 ms rounding allowance |
+| A constant 30 fps video through the same command | unchanged (173 frames) | never run: constant videos are left untouched (same bytes) |
+
+Checks before anything is replaced (`CfrVerifier`, plus the usual `OutputVerifier`): frames (exact for a clip; the expected one +-1 for a whole video), length
+(+-1 frame), audio start (+-1 frame or 30 ms of where it started in the ORIGINAL), audio length (+-1 frame or 60 ms of the original's, or of what the clip needs:
+AAC adds 21 ms of its own at the start, PCM and Opus add other amounts; the first real run of ProRes showed 36 ms of that), and the result must be constant now
+(the intervals between frames all equal). Audio is compared with the original's audio, not with an ideal: a file that arrived 50 ms out of step stays so and is not
+blamed on the conversion. A failure deletes the temporary file, leaves the original as it was and sends the row to "Revisar" with the reason. Whole videos
+that stay in the same container (an MP4 made constant is an MP4) take the clean name only after the original is deleted, never before the check.
+The real-ffmpeg tests spoil the result on purpose (a too short output, the audio removed, the audio times moved half a second) and check that the original is intact byte for byte.
+
+Detection: frame times of the first 600 packets and, for videos over 20 s, 300 packets from the middle (ffprobe `-read_intervals`, nothing decoded). Variable when at least 3
+intervals and 1 % of them are irregular (more than 1.5 ms or 2 % away from the usual one; MKV/WebM round to the millisecond), or when ffprobe's two rates disagree by more than 1 %
+and one interval is irregular. Constant tests: exact times, an MP4 clock (1/30000), MKV/WebM milliseconds (33/34 ms, 16/17 ms), an MPEG-TS clock, frames out of order from B-frames.
+Not decided by detection alone: fewer than 12 frames to look at, a single freeze in an otherwise constant video.

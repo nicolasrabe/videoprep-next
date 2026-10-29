@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Videoprep.App.Services;
+using Videoprep.Core.Formats;
 using Videoprep.Core.Profiles;
 using Videoprep.Core.Scraping;
 
@@ -30,7 +31,7 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         TabShorts = s.Tabs.Contains("shorts");
         TabStreams = s.Tabs.Contains("streams");
         Filter = FilterInputs.From(s.Filters);
-        Format = new FormatPicker(s.Profile.Format, s.Profile.Cap);
+        Format = new FormatPicker(s.Profile.Format, s.Profile.Cap, s.Profile.ConstantRate);
         NameSeries = s.Profile.Naming == "series";
         Prefix = s.Profile.Prefix;
         Folder = s.Folder;
@@ -41,7 +42,7 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         SelectedProfile = s.Profile.ProfileId is { } id ? Profiles.FirstOrDefault(c => c.Profile?.Id == id) ?? Profiles[0] : Profiles[0];
         Format.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(FormatPicker.SelectedFormat) or nameof(FormatPicker.SelectedResolution)) FollowOwnValues();
+            if (e.PropertyName is nameof(FormatPicker.SelectedFormat) or nameof(FormatPicker.SelectedResolution) or nameof(FormatPicker.ConstantRate)) FollowOwnValues();
         };
         _ready = true;
     }
@@ -114,7 +115,8 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
 
     /// <summary>The profile it follows: only when the values on screen are still exactly the profile's.</summary>
     private string? FollowedProfileId() =>
-        SelectedProfile?.Profile is { } p && p.Format == Format.FormatKey && p.Cap == Format.Cap && p.IsSeries == NameSeries ? p.Id : null;
+        SelectedProfile?.Profile is { } p && p.Format == Format.FormatKey && p.Cap == Format.Cap && p.IsSeries == NameSeries
+        && p.ConstantRate == Format.ConstantRate ? p.Id : null;
 
     /// <summary>The subscription to save, or null and a message for the user.</summary>
     public Subscription? Build(out string? problem)
@@ -141,6 +143,7 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
             {
                 Format = Format.FormatKey, Cap = Format.Cap, Naming = NameSeries ? "series" : "orig",
                 Prefix = NameSeries ? (Prefix.Trim().Length > 0 ? Prefix.Trim() : name) : "",
+                ConstantRate = Format.ConstantRate && FormatCatalog.Get(Format.FormatKey).Kind == MediaKind.Video,
                 ProfileId = FollowedProfileId(),
             },
             Folder = Folder.Trim().Trim('"'), SubfolderPerSub = SubfolderPerSub,

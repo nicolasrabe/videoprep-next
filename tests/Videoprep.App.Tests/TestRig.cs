@@ -28,7 +28,9 @@ internal sealed class FakeUi : IUiServices
     public Task<string?> PickTextFile() => Task.FromResult(FileToPick);
     public Task<string?> PickSaveFile(string suggestedName) => Task.FromResult(FileToPick);
     public Task<string?> PickColor(string current) => Task.FromResult(ColorToPick);
-    public Task<bool> ShowOptions(OptionsViewModel options) => Task.FromResult(false);
+    /// <summary>What the "user" does in Opciones; null = presses Cancelar.</summary>
+    public Func<OptionsViewModel, bool>? Options { get; set; }
+    public Task<bool> ShowOptions(OptionsViewModel options) => Task.FromResult(Options?.Invoke(options) ?? false);
     /// <summary>What the "user" types in the subscription dialog; null = presses Cancelar.</summary>
     public Action<SubscriptionEditViewModel>? FillSubscription { get; set; }
     public Task<bool> EditSubscription(SubscriptionEditViewModel subscription)

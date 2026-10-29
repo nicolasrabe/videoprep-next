@@ -34,6 +34,10 @@ public sealed partial class BatchEditViewModel : ObservableObject
     public IReadOnlyList<Choice<string>> Resolutions { get; }
     public IReadOnlyList<Choice<string>> NameModes { get; }
 
+    /// <summary>F8: "(sin cambios)", "Sí", "No".</summary>
+    public IReadOnlyList<Choice<string>> ConstantChoices { get; }
+    [ObservableProperty] private Choice<string> _selectedConstant;
+
     /// <summary>"(sin cambios)" first, then the profiles (F6): picking one fills Formato, Resolución and Nombres below.</summary>
     public IReadOnlyList<ProfileChoice> Profiles { get; }
     [ObservableProperty] private ProfileChoice _selectedProfile;
@@ -43,6 +47,8 @@ public sealed partial class BatchEditViewModel : ObservableObject
     {
         if (value.Profile is not { } p) return;
         SelectedFormat = Formats.FirstOrDefault(f => f.Value == p.Format) ?? SelectedFormat;
+        // A profile that asks for a constant rate turns it on; one that does not ask leaves the videos as they are.
+        if (p.ConstantRate) SelectedConstant = ConstantChoices[1];
         SelectedResolution = Resolutions.FirstOrDefault(r => r.Value is { } v && FormatCatalog.Resolutions[v] == p.Cap) ?? SelectedResolution;
         if (p.IsSeries)
         {
@@ -98,6 +104,8 @@ public sealed partial class BatchEditViewModel : ObservableObject
         ];
         Profiles = [new ProfileChoice(null, same), .. profiles ?? []];
         _selectedProfile = Profiles[0];
+        ConstantChoices = [new(null, same), new("yes", L["batch_cfr_yes"]), new("no", L["batch_cfr_no"])];
+        _selectedConstant = ConstantChoices[0];
         _selectedFormat = Formats[0];
         _selectedResolution = Resolutions[0];
         _selectedNames = NameModes[0];
@@ -108,6 +116,7 @@ public sealed partial class BatchEditViewModel : ObservableObject
     {
         Format = SelectedFormat.Value,
         Cap = SelectedResolution.Value is { } r ? FormatCatalog.Resolutions[r] : null,
+        ConstantRate = SelectedConstant.Value switch { "yes" => true, "no" => false, _ => null },
         Names = SelectedNames.Value is { } n ? Enum.Parse<NameChange>(n) : NameChange.None,
         Prefix = Prefix, Before = Before, After = After, Find = Find, ReplaceWith = ReplaceWith,
     };

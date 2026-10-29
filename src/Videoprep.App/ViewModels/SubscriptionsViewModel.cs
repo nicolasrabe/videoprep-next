@@ -218,6 +218,7 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
         vm.Filter.CopyFrom(ex.Filter);
         vm.Format.SelectedFormat = vm.Format.FormatChoices.FirstOrDefault(f => f.Key == ex.Format.FormatKey) ?? vm.Format.SelectedFormat;
         vm.Format.SelectedResolution = ex.Format.SelectedResolution;
+        vm.Format.ConstantRate = ex.Format.ConstantRate;
         vm.Folder = _host.CurrentFolder;
         await AddWith(vm);
     }

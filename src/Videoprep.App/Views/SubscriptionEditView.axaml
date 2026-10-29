@@ -62,6 +62,7 @@
       <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
       <ComboBox ItemsSource="{Binding Format.FormatChoices}" SelectedItem="{Binding Format.SelectedFormat}" MinWidth="220" />
       <ComboBox ItemsSource="{Binding Format.ResolutionChoices}" SelectedItem="{Binding Format.SelectedResolution}" MinWidth="90" />
+      <CheckBox Content="{s:T chk_cfr}" IsChecked="{Binding Format.ConstantRate}" ToolTip.Tip="{s:T tip_cfr}" />
     </WrapPanel>
     <WrapPanel ItemSpacing="10" LineSpacing="6">
       <TextBlock Classes="muted" Text="{s:T lbl_names}" VerticalAlignment="Center" />

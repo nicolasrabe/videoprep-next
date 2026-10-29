@@ -137,8 +137,12 @@ public sealed partial class MainViewModel
         return f.Kind == MediaKind.Audio ? f.Label : $"{f.Label} · {FormatCatalog.ResolutionLabel(it.Cap)}";
     }
 
-    private string FormatText(QueueItem it) =>
-        it.SubFolder.Length > 0 ? $"{FormatLabel(it)} · {it.SubFolder}{Path.DirectorySeparatorChar}" : FormatLabel(it);
+    private string FormatText(QueueItem it)
+    {
+        var text = FormatLabel(it);
+        if (it.ConstantRate && it.Kind == MediaKind.Video) text += " · " + L["fmt_cfr"];
+        return it.SubFolder.Length > 0 ? $"{text} · {it.SubFolder}{Path.DirectorySeparatorChar}" : text;
+    }
 
     /// <summary>The video title when known: from the preview (YouTube) or from an opened row's card (other sites).</summary>
     private string? TitleOf(QueueItem it)
@@ -550,6 +554,7 @@ public sealed partial class MainViewModel
         RebuildFormatLists();
         SelectedFormat = FormatChoices.FirstOrDefault(f => f.Key == it.Format) ?? SelectedFormat;
         SelectedResolution = FormatCatalog.ResolutionLabel(it.Cap);
+        ConstantRate = it.ConstantRate;
         switch (it.Naming)
         {
             case NamingMode.Custom: NameCustom = true; CustomText = it.Custom; break;
@@ -626,6 +631,7 @@ public sealed partial class MainViewModel
                 Id = _nextItemId++, Url = url, Format = fmt.Key, Cap = fmt.Cap,
                 Naming = name.Length > 0 ? NamingMode.Custom : series ? NamingMode.Series : NamingMode.Original,
                 Custom = name, Prefix = prefix, SubFolder = review.UseSubfolder ? review.SubfolderName : "",
+                ConstantRate = (fmt.Profile?.ConstantRate ?? ConstantRate) && FormatCatalog.Get(fmt.Key).Kind == MediaKind.Video,
             });
         }
         SaveQueue();

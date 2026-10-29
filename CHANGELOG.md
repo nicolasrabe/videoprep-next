@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## Sin publicar (0.3.0, Rondas 1 y 2)
+## Sin publicar (0.3.0, Rondas 1, 2 y 3)
 - "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html
   and .csv. In Word files it finds hyperlinks, HYPERLINK fields and typed links, also in headers, footers, footnotes
   and text boxes. Google Docs and Outlook redirect links are unwrapped. A review window shows every link with the text
@@ -36,6 +36,15 @@ Versions below 1.0.0 are early releases: things can change between them.
   (o `.txt`) en la carpeta de destino con título, canal, enlace, nombre exacto del archivo, ruta, formato, fecha y estado. CSV
   con BOM y con el separador del idioma de Windows; sin cookies ni datos de sesión en los enlaces; los textos que Excel
   tomaría por una fórmula llevan un apóstrofe. También "Exportar lista de fuentes..." en el menú de la cola.
+
+- **Velocidad constante** (Ronda 3, apagada por defecto): una casilla en Descargar (y en Opciones, en los perfiles, en "Cambiar N
+  elementos" y en Scraping) que convierte los videos de velocidad variable (Twitch, X, capturas de pantalla) a velocidad
+  constante para que Premiere los lea bien. Solo toca un video si **de verdad** es de velocidad variable (mira los tiempos de los
+  fotogramas); los de velocidad constante no se recodifican nunca y quedan idénticos. Se hace en el mismo paso que el corte
+  exacto de fragmentos, para MP4, MOV (H.264 y ProRes), WebM y MKV; la velocidad nueva es la estándar más cercana (23,976, 24, 25,
+  29,97, 30, 50, 59,94 o 60). Antes de reemplazar nada se comprueba la cantidad de fotogramas, la duración (un fotograma de
+  margen), que el audio siga en sintonía con el del original y que el resultado sea de verdad constante; si algo falla, el original
+  queda intacto y la fila pasa a "Revisar" con el motivo. Un MP4 convertido queda con su nombre limpio (no "Nombre_2").
 
 ## 0.2.0 - 2026-10-26
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).

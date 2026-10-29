@@ -76,9 +76,12 @@ public sealed partial class FormatPicker : ObservableObject
     [ObservableProperty] private FormatChoice? _selectedFormat;
     public ObservableCollection<string> ResolutionChoices { get; } = [];
     [ObservableProperty] private string? _selectedResolution;
+    /// <summary>F8 "Velocidad constante".</summary>
+    [ObservableProperty] private bool _constantRate;
 
-    public FormatPicker(string formatKey = "mp4", int cap = FormatCatalog.DefaultCap)
+    public FormatPicker(string formatKey = "mp4", int cap = FormatCatalog.DefaultCap, bool constantRate = false)
     {
+        _constantRate = constantRate;
         foreach (var f in FormatCatalog.All) FormatChoices.Add(new FormatChoice(f.Key, f.Label));
         SelectedFormat = FormatChoices.FirstOrDefault(f => f.Key == formatKey) ?? FormatChoices[0];
         var label = FormatCatalog.ResolutionLabel(cap);
@@ -116,6 +119,7 @@ public sealed partial class FormatPicker : ObservableObject
         SelectedFormat = FormatChoices.FirstOrDefault(f => f.Key == p.Format) ?? SelectedFormat;
         var label = FormatCatalog.ResolutionLabel(p.Cap);
         if (ResolutionChoices.Contains(label)) SelectedResolution = label;
+        ConstantRate = p.ConstantRate;
     }
 
     public string FormatKey => SelectedFormat?.Key ?? "mp4";

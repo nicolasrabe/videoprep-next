@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Videoprep.App.Services;
 using CommunityToolkit.Mvvm.Input;
 using Videoprep.Core.Formats;
 using Videoprep.Core.Profiles;
@@ -56,6 +57,7 @@ public sealed partial class MainViewModel
     private static string ProfileDetail(FormatProfile p)
     {
         var label = FormatLabelOf(p.Format, p.Cap);
+        if (p.ConstantRate) label += " · " + Loc.Instance["fmt_cfr"];
         return p.IsSeries ? $"{label} · {p.Prefix}1, {p.Prefix}2..." : label;
     }
 
@@ -92,6 +94,7 @@ public sealed partial class MainViewModel
         SelectedFormat = FormatChoices.FirstOrDefault(f => f.Key == p.Format) ?? SelectedFormat;
         var label = FormatCatalog.ResolutionLabel(p.Cap);
         if (ResolutionChoices.Contains(label)) SelectedResolution = label;
+        ConstantRate = p.ConstantRate;
         if (p.IsSeries)
         {
             NameSeries = true;
@@ -106,7 +109,7 @@ public sealed partial class MainViewModel
     private FormatProfile CurrentChoices() => new()
     {
         Format = SelectedFormatKey, Cap = SelectedCap, Naming = NameSeries ? "series" : "orig",
-        Prefix = NameSeries ? SeriesText.Trim() : "",
+        Prefix = NameSeries ? SeriesText.Trim() : "", ConstantRate = ConstantRate,
     };
 
     // ---------------- subscriptions affected by a change ----------------

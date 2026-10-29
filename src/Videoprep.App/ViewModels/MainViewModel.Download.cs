@@ -57,6 +57,9 @@ public sealed partial class MainViewModel
     [NotifyPropertyChangedFor(nameof(SeriesEnabled))]
     private bool _nameSeries;
 
+    /// <summary>F8 "Velocidad constante": the next link sent to the queue asks for it. Starts with the setting in Opciones.</summary>
+    [ObservableProperty] private bool _constantRate;
+
     [ObservableProperty] private string _customText = "";
     [ObservableProperty] private string _seriesText = "Video";
     [ObservableProperty] private string _exampleText = "";
@@ -79,6 +82,7 @@ public sealed partial class MainViewModel
     private void InitDownload()
     {
         Folder = Settings.Folder.Length > 0 ? Settings.Folder : DefaultFolder();
+        ConstantRate = Settings.ConstantRate;
         SeriesText = Settings.Prefix;
         if (Settings.Naming == "series") NameSeries = true; else NameOriginal = true;
         RebuildFormatLists();
@@ -254,7 +258,7 @@ public sealed partial class MainViewModel
     private void AddDefaultItem(string url)
     {
         var prefix = SafeName.Make(SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video", "Video");
-        AddItem(new QueueItem { Url = url, Naming = NameSeries ? NamingMode.Series : NamingMode.Original, Prefix = prefix });
+        AddItem(new QueueItem { Url = url, Naming = NameSeries ? NamingMode.Series : NamingMode.Original, Prefix = prefix, ConstantRate = ConstantRate });
         // Like the legacy Add-ItemToQueue: start the YouTube title lookup so the queue shows names.
         _svc.Preview.Request(url, null);
     }
@@ -311,7 +315,7 @@ public sealed partial class MainViewModel
             Url = _draftUrl, Format = SelectedFormatKey, Cap = SelectedCap, Naming = naming, Custom = CustomText.Trim(),
             Prefix = SafeName.Make(prefix.Length > 0 ? prefix : "Video", "Video"), Clips = clips,
             Fps = _svc.Preview.Get(_draftKey)?.Detail?.Fps,
-            SubFolder = _editId > 0 ? _editSubFolder : "",
+            SubFolder = _editId > 0 ? _editSubFolder : "", ConstantRate = ConstantRate && SelectedFormat is { } f && FormatCatalog.Get(f.Key).Kind == MediaKind.Video,
         };
         var index = _editId > 0 ? Items.ToList().FindIndex(i => i.Id == _editId) : -1;
         if (index >= 0)
@@ -347,6 +351,7 @@ public sealed partial class MainViewModel
         SelectedFormat = FormatChoices.FirstOrDefault();
         SelectedResolution = "1080p";
         CustomText = "";
+        ConstantRate = Settings.ConstantRate;
         if (NameCustom) NameOriginal = true;
         UpdateHint();
         UpdateExample();
@@ -510,6 +515,7 @@ public sealed partial class MainViewModel
         {
             vm.ApplyTo(Settings);
             SaveSettings();
+            ConstantRate = Settings.ConstantRate;   // the Download tab starts with the new default
             if (_draftKey.Length > 0 && !IsRunning) _svc.Preview.Refresh(_draftKey, DetailRequestNow());
         }
     }

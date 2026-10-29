@@ -296,7 +296,7 @@ public sealed partial class ExploreViewModel : ObservableObject
             await _host.Ui.ShowMessage(L["sc_nothing_selected"]);
             return;
         }
-        _host.AddToQueue(picked.Select(r => (r.Entry.Url, r.Entry.Title)), Format.FormatKey, Format.Cap);
+        _host.AddToQueue(picked.Select(r => (r.Entry.Url, r.Entry.Title)), Format.FormatKey, Format.Cap, Format.ConstantRate);
         foreach (var r in picked)
         {
             r.Selected = false;

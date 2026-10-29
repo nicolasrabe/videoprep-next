@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Videoprep.App.Services;
 using Videoprep.Core.Engine;
+using Videoprep.Core.Formats;
 using Videoprep.Core.Import;
 using Videoprep.Core.Models;
 using Videoprep.Core.Sources;
@@ -88,6 +89,7 @@ public sealed partial class MainViewModel
             {
                 Id = _nextItemId++, Url = u, Format = SelectedFormatKey, Cap = SelectedCap,
                 Naming = NameSeries ? NamingMode.Series : NamingMode.Original, Prefix = prefix,
+                ConstantRate = ConstantRate && FormatCatalog.Get(SelectedFormatKey).Kind == MediaKind.Video,
             });
             _svc.Preview.Request(u, null);   // the title, like a pasted link
         }
