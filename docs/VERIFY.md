@@ -155,3 +155,37 @@ Running it through the real engine showed two things the synthetic clip had hidd
 - The target was 23.976 (nearest to the 16.7 average) although the video says 30 fps: a video whose own rate is 30 or less keeps that rate (nothing is dropped).
 Result (MP4 and ProRes MOV): 1800 frames, every interval 33 ms, 30/1 in both rates, audio 60.0 s. Original untouched (same SHA-256). A test with audio longer than the video
 (`Audio_that_outlasts_the_video_is_kept_whole`) keeps this from coming back. `A_real_clip_from_the_user_goes_through_the_engine` runs any file given in `VIDEOPREP_REAL_CLIP`.
+
+## 0.3 round 3, F9 updates of videoprep itself (2026-10-29)
+What it does: on opening (at most once a day, can be turned off) and with "Buscar actualizaciones ahora" in Ajustes, videoprep reads GitHub's list of releases
+(`https://api.github.com/repos/nicolasrabe/videoprep-next/releases`, the repository is one constant in `UpdateEndpoint.cs`). A strictly newer version (semver) shows a banner
+"Hay una versión nueva: X.Y.Z - Ver novedades - Actualizar - Ahora no". While the installed version is 0.x, pre-releases count (everything shipped so far is one).
+"Actualizar" always needs the click, does nothing while something downloads, and never asks for administrator rights.
+
+Where the address checks are: only `https`, only `github.com`, `api.github.com` and `*.githubusercontent.com`, default port, no user name, every redirect looked at
+(5 hops at most, the client never follows one by itself); the download addresses are built from the tag, not copied from the list; size limits are enforced while reading
+(list 2 MB, sums 64 KB, zip 250 MB).
+
+How it installs (Windows): download `videoprep-<tag>-win-x64.zip` and `SHA256SUMS.txt` of the same release; the zip's SHA-256 must be listed and equal (missing or different: nothing is
+installed, the page is offered); unpack only `videoprep.exe` (flat zip, no `..`, no drive letters, no second copy, size counted while writing); check that it is a Windows x64 program that
+says the release's version; the NEW program is started with `--apply-update` (arguments one by one, never a command string); it waits for the old one to close, copies itself to
+`videoprep.exe.new`, checks the hash, moves the old one to `videoprep.exe.old`, the new one to `videoprep.exe`, starts it and watches it for 15 s; if it ends with a non-zero code the old one is put back.
+Every file step is retried for about 10 s (antivirus and Windows keep files busy); every failure puts things back; the result is saved BEFORE each program opens so that program tells the person once.
+The old copy stays as `videoprep.exe.old` to go back (rename it). The old program does not close until the installer has stayed alive 4 s (a blocked or damaged installer must not leave the person with nothing).
+macOS and Linux: the button only opens the downloads page.
+
+What the SHA-256 protects and what it does not: it protects against a damaged download and against a zip swapped while the sums file stays the same. It does NOT protect against someone who controls
+the repository or the account (they can change both files) or a compromised CI. The real protection would be to sign `videoprep.exe`; that is for later. Until then Windows shows "Windows protegió su PC" on first open.
+
+Checked by running (all on COPIES in a temporary folder, with its own `VIDEOPREP_HOME`; never the owner's exe, settings, queue, scheduled task or clipboard):
+- 90+ unit tests with an in-memory GitHub (versions, hosts, redirects, size limits, zip-slip, zip bomb, wrong/missing checksum, swapped zip, not a PE, wrong version, locked files retried and given up, rollback after a crash, command line round trip).
+- A folder where Windows itself denies writing (`icacls /deny`): found out before downloading.
+- `tests/desktop/update-replace-check.ps1`, real programs on the real desktop (UI Automation), development builds that say 0.2.9 and 0.3.0, a local server on 127.0.0.1:
+  `good` (banner by itself, nothing installed before the click, Actualizar, old closes, new opens from the same folder, `.old` is the old file by hash, "se actualizó a la versión 0.3.0" shown once, Ajustes button says "Ya tenés la última versión"),
+  `badsum` (explained, old keeps running, no `.old`/`.new`, nothing left in updates), `nostart` (installer cannot start: the old program does NOT close), `crash` (new one exits with code 7 as it opens: old put back and reopened, told "se cerró sola al abrirse"),
+  `lockshort` (`videoprep.exe.new` held 4 s: retried, installed), `locklong` (held longer than the wait: nothing changed, old reopened, told it was busy). All six passed.
+  The check found two real defects before shipping: the result was written after the 15 s watch (the new program had already started and never told the person), and a new program that cannot start left nobody running.
+- Development-only variables (`VIDEOPREP_UPDATE_URL`, only `http://127.0.0.1`; `VIDEOPREP_TEST_CRASH_VERSION`) exist only under `#if DEBUG`; tests (which CI runs in Release) read the compiled dlls and fail if either text is in a Release build.
+
+NOT verified: a real release on GitHub (none has the new files until one is published, so the real download from github.com was never run); the real reaction of Windows Defender / SmartScreen / third-party antivirus to
+the replaced exe; Windows 11; macOS (the build exists but nobody ran it); a signed exe. People who have 0.2.0 have no updater: they must download 0.3.0 by hand once (README and release notes say so).

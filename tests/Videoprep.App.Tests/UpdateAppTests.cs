@@ -246,6 +246,20 @@ public sealed class UpdateAppTests : IDisposable
         Assert.Contains("sigue funcionando", _rig.Ui.Messages[1]);
     }
 
+    [Fact]
+    public void The_development_only_hooks_are_not_inside_a_release_program()
+    {
+        // CI tests in Release: the way back is tried with a hook that exists only in development builds.
+        var bytes = File.ReadAllBytes(typeof(MainViewModel).Assembly.Location);
+        const string name = "VIDEOPREP_TEST_CRASH_VERSION";
+        var inside = bytes.AsSpan().IndexOf(System.Text.Encoding.ASCII.GetBytes(name)) >= 0 || bytes.AsSpan().IndexOf(System.Text.Encoding.Unicode.GetBytes(name)) >= 0;
+#if DEBUG
+        Assert.True(inside);
+#else
+        Assert.False(inside, "a development-only hook is inside a Release videoprep.dll");
+#endif
+    }
+
     [AvaloniaFact]
     public async Task The_updates_folder_is_tidied_when_opening()
     {

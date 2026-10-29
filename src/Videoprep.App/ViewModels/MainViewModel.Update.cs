@@ -161,7 +161,7 @@ public sealed partial class MainViewModel
         SaveQueue();
         var request = new ApplyRequest(_svc.CurrentExe!, staged.ExePath, staged.Sha256, Environment.ProcessId, _svc.CurrentVersion.ToString(), staged.Version.ToString());
         _svc.Log.Write($"Update: starting the installer of {staged.Version} and closing videoprep.");
-        if (!_svc.StartProcess(staged.ExePath, request.ToArguments()))
+        if (!await _svc.StartProcess(staged.ExePath, request.ToArguments()).ConfigureAwait(true))
         {
             Updating = false;
             StatusText = L["st_ready"];

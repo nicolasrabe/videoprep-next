@@ -156,7 +156,7 @@ internal sealed class TestRig : IDisposable
             CurrentVersion = SemVer.Parse(installedVersion),
             CurrentExe = InstalledExe,
             CanSelfUpdate = selfUpdate,
-            StartProcess = (exe, args) => { Started.Add((exe, args)); return StartWorks; },
+            StartProcess = (exe, args) => { Started.Add((exe, args)); return Task.FromResult(StartWorks); },
             VersionOf = _ => ExeVersion,
         };
         Directory.CreateDirectory(Path.GetDirectoryName(InstalledExe)!);

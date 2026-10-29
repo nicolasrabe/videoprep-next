@@ -1,5 +1,6 @@
 using Avalonia;
 using Videoprep.App.Cli;
+using Videoprep.Core;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Logging;
 using Videoprep.Core.Storage;
@@ -29,6 +30,10 @@ internal static class Program
 
         // F9: the new program replaces the old one (started by the old program when the person pressed Actualizar).
         if (args.Length > 0 && args[0] == ApplyRequest.Flag) return ApplyUpdate(args);
+#if DEBUG
+        // Development check of the way back (tests/desktop/update-replace-check.ps1): the version named here "crashes" as it opens.
+        if (Environment.GetEnvironmentVariable("VIDEOPREP_TEST_CRASH_VERSION") == AppInfo.Version) return 7;
+#endif
 
         if (args.Length > 0 && args[0] == "--demo")
         {
@@ -73,6 +78,7 @@ internal static class Program
     private static int ApplyUpdate(string[] args)
     {
         var paths = AppPaths.ForCurrentUser();
+        ApplyRequest? parsed = null;
         try
         {
             if (!ApplyRequest.TryParse(args, Environment.ProcessPath ?? "", out var request)
@@ -81,14 +87,19 @@ internal static class Program
                 Log.Write("WARN  Update: --apply-update was started with arguments it does not accept; nothing was changed.");
                 return 2;
             }
-            var applier = new UpdateApplier(new ProcessUpdateHost(), log: line => Log.Write("Update: " + line));
+            // The result is saved by the applier before each program it opens: that program tells the person.
+            parsed = request;
+            var applier = new UpdateApplier(new ProcessUpdateHost(), log: line => Log.Write("Update: " + line),
+                                            saveResult: r => UpdateResult.Write(paths.UpdatesDir, r));
             var result = applier.RunAsync(request, CancellationToken.None).GetAwaiter().GetResult();
-            UpdateResult.Write(paths.UpdatesDir, result);   // the program that opens next tells the person
             return result.Ok ? 0 : 1;
         }
         catch (Exception ex)
         {
             Log.Crash(ex, "--apply-update");
+            // Whatever went wrong, never leave the person without a program: open the installed one again.
+            try { if (parsed is not null && File.Exists(parsed.Target)) new ProcessUpdateHost().Launch(parsed.Target); }
+            catch (Exception again) when (again is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) { Log.Write("WARN  Update: could not open videoprep again: " + again.Message); }
             return 1;
         }
     }

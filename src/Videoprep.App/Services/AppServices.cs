@@ -30,18 +30,27 @@ public sealed class AppServices
     public string? CurrentExe { get; init; } = Environment.ProcessPath;
     /// <summary>Only Windows installs the update by itself; elsewhere the button opens the downloads page.</summary>
     public bool CanSelfUpdate { get; init; } = OperatingSystem.IsWindows();
-    /// <summary>Starts the new program with its arguments (ArgumentList, never a command string); false when it could not start.</summary>
-    public Func<string, IReadOnlyList<string>, bool> StartProcess { get; init; } = StartUpdater;
+    /// <summary>
+    /// Starts the new program with its arguments (ArgumentList, never a command string) and answers true only if it is still alive a few
+    /// seconds later: a program that cannot start (blocked by an antivirus, damaged) must not make this one close first.
+    /// </summary>
+    public Func<string, IReadOnlyList<string>, Task<bool>> StartProcess { get; init; } = StartUpdaterAsync;
+    /// <summary>How long the new program must stay alive before this one closes.</summary>
+    public static readonly TimeSpan UpdaterMustLive = TimeSpan.FromSeconds(4);
     /// <summary>Reads the version a downloaded program says it has (tests answer without a real file).</summary>
     public Func<string, string?>? VersionOf { get; init; }
 
-    private static bool StartUpdater(string exe, IReadOnlyList<string> args)
+    private static async Task<bool> StartUpdaterAsync(string exe, IReadOnlyList<string> args)
     {
         try
         {
             var psi = new System.Diagnostics.ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe) ?? "" };
             foreach (var a in args) psi.ArgumentList.Add(a);
-            return System.Diagnostics.Process.Start(psi) is not null;
+            using var p = System.Diagnostics.Process.Start(psi);
+            if (p is null) return false;
+            using var cts = new CancellationTokenSource(UpdaterMustLive);
+            try { await p.WaitForExitAsync(cts.Token).ConfigureAwait(false); return false; }   // it ended by itself: it did not work
+            catch (OperationCanceledException) { return true; }                                 // still running: it is waiting for us to close
         }
         catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) { return false; }
     }

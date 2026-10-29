@@ -1,6 +1,8 @@
 name: Release
 
-# Push a tag like v0.2.0 to build the release zips and create a GitHub pre-release (0.x is always pre-release).
+# Push a tag like v0.3.0 to build the release zip and create a GitHub release (a 0.x version, or one with a suffix like -rc.1,
+# is always marked as a pre-release). videoprep's own updater reads this release: the zip must be named
+# videoprep-<tag>-<rid>.zip and SHA256SUMS.txt must list it (the updater installs nothing it cannot check against that file).
 on:
   push:
     tags: ["v*"]
@@ -24,17 +26,27 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           VER="${TAG#v}"
-          # Windows only for 0.2.0: nobody can test the macOS build yet (PORT_PLAN: macOS after 0.2.0).
+          # Windows only so far: nobody can test the macOS build yet (PORT_PLAN: macOS later). Mac and Linux builds do not install updates by themselves.
           for RID in win-x64; do
             dotnet publish src/Videoprep.App -c Release -r "$RID" -o "dist/$RID" -p:VersionPrefix="$VER" -p:VersionSuffix=
             (cd "dist/$RID" && zip -9 "../videoprep-$TAG-$RID.zip" *)
+            # The updater takes videoprep.exe out of the zip and nothing else: the zip holds that file only.
+            test "$(unzip -Z1 "dist/videoprep-$TAG-$RID.zip")" = "videoprep.exe"
           done
+      - name: SHA256SUMS.txt (the zips only) and check it
+        run: |
           cd dist
           sha256sum videoprep-*.zip | tee SHA256SUMS.txt
-      - name: Create pre-release
+          test "$(wc -l < SHA256SUMS.txt)" -eq "$(ls videoprep-*.zip | wc -l)"
+          sha256sum -c SHA256SUMS.txt
+      - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/videoprep-*.zip dist/SHA256SUMS.txt \
-            --prerelease --title "videoprep ${GITHUB_REF_NAME#v}" \
-            --notes "See CHANGELOG.md. SHA-256 of each zip is in SHA256SUMS.txt."
+          TAG="${GITHUB_REF_NAME}"
+          VER="${TAG#v}"
+          PRE=""
+          if [[ "$VER" == 0.* || "$VER" == *-* ]]; then PRE="--prerelease"; fi
+          NOTES="docs/RELEASE_NOTES_${VER}.md"
+          if [[ ! -f "$NOTES" ]]; then NOTES="CHANGELOG.md"; fi
+          gh release create "$TAG" dist/videoprep-*.zip dist/SHA256SUMS.txt $PRE --title "videoprep ${VER}" --notes-file "$NOTES"

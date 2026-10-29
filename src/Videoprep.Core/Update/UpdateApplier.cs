@@ -150,7 +150,8 @@ public static class UpdatePermissions
 /// The old copy stays as videoprep.exe.old so the user can go back.
 /// </summary>
 public sealed class UpdateApplier(IUpdateHost host, Func<TimeSpan, CancellationToken, Task>? delay = null, int retryAttempts = 20,
-                                  TimeSpan? retryStep = null, TimeSpan? watch = null, Action<string>? log = null)
+                                  TimeSpan? retryStep = null, TimeSpan? watch = null, Action<string>? log = null,
+                                  Action<UpdateResult>? saveResult = null)
 {
     public static readonly TimeSpan WaitForOldProgram = TimeSpan.FromSeconds(60);
 
@@ -158,6 +159,7 @@ public sealed class UpdateApplier(IUpdateHost host, Func<TimeSpan, CancellationT
     private readonly TimeSpan _step = retryStep ?? TimeSpan.FromMilliseconds(500);
     private readonly TimeSpan _watch = watch ?? TimeSpan.FromSeconds(15);
     private readonly Action<string> _log = log ?? (_ => { });
+    private readonly Action<UpdateResult> _save = saveResult ?? (_ => { });
     private string _lastError = "";
 
     public async Task<UpdateResult> RunAsync(ApplyRequest req, CancellationToken ct)
@@ -173,9 +175,14 @@ public sealed class UpdateApplier(IUpdateHost host, Func<TimeSpan, CancellationT
 
         _log($"waiting for videoprep (process {req.WaitPid}) to close");
         if (!await host.WaitForExitAsync(req.WaitPid, WaitForOldProgram, ct).ConfigureAwait(false))
-            return Fail(UpdateFailure.StillRunning, "the old program did not close in time; nothing was changed");
+        {
+            var r = Fail(UpdateFailure.StillRunning, "the old program did not close in time; nothing was changed");
+            _save(r);
+            return r;
+        }
 
-        UpdateResult Done(UpdateResult r) { StartAgain(target); return r; }
+        // The result is saved BEFORE any program is opened, so the one that opens can tell the person.
+        UpdateResult Done(UpdateResult r) { _save(r); StartAgain(target); return r; }
 
         if (!File.Exists(req.Staged) || Sha256Sums.HashFile(req.Staged) != req.ExpectedSha256)
             return Done(Fail(UpdateFailure.ChecksumMismatch, "the new program is not the one that was checked"));
@@ -217,6 +224,8 @@ public sealed class UpdateApplier(IUpdateHost host, Func<TimeSpan, CancellationT
 
         _log("starting the new version and watching it for " + _watch.TotalSeconds.ToString("0", CultureInfo.InvariantCulture) + " s");
         IRunningApp app;
+        var success = new UpdateResult(true, req.FromVersion, req.ToVersion, null, "");
+        _save(success);   // the new program reads this when it starts; a failure below replaces it before the old one is opened again
         try { app = host.Launch(target); }
         catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or InvalidOperationException)
         {
@@ -230,7 +239,7 @@ public sealed class UpdateApplier(IUpdateHost host, Func<TimeSpan, CancellationT
             return Done(Fail(UpdateFailure.NewVersionDidNotStart, $"the new version closed by itself with code {c}; the old one was put back"));
         }
         _log("the new version is running");
-        return new UpdateResult(true, req.FromVersion, req.ToVersion, null, "");
+        return success;
     }
 
     private async Task RestoreAsync(string target, string old, bool hadOld, CancellationToken ct)

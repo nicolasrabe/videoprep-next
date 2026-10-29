@@ -464,11 +464,13 @@ public sealed class UpdateApplierTests : IDisposable
         public bool OldClosed { get; set; } = true;
         public int? ExitOfNew { get; set; }                       // null = keeps running
         public List<(string Exe, byte[] Content)> Launched { get; } = [];
+        public List<string> Events { get; } = [];
 
         public Task<bool> WaitForExitAsync(int pid, TimeSpan timeout, CancellationToken ct) => Task.FromResult(OldClosed);
 
         public IRunningApp Launch(string exe)
         {
+            Events.Add("launch");
             Launched.Add((exe, File.ReadAllBytes(exe)));
             return new Running(Launched.Count == 1 ? ExitOfNew : null);
         }
@@ -480,7 +482,7 @@ public sealed class UpdateApplierTests : IDisposable
     }
 
     private static UpdateApplier Applier(FakeHost host, Func<TimeSpan, CancellationToken, Task>? delay = null) =>
-        new(host, delay ?? ((_, _) => Task.CompletedTask), retryAttempts: 10);
+        new(host, delay ?? ((_, _) => Task.CompletedTask), retryAttempts: 10, saveResult: r => host.Events.Add(r.Ok ? "save-ok" : "save-fail"));
 
     private void AssertInstalled(byte[] exe)
     {
@@ -497,6 +499,7 @@ public sealed class UpdateApplierTests : IDisposable
         AssertInstalled(_newExe);
         Assert.Equal(_oldExe, File.ReadAllBytes(Target + ".old"));              // the way back
         Assert.Equal([_newExe], host.Launched.Select(l => l.Content));
+        Assert.Equal(["save-ok", "launch"], host.Events);
     }
 
     [Fact]
@@ -571,6 +574,8 @@ public sealed class UpdateApplierTests : IDisposable
         Assert.Equal(UpdateFailure.NewVersionDidNotStart, r.Failure);
         AssertInstalled(_oldExe);
         Assert.Equal([_newExe, _oldExe], host.Launched.Select(l => l.Content));
+        // Each result is on disk before the program it is meant for opens (that program tells the person).
+        Assert.Equal(["save-ok", "launch", "save-fail", "launch"], host.Events);
     }
 
     [Fact]

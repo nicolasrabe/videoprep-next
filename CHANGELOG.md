@@ -46,6 +46,20 @@ Versions below 1.0.0 are early releases: things can change between them.
   margen), que el audio siga en sintonía con el del original y que el resultado sea de verdad constante; si algo falla, el original
   queda intacto y la fila pasa a "Revisar" con el motivo. Un MP4 convertido queda con su nombre limpio (no "Nombre_2").
 
+- **Actualizaciones de videoprep** (Ronda 3): al abrirse (como máximo una vez por día, se puede apagar) y con el botón "Buscar
+  actualizaciones ahora" en Ajustes, videoprep mira la lista pública de versiones de GitHub. Si hay una más nueva aparece una
+  franja arriba: "Hay una versión nueva: X.Y.Z · Ver novedades · Actualizar". **Actualizar** siempre necesita tu clic, no hace nada
+  mientras hay una descarga en curso y nunca pide permisos de administrador. Baja el zip y `SHA256SUMS.txt` de la misma versión,
+  comprueba el SHA-256 (si falta o no coincide, no instala nada y te ofrece abrir la página), saca solo `videoprep.exe` del zip
+  (con defensas contra rutas peligrosas y zips gigantes) y la versión nueva reemplaza a la vieja: la vieja queda como
+  `videoprep.exe.old` para volver atrás, y si la nueva se cierra sola al abrirse se vuelve a la anterior. Si Windows o el antivirus tienen el archivo ocupado
+  reintenta unos 10 segundos; si la carpeta no deja escribir, lo explica antes de bajar nada. Solo se aceptan direcciones
+  `https` de GitHub (con las redirecciones revisadas una por una). En Mac y Linux el botón abre la página de descargas.
+  El SHA-256 protege contra descargas dañadas, no contra alguien que controle el repositorio; firmar el programa queda para más adelante.
+  **Quien tenga la 0.2.0 no tiene actualizador**: tiene que bajar la 0.3.0 a mano una vez.
+- Velocidad constante: corregido con un clip real (audio más largo que el video: ya no se recorta; una velocidad nominal de 30 fps o menos se
+  respeta en vez de bajar al promedio).
+
 ## 0.2.0 - 2026-10-26
 - Rewrite as a C#/.NET + Avalonia app that builds to a single `videoprep.exe` (no PowerShell needed).
 - Phase 1: project skeleton, automatic build and tests on Windows, macOS and Linux (GitHub Actions), test window showing the version.

@@ -1,7 +1,7 @@
 """Print every failed test in the .trx files as a GitHub Actions error annotation.
 
 Annotations are readable without logging in (Checks API), so a failure on macOS/Linux can be diagnosed from the
-run page or from the API. Usage: python trx_annotations.py <folder with .trx files>
+run page or from the API. Usage: python trx_annotations.py <folder with .trx files> [more folders]
 """
 import pathlib
 import sys
@@ -14,9 +14,9 @@ def esc(text: str) -> str:
     return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
 
 
-def main(folder: str) -> int:
+def main(folders: list[str]) -> int:
     failed = 0
-    for trx in sorted(pathlib.Path(folder).rglob("*.trx")):
+    for trx in sorted(t for f in folders for t in pathlib.Path(f).rglob("*.trx")):
         root = ET.parse(trx).getroot()
         for r in root.iterfind(".//t:UnitTestResult", NS):
             if r.get("outcome") != "Failed":
@@ -31,4 +31,4 @@ def main(folder: str) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else "TestResults"))
+    sys.exit(main(sys.argv[1:] or ["TestResults"]))
