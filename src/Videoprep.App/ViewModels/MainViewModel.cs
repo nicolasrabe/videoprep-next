@@ -60,6 +60,7 @@ public sealed partial class MainViewModel : ObservableObject
         InitDownload();
         InitSettings();
         InitClipboard();
+        InitUpdates();
         InitProfiles();
         Scraping = new ScrapingViewModel(this);
         RebuildProfileChoices();   // the Scraping boxes get the profiles too
@@ -80,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (Items.Count > 0) _svc.Log.Write($"Queue restored: {Items.Count} item(s).");
         // "Revisar al abrir videoprep": in the background, the window stays usable.
         _ = Scraping.Subscriptions.OnShownAsync();
+        await OnShownUpdatesAsync();
 
         if (Settings.AutoUpdate && missing.Count == 0 && UpdateIsDue(Settings.LastUpdate, DateTimeOffset.Now))
         {
@@ -151,6 +153,8 @@ public sealed partial class MainViewModel : ObservableObject
         if (!IsRunning) StatusText = L["st_ready"];
         ToolsStatus = ToolLines(L["tool_found"], L["tool_missing"]);
         OnPropertyChanged(nameof(AboutText));
+        OnPropertyChanged(nameof(UpdateBannerText));
+        OnPropertyChanged(nameof(InstalledVersionText));
     }
 
     private static string BrowserName(string key) => CookieStrategy.Browsers.FirstOrDefault(b => b.Key == key)?.Name ?? key;

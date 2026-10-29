@@ -37,6 +37,21 @@
         </StackPanel>
       </Border>
 
+      <!-- F9: updates of videoprep itself -->
+      <Border Classes="card">
+        <StackPanel Spacing="8">
+          <TextBlock Classes="title" Text="{s:T grp_updates}" />
+          <TextBlock x:Name="InstalledVersion" Text="{Binding InstalledVersionText}" />
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button x:Name="CheckUpdatesButton" Content="{s:T btn_checkupd}" Command="{Binding CheckUpdatesNowCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding UpdateBannerVisible}" />
+          </StackPanel>
+          <TextBlock x:Name="UpdateStatusText" Classes="muted" Text="{Binding UpdateStatus}" TextWrapping="Wrap" IsVisible="{Binding UpdateStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <CheckBox Content="{s:T chk_updcheck}" IsChecked="{Binding UpdateCheckOn}" />
+          <TextBlock Classes="muted" Text="{s:T txt_updprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
+        </StackPanel>
+      </Border>
+
       <!-- When a batch finishes -->
       <Border Classes="card">
         <StackPanel Spacing="8">

@@ -20,5 +20,7 @@
     <None Include="..\Videoprep.Core.Tests\Fixtures\listing\**" LinkBase="Fixtures\listing" CopyToOutputDirectory="PreserveNewest" />
     <!-- Word files for the import tests are built in code (no user documents in the repo). -->
     <Compile Include="..\Videoprep.Core.Tests\DocxBuilder.cs" Link="DocxBuilder.cs" />
+    <!-- An in-memory GitHub for the update tests (no network is used). -->
+    <Compile Include="..\Videoprep.Core.Tests\UpdateKit.cs" Link="UpdateKit.cs" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,17 @@
         Width="1000" Height="740" MinWidth="900" MinHeight="640"
         WindowStartupLocation="CenterScreen">
   <!-- Resizable (AUDIT M7: the legacy window was a fixed 760x640). -->
-  <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
+  <Grid RowDefinitions="Auto,*">
+  <!-- F9: a newer videoprep exists. Installing always waits for the click on "Actualizar". -->
+  <Border x:Name="UpdateBanner" Classes="card" IsVisible="{Binding UpdateBannerVisible}" Margin="8,6,8,0">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+      <TextBlock x:Name="UpdateBannerText" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" />
+      <Button Grid.Column="1" Content="{s:T upd_notes}" Command="{Binding OpenReleaseNotesCommand}" />
+      <Button Grid.Column="2" x:Name="UpdateInstallButton" Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Grid.Column="3" Content="{s:T upd_later}" Command="{Binding DismissUpdateCommand}" />
+    </Grid>
+  </Border>
+  <TabControl Grid.Row="1" x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
     <TabItem x:Name="TabDownload" Header="{s:T tab_dl}">
       <v:DownloadView />
     </TabItem>
@@ -26,4 +36,5 @@
       <v:LogView />
     </TabItem>
   </TabControl>
+  </Grid>
 </Window>

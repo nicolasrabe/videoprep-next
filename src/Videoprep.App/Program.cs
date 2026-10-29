@@ -4,6 +4,7 @@ using Videoprep.Core.Engine;
 using Videoprep.Core.Logging;
 using Videoprep.Core.Storage;
 using Videoprep.Core.Tools;
+using Videoprep.Core.Update;
 
 namespace Videoprep.App;
 
@@ -25,6 +26,9 @@ internal static class Program
             Log.Crash(e.Exception, "background task");
             e.SetObserved();
         };
+
+        // F9: the new program replaces the old one (started by the old program when the person pressed Actualizar).
+        if (args.Length > 0 && args[0] == ApplyRequest.Flag) return ApplyUpdate(args);
 
         if (args.Length > 0 && args[0] == "--demo")
         {
@@ -64,6 +68,29 @@ internal static class Program
         }
 
         return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    private static int ApplyUpdate(string[] args)
+    {
+        var paths = AppPaths.ForCurrentUser();
+        try
+        {
+            if (!ApplyRequest.TryParse(args, Environment.ProcessPath ?? "", out var request)
+                || !string.Equals(Path.GetFileName(request.Target), UpdateStager.ExeName, StringComparison.OrdinalIgnoreCase))
+            {
+                Log.Write("WARN  Update: --apply-update was started with arguments it does not accept; nothing was changed.");
+                return 2;
+            }
+            var applier = new UpdateApplier(new ProcessUpdateHost(), log: line => Log.Write("Update: " + line));
+            var result = applier.RunAsync(request, CancellationToken.None).GetAwaiter().GetResult();
+            UpdateResult.Write(paths.UpdatesDir, result);   // the program that opens next tells the person
+            return result.Ok ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            Log.Crash(ex, "--apply-update");
+            return 1;
+        }
     }
 
     // Also used by the designer and by the headless tests.

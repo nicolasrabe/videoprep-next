@@ -35,6 +35,8 @@ public sealed class AppPaths(string roamingRoot, string localRoot)
     public string ToolsDir => Path.Combine(Local, "tools");
     public string LogsDir => Path.Combine(Local, "logs");
     public string CacheDir => Path.Combine(Local, "cache");
+    /// <summary>F9: downloaded new versions waiting to be installed, and the result of the last update attempt.</summary>
+    public string UpdatesDir => Path.Combine(Local, "updates");
     public string RunLockFile => Path.Combine(Local, "run.lock");
     /// <summary>Session copy of the browser cookies (AUDIT M5); deleted when videoprep closes.</summary>
     public string SessionCookieFile => Path.Combine(Local, "session-cookies.txt");

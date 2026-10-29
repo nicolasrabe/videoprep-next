@@ -60,6 +60,10 @@ public sealed class Settings
     [JsonPropertyName("clipboardWatch")] public bool ClipboardWatch { get; set; }
     /// <summary>F8: new queue items start with "velocidad constante" on (off by default; it re-encodes, only variable-rate videos are touched).</summary>
     [JsonPropertyName("constantRate")] public bool ConstantRate { get; set; }
+    /// <summary>F9: look for a newer videoprep when it opens, at most once a day (on by default; only the public list of releases is read).</summary>
+    [JsonPropertyName("updateCheck")] public bool UpdateCheck { get; set; } = true;
+    /// <summary>F9: when the list of releases was last read (ISO 8601); empty = never.</summary>
+    [JsonPropertyName("updateLast")] public string UpdateLast { get; set; } = "";
     /// <summary>F7: write a list of sources when a batch ends (off by default).</summary>
     [JsonPropertyName("sourceList")] public bool SourceList { get; set; }
     /// <summary>"csv" or "txt".</summary>

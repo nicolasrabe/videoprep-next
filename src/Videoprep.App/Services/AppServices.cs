@@ -4,6 +4,7 @@ using Videoprep.Core.Logging;
 using Videoprep.Core.Preview;
 using Videoprep.Core.Storage;
 using Videoprep.Core.Tools;
+using Videoprep.Core.Update;
 
 namespace Videoprep.App.Services;
 
@@ -20,6 +21,30 @@ public sealed class AppServices
     public required VideoInfoService Info { get; init; }
     /// <summary>Browsers with a profile folder on this PC (only the folder is checked; cookies are not read).</summary>
     public Func<IReadOnlyList<string>> InstalledBrowsers { get; init; } = () => CookieStrategy.InstalledBrowsers();
+
+    /// <summary>F9: the updater's own HTTP door (null = no update checks, e.g. in tests that do not need them).</summary>
+    public UpdateClient? Updates { get; init; }
+    /// <summary>The version that runs (tests pretend to be older).</summary>
+    public SemVer CurrentVersion { get; init; } = SemVer.ParseOrZero(AppInfo.Version);
+    /// <summary>Where the running program lives (null or not videoprep.exe = it was started by something else, e.g. during development).</summary>
+    public string? CurrentExe { get; init; } = Environment.ProcessPath;
+    /// <summary>Only Windows installs the update by itself; elsewhere the button opens the downloads page.</summary>
+    public bool CanSelfUpdate { get; init; } = OperatingSystem.IsWindows();
+    /// <summary>Starts the new program with its arguments (ArgumentList, never a command string); false when it could not start.</summary>
+    public Func<string, IReadOnlyList<string>, bool> StartProcess { get; init; } = StartUpdater;
+    /// <summary>Reads the version a downloaded program says it has (tests answer without a real file).</summary>
+    public Func<string, string?>? VersionOf { get; init; }
+
+    private static bool StartUpdater(string exe, IReadOnlyList<string> args)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe) ?? "" };
+            foreach (var a in args) psi.ArgumentList.Add(a);
+            return System.Diagnostics.Process.Start(psi) is not null;
+        }
+        catch (Exception ex) when (ex is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) { return false; }
+    }
 
     /// <summary>Run the clipboard timer (tests turn it off and ask for each check themselves).</summary>
     public bool ClipboardTimer { get; init; } = true;
@@ -44,6 +69,7 @@ public sealed class AppServices
             Tools = new ToolManager(paths.ToolsDir, http),
             Preview = new PreviewService(runner, http, log),
             Info = new VideoInfoService(runner, http, log),
+            Updates = new UpdateClient(UpdateClient.CreateHandler(), $"videoprep/{AppInfo.Version}"),
         };
     }
 }

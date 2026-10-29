@@ -6,6 +6,8 @@ using Videoprep.Core.Logging;
 using Videoprep.Core.Preview;
 using Videoprep.Core.Storage;
 using Videoprep.Core.Tools;
+using Videoprep.Core.Tests;
+using Videoprep.Core.Update;
 
 namespace Videoprep.App.Tests;
 
@@ -124,7 +126,15 @@ internal sealed class TestRig : IDisposable
     /// <summary>Pauses asked for by the app (title lookups, scraping); tests do not wait.</summary>
     public List<TimeSpan> Pauses { get; } = [];
 
-    public TestRig(bool tools = false)
+    /// <summary>F9: an in-memory GitHub; the updater only exists when a test asks for it (<c>updates: true</c>).</summary>
+    public FakeGitHub Hub { get; } = new();
+    /// <summary>Where the "installed" videoprep.exe is (a real file of the right name inside the temp folder).</summary>
+    public string InstalledExe => Path.Combine(Dir, "install", "videoprep.exe");
+    public List<(string Exe, IReadOnlyList<string> Args)> Started { get; } = [];
+    public bool StartWorks { get; set; } = true;
+    public string ExeVersion { get; set; } = "0.3.0";
+
+    public TestRig(bool tools = false, bool updates = false, string installedVersion = "0.2.0", bool selfUpdate = true)
     {
         Paths = new AppPaths(Path.Combine(Dir, "roaming"), Path.Combine(Dir, "local"));
         // Start in Spanish whatever the language of the machine (CI runners are English).
@@ -142,7 +152,15 @@ internal sealed class TestRig : IDisposable
             ClipboardTimer = false,
             Delay = (t, _) => { lock (Pauses) Pauses.Add(t); return Task.CompletedTask; },
             SchTasks = args => { SchTaskCalls.Add(args); return Task.FromResult((SchTaskExit, "fake schtasks")); },
+            Updates = updates ? Hub.Client() : null,
+            CurrentVersion = SemVer.Parse(installedVersion),
+            CurrentExe = InstalledExe,
+            CanSelfUpdate = selfUpdate,
+            StartProcess = (exe, args) => { Started.Add((exe, args)); return StartWorks; },
+            VersionOf = _ => ExeVersion,
         };
+        Directory.CreateDirectory(Path.GetDirectoryName(InstalledExe)!);
+        File.WriteAllBytes(InstalledExe, UpdateKit.FakeExe("installed"));
     }
 
     public MainViewModel Create() => new(Services, Ui, a => a());

@@ -21,7 +21,8 @@ public sealed partial class MainViewModel
     [NotifyPropertyChangedFor(nameof(IsIdle), nameof(ResolutionEnabled), nameof(CustomEnabled), nameof(SeriesEnabled), nameof(CanRetry))]
     private bool _isRunning;
 
-    public bool IsIdle => !IsRunning;
+    /// <summary>Nothing is downloading or being replaced (an update in progress also blocks the buttons that start work).</summary>
+    public bool IsIdle => !IsRunning && !Updating;
 
     partial void OnIsRunningChanged(bool value)
     {
