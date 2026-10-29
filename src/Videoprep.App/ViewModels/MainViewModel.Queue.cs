@@ -278,12 +278,6 @@ public sealed partial class MainViewModel
         if (card is null) return;
         var info = _svc.Info.Get(row.VideoKey);
         var preview = _svc.Preview.Get(row.VideoKey);
-        card.State = info?.State switch
-        {
-            InfoState.Ready => CardState.Ready,
-            InfoState.Failed => CardState.Failed,
-            _ => CardState.Loading,
-        };
         card.Title = info?.Title is { Length: > 0 } t ? t : preview?.Title ?? "";
         var bits = new List<string>();
         var channel = info?.Channel is { Length: > 0 } c ? c : preview?.Author ?? "";
@@ -310,6 +304,13 @@ public sealed partial class MainViewModel
             var file = (it.SubFolder.Length > 0 ? it.SubFolder + Path.DirectorySeparatorChar : "") + name + ext;
             card.Will = L.Format("det_will", $"{FormatText(it)}  ·  {file}");
         }
+        // Last: whoever waits for "ready" sees the card already filled in.
+        card.State = info?.State switch
+        {
+            InfoState.Ready => CardState.Ready,
+            InfoState.Failed => CardState.Failed,
+            _ => CardState.Loading,
+        };
     }
 
     private static Bitmap? DecodeBitmap(byte[] bytes)
