@@ -127,6 +127,23 @@ public sealed class CheckRunnerTests : IDisposable
     }
 
     [Fact]
+    public async Task A_subscription_that_follows_a_profile_downloads_with_the_profiles_current_values()
+    {
+        var profiles = Profiles.ProfileStore.Load(_paths.ProfilesFile, out _);
+        var p = profiles.Add(new Profiles.FormatProfile { Name = "Voz", Format = "m4a", Cap = 720 });
+        var own = new SubscriptionProfile { Format = "mp4", Cap = 1080, ProfileId = p.Id };
+        SaveSubs(25, Sub("a") with { Profile = own });
+        await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+        var call = _rig.Calls().First(c => !c.Contains("--flat-playlist") && !c.Contains("--skip-download"));
+        Assert.Contains("m4a", call);                                                 // the profile's format, not the stored mp4
+        Assert.DoesNotContain("--merge-output-format", call);
+
+        // The profile is deleted: the values the subscription kept are used again.
+        profiles.Remove(p.Id);
+        Assert.Equal("mp4", Profiles.ProfileLinks.Effective(own, Profiles.ProfileStore.Load(_paths.ProfilesFile, out _)).Format);
+    }
+
+    [Fact]
     public async Task Max_count_means_the_newest_ones_not_two_more_every_check()
     {
         // Nico's report 2026-10-26: backfill with max 2 downloaded two OLDER videos on every check.

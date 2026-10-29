@@ -25,10 +25,14 @@ public sealed record StatusEvent(Job Job, JobStatus Status, string File = "", st
 /// <summary>A clip was checked: frames and seconds expected vs. found (for the demo and the log).</summary>
 public sealed record VerifiedEvent(Job Job, string File, long? Frames, double? Seconds, bool Ok, string Reason) : EngineEvent;
 
+/// <summary>What yt-dlp said about a downloaded video (for the sources list); empty text = not known.</summary>
+public sealed record VideoMeta(string Title, string Channel, string Url);
+
 /// <summary>Final numbers of a batch (port of the counters of Complete-Batch).</summary>
 public sealed record BatchResult(int Ok, int Warn, int Fail, IReadOnlyList<string> FailedItems, bool Cancelled,
                                  bool Blocked, IReadOnlyDictionary<string, JobStatus> Statuses,
-                                 IReadOnlyDictionary<string, string> Files, IReadOnlyDictionary<string, string> Reasons);
+                                 IReadOnlyDictionary<string, string> Files, IReadOnlyDictionary<string, string> Reasons,
+                                 IReadOnlyDictionary<int, VideoMeta>? Metas = null);
 
 /// <summary>Fixed inputs of one batch.</summary>
 public sealed record EngineContext

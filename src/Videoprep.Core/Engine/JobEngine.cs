@@ -36,6 +36,26 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             .ToList();
     }
 
+    /// <summary>The video's title and channel from --print-to-file (one JSON line); the temp file is deleted.</summary>
+    public static VideoMeta? ReadMeta(string metaFile)
+    {
+        try
+        {
+            if (!File.Exists(metaFile)) return null;
+            var line = File.ReadAllLines(metaFile, Encoding.UTF8).LastOrDefault(l => l.TrimStart().StartsWith('{'));
+            File.Delete(metaFile);
+            if (line is null) return null;
+            using var doc = System.Text.Json.JsonDocument.Parse(line);
+            string S(string name) => doc.RootElement.TryGetProperty(name, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.String ? v.GetString() ?? "" : "";
+            var channel = S("channel").Length > 0 ? S("channel") : S("uploader");
+            return new VideoMeta(S("title"), channel, S("webpage_url"));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Where a job's files go: the batch folder, or a subfolder of it. The subfolder name is cleaned again here, so a
     /// queue file edited by hand cannot point outside the batch folder ("..", "C:\", "\\server").
@@ -68,6 +88,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             g => g.Key, g => new VideoGroup(g.Count(), g.Any(j => j.IsRange)));
         private readonly Dictionary<string, JobStatus> _status = jobs.ToDictionary(j => j.Key, _ => JobStatus.Queued);
         private readonly Dictionary<string, string> _files = [];
+        private readonly Dictionary<int, VideoMeta> _metas = [];
         private readonly Dictionary<string, string> _reasons = [];
         private readonly HashSet<int> _skippedGroups = [];
         private readonly List<string> _failed = [];
@@ -98,7 +119,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
             var word = _cancelled ? "Stopped" : "Done";
             _log.Write($"=== {word}: {_ok} OK, {_warn} to review, {_fail} failed ===");
             foreach (var f in _failed) _log.Write("  FAILED: " + f);
-            return new BatchResult(_ok, _warn, _fail, _failed, _cancelled, _blocked, _status, _files, _reasons);
+            return new BatchResult(_ok, _warn, _fail, _failed, _cancelled, _blocked, _status, _files, _reasons, _metas);
         }
 
         private async Task RunJobAsync(Job job)
@@ -197,9 +218,10 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
 
                 var dump = ctx.SessionCookieFile is not null && src.Kind == CookieKind.Browser ? ctx.SessionCookieFile : null;
                 var pathFile = Path.Combine(Path.GetTempPath(), $"videoprep-final-{Guid.NewGuid():N}.txt");
+                var metaFile = Path.Combine(Path.GetTempPath(), $"videoprep-meta-{Guid.NewGuid():N}.txt");
                 var folder = FolderFor(ctx.Folder, job);
                 var args = YtDlpArgs.Download(job, ctx.Options, ctx.Tools, src, folder, g.HasClips, ctx.ArchiveFile,
-                                              ctx.ForceArchive, dump, pathFile);
+                                              ctx.ForceArchive, dump, pathFile, metaFile);
                 var before = SnapshotFolder(folder);
                 var output = new StringBuilder();
                 var printed = new List<string>();
@@ -216,6 +238,7 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                 }, ct).ConfigureAwait(false);
 
                 printed.AddRange(ReadFinalPaths(pathFile));   // last = preferred over the console copy
+                if (JobEngine.ReadMeta(metaFile) is { } meta) _metas[job.GroupId] = meta;
                 if (r.Cancelled)
                 {
                     _log.Write("Stopped by user. Partial files (.part) may remain in the folder.");

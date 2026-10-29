@@ -2,6 +2,7 @@ using System.Globalization;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Logging;
 using Videoprep.Core.Models;
+using Videoprep.Core.Profiles;
 using Videoprep.Core.Storage;
 using Videoprep.Core.Text;
 
@@ -162,11 +163,14 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
         var folder = sub.TargetFolder();
         Directory.CreateDirectory(folder);
         Directory.CreateDirectory(paths.ArchivesDir);   // yt-dlp appends to the archive but does not create its folder
-        var series = sub.Profile.Naming == "series";
-        var prefix = SafeName.Make(sub.Profile.Prefix.Trim().Length > 0 ? sub.Profile.Prefix.Trim() : sub.Name, "Video");
+        // F6: a subscription that follows a profile downloads with the profile's current values (read now, so a profile
+        // edited a minute ago counts); if the profile is gone it uses the values it kept.
+        var profile = ProfileLinks.Effective(sub.Profile, ProfileStore.Load(paths.ProfilesFile, out _));
+        var series = profile.Naming == "series";
+        var prefix = SafeName.Make(profile.Prefix.Trim().Length > 0 ? profile.Prefix.Trim() : sub.Name, "Video");
         var items = take.Select((v, n) => new QueueItem
         {
-            Id = n + 1, Url = v.Url, Format = sub.Profile.Format, Cap = sub.Profile.Cap,
+            Id = n + 1, Url = v.Url, Format = profile.Format, Cap = profile.Cap,
             Naming = series ? NamingMode.Series : NamingMode.Original, Prefix = prefix,
         }).ToList();
         var next = new Dictionary<string, int>();

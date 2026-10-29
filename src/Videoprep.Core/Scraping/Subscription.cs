@@ -47,6 +47,11 @@ public sealed record SubscriptionProfile
     /// <summary>"orig" (title of the video) or "series" (prefix + number).</summary>
     [JsonPropertyName("naming")] public string Naming { get; init; } = "orig";
     [JsonPropertyName("prefix")] public string Prefix { get; init; } = "";
+    /// <summary>
+    /// The profile this subscription follows (F6), or null for its own values. The values above are always kept too:
+    /// they are what is used when the profile is deleted.
+    /// </summary>
+    [JsonPropertyName("profileId")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? ProfileId { get; init; }
     [JsonPropertyName("kind")] public string Kind => FormatCatalog.Get(Format).Kind == MediaKind.Audio ? "audio" : "video";
 }
 

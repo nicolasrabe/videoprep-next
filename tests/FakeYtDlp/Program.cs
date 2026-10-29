@@ -181,8 +181,15 @@ if (cookieFile is not null && browser is not null)
     File.WriteAllText(cookieFile, "# Netscape HTTP Cookie File\n.fake.test\tTRUE\t/\tTRUE\t0\tSID\tfake\n");
 if (archive is not null) File.AppendAllText(archive, $"{extractor} {id}\n");
 
-var toFile = argv.IndexOf("--print-to-file");
-if (toFile >= 0 && toFile + 2 < argv.Count) File.AppendAllText(argv[toFile + 2], target + "\n", new System.Text.UTF8Encoding(false));
+// Every --print-to-file TEMPLATE FILE pair: the JSON template (%(.{...})j) gets title/channel, the others the path.
+for (var k = 0; k + 2 < argv.Count; k++)
+{
+    if (argv[k] != "--print-to-file") continue;
+    var text = argv[k + 1].Contains("%(.{", StringComparison.Ordinal)
+        ? "{\"title\": \"" + title + "\", \"channel\": \"Fake channel\", \"uploader\": \"Fake uploader\", \"webpage_url\": \"" + url + "\"}"
+        : target;
+    File.AppendAllText(argv[k + 2], text + "\n", new System.Text.UTF8Encoding(false));
+}
 Console.WriteLine(target.Replace("：", ""));   // --print after_move:filepath (loses the full-width colon, like the real one)
 return scenario switch
 {

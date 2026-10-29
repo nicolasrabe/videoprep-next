@@ -51,6 +51,18 @@ public sealed class Settings
     /// <summary>The Scraping legal notice was shown once (SCRAPING_SPEC: "shown once on first use of the tab").</summary>
     [JsonPropertyName("scrapingLegal")] public bool ScrapingLegalShown { get; set; }
 
+    /// <summary>F4: the mini window stays on top of the others (a new setting, on by default).</summary>
+    [JsonPropertyName("miniOnTop")] public bool MiniOnTop { get; set; } = true;
+    /// <summary>F4: where the mini window was left (screen pixels); null = never moved.</summary>
+    [JsonPropertyName("miniX")] public int? MiniX { get; set; }
+    [JsonPropertyName("miniY")] public int? MiniY { get; set; }
+    /// <summary>F5: add the video links I copy to the queue (off by default; videoprep reads the clipboard only while on).</summary>
+    [JsonPropertyName("clipboardWatch")] public bool ClipboardWatch { get; set; }
+    /// <summary>F7: write a list of sources when a batch ends (off by default).</summary>
+    [JsonPropertyName("sourceList")] public bool SourceList { get; set; }
+    /// <summary>"csv" or "txt".</summary>
+    [JsonPropertyName("sourceListFormat")] public string SourceListFormat { get; set; } = "csv";
+
     /// <summary>Fix bad or old values (legacy ranges: crf 10-28, limit 0-500, sleep 0-30) and migrate the cookie index.</summary>
     public void Normalize(bool fromLegacyFile)
     {
@@ -64,6 +76,7 @@ public sealed class Settings
         if (!ThemeNames.Contains(Theme)) Theme = "light";
         if (Lang is not ("es" or "en")) Lang = "";
         if (Naming is not ("orig" or "series")) Naming = "orig";
+        if (SourceListFormat is not ("csv" or "txt")) SourceListFormat = "csv";
         if (string.IsNullOrWhiteSpace(Prefix)) Prefix = "Video";
         if (PreferredBrowser is not null && !BrowserKeys.Contains(PreferredBrowser)) PreferredBrowser = null;
         Version = CurrentVersion;

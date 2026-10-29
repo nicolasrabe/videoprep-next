@@ -4,7 +4,7 @@ using Videoprep.Core.Text;
 namespace Videoprep.Core.Models;
 
 /// <summary>"Nombres" in the "Cambiar N elementos" dialog.</summary>
-public enum NameChange { None, Series, AddText, Replace }
+public enum NameChange { None, Series, AddText, Replace, Original }
 
 /// <summary>What the "Cambiar N elementos" dialog changes; null / <see cref="NameChange.None"/> = "(sin cambios)".</summary>
 public sealed record BatchEdit
@@ -55,6 +55,9 @@ public static class QueueEdits
         {
             case NameChange.Series when e.Prefix.Trim().Length > 0:
                 r = r with { Naming = NamingMode.Series, Prefix = SafeName.Make(e.Prefix.Trim(), "Video") };
+                break;
+            case NameChange.Original:
+                r = r with { Naming = NamingMode.Original, Custom = "" };
                 break;
             case NameChange.AddText or NameChange.Replace:
                 if (BaseName(it, title) is not { } baseName) break;

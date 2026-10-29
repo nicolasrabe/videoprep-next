@@ -8,9 +8,20 @@ namespace Videoprep.Core.Storage;
 /// </summary>
 public sealed class AppPaths(string roamingRoot, string localRoot)
 {
-    public static AppPaths ForCurrentUser() => new(
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "videoprep"),
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "videoprep"));
+    /// <summary>
+    /// Environment variable that moves every videoprep folder under one root (roaming\ and local\ inside it). For checks
+    /// that run the real program without touching the user's own settings and queue; not shown to users.
+    /// </summary>
+    public const string HomeVariable = "VIDEOPREP_HOME";
+
+    public static AppPaths ForCurrentUser()
+    {
+        if (Environment.GetEnvironmentVariable(HomeVariable) is { Length: > 0 } home)
+            return new AppPaths(Path.Combine(home, "roaming"), Path.Combine(home, "local"));
+        return new AppPaths(
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "videoprep"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "videoprep"));
+    }
 
     public string Roaming { get; } = roamingRoot;
     public string Local { get; } = localRoot;
@@ -19,6 +30,7 @@ public sealed class AppPaths(string roamingRoot, string localRoot)
     public string ArchiveFile => Path.Combine(Roaming, "downloaded.txt");
     public string QueueFile => Path.Combine(Roaming, "queue.json");
     public string SubscriptionsFile => Path.Combine(Roaming, "subscriptions.json");
+    public string ProfilesFile => Path.Combine(Roaming, "profiles.json");
     public string ArchivesDir => Path.Combine(Roaming, "archives");
     public string ToolsDir => Path.Combine(Local, "tools");
     public string LogsDir => Path.Combine(Local, "logs");
