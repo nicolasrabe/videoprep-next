@@ -536,6 +536,7 @@ public sealed class UpdateApplierTests : IDisposable
     [Fact]
     public async Task A_file_the_antivirus_holds_for_a_moment_is_retried_until_it_lets_go()
     {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "only Windows refuses to move a file that another handle holds open");
         var req = Setup();
         FileStream? hold = new(Target, FileMode.Open, FileAccess.Read, FileShare.None);   // the installed program is busy
         var waits = 0;
@@ -554,6 +555,7 @@ public sealed class UpdateApplierTests : IDisposable
     [Fact]
     public async Task A_file_that_stays_locked_gives_up_cleanly_and_the_old_version_keeps_working()
     {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "only Windows refuses to move a file that another handle holds open");
         var req = Setup();
         using var hold = new FileStream(Target, FileMode.Open, FileAccess.Read, FileShare.None);
         var waits = 0;
@@ -601,7 +603,8 @@ public sealed class UpdateApplierTests : IDisposable
     [Fact]
     public void The_command_line_survives_odd_paths_and_bad_ones_are_refused()
     {
-        var req = new ApplyRequest(@"C:\Users\Nico Pérez\Mi Programa;&calc\videoprep.exe", @"C:\x\videoprep.exe", new string('a', 64), 77, "0.2.9", "0.3.0");
+        var odd = Path.Combine(Path.GetTempPath(), "Nico Pérez", "Mi Programa;&calc", "videoprep.exe");
+        var req = new ApplyRequest(odd, Path.Combine(Path.GetTempPath(), "x", "videoprep.exe"), new string('a', 64), 77, "0.2.9", "0.3.0");
         Assert.True(ApplyRequest.TryParse(req.ToArguments(), req.Staged, out var back));
         Assert.Equal(req, back);
         Assert.False(ApplyRequest.TryParse(["--apply-update", "--target", "relative.exe", "--sha256", new string('a', 64), "--pid", "1", "--from", "a", "--to", "b"], "s", out _));

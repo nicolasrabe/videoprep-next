@@ -28,6 +28,8 @@ public sealed class AppServices
     public SemVer CurrentVersion { get; init; } = SemVer.ParseOrZero(AppInfo.Version);
     /// <summary>Where the running program lives (null or not videoprep.exe = it was started by something else, e.g. during development).</summary>
     public string? CurrentExe { get; init; } = Environment.ProcessPath;
+    /// <summary>The kind of zip this system takes from a release ("win-x64"...); tests choose it.</summary>
+    public string Rid { get; init; } = ReleaseFeed.CurrentRid();
     /// <summary>Only Windows installs the update by itself; elsewhere the button opens the downloads page.</summary>
     public bool CanSelfUpdate { get; init; } = OperatingSystem.IsWindows();
     /// <summary>

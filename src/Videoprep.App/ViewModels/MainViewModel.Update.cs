@@ -70,7 +70,7 @@ public sealed partial class MainViewModel
         if (manual) UpdateStatus = L["upd_checking"];
         try
         {
-            var found = await new UpdateChecker(client).CheckAsync(_svc.CurrentVersion, ReleaseFeed.CurrentRid(), CancellationToken.None).ConfigureAwait(true);
+            var found = await new UpdateChecker(client).CheckAsync(_svc.CurrentVersion, _svc.Rid, CancellationToken.None).ConfigureAwait(true);
             Settings.UpdateLast = DateTimeOffset.Now.ToString("o");
             SaveSettings();
             UpdateAvailable = found;

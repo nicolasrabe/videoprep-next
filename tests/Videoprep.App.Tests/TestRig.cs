@@ -156,6 +156,7 @@ internal sealed class TestRig : IDisposable
             CurrentVersion = SemVer.Parse(installedVersion),
             CurrentExe = InstalledExe,
             CanSelfUpdate = selfUpdate,
+            Rid = "win-x64",   // the fake release has the Windows zip whatever system runs the tests
             StartProcess = (exe, args) => { Started.Add((exe, args)); return Task.FromResult(StartWorks); },
             VersionOf = _ => ExeVersion,
         };
