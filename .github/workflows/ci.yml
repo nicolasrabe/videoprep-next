@@ -55,9 +55,10 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - name: Install ffmpeg (Ubuntu's own build)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
-      # DIAGNOSTIC (WebM audio): the ffmpeg that videoprep downloads for the user (yt-dlp/FFmpeg-Builds), next to Ubuntu's.
+      # The integration tests use the same ffmpeg build that videoprep downloads for its users (yt-dlp/FFmpeg-Builds, the Linux
+      # twin of the Windows build), not Ubuntu's own package: Ubuntu's ffmpeg 8.0.1 prints "Error parsing Opus packet header"
+      # when it READS our WebM audio (docs/VERIFY.md), the videoprep build never does. The download is cached.
+      # To take a newer build, change the number at the end of the cache key.
       - name: Restore videoprep's ffmpeg build (cache)
         id: ffcache
         uses: actions/cache/restore@v6
@@ -66,52 +67,27 @@ jobs:
           key: ffmpeg-ytdlp-linux64-v1
       - name: Download videoprep's ffmpeg build
         if: steps.ffcache.outputs.cache-hit != 'true'
-        continue-on-error: true
         run: |
           mkdir -p ~/ffmpeg-videoprep && cd ~/ffmpeg-videoprep
-          curl -sSL --retry 3 -o ff.tar.xz "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-linux64-gpl.tar.xz"
+          curl -sSL --retry 3 --fail -o ff.tar.xz "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-linux64-gpl.tar.xz"
           tar -xJf ff.tar.xz --strip-components=1 && rm -f ff.tar.xz
       - name: Save the ffmpeg cache
-        if: always() && steps.ffcache.outputs.cache-hit != 'true'
+        if: steps.ffcache.outputs.cache-hit != 'true'
         continue-on-error: true
         uses: actions/cache/save@v6
         with:
           path: ~/ffmpeg-videoprep
           key: ffmpeg-ytdlp-linux64-v1
-      - name: Diagnostic settings
+      - name: Use videoprep's ffmpeg for the tests
         run: |
-          mkdir -p "$RUNNER_TEMP/diag"
-          echo "VIDEOPREP_DIAG_DIR=$RUNNER_TEMP/diag" >> "$GITHUB_ENV"
-          list="apt=/usr/bin"
-          [ -x "$HOME/ffmpeg-videoprep/bin/ffmpeg" ] && list="$list;app=$HOME/ffmpeg-videoprep/bin"
-          echo "VIDEOPREP_DIAG_FFMPEGS=$list" >> "$GITHUB_ENV"
-          echo "$list"
+          test -x "$HOME/ffmpeg-videoprep/bin/ffmpeg" && test -x "$HOME/ffmpeg-videoprep/bin/ffprobe"
+          echo "VIDEOPREP_FFMPEG_DIR=$HOME/ffmpeg-videoprep/bin" >> "$GITHUB_ENV"
+          "$HOME/ffmpeg-videoprep/bin/ffmpeg" -version | head -1
       - run: dotnet build videoprep.slnx -c Release
       - run: dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResults
       - name: Report failed tests as annotations
         if: failure()
         run: python3 .github/scripts/trx_annotations.py TestResults
-      - name: WebM audio diagnostic (both ffmpeg builds)
-        if: always()
-        run: bash tests/ci/webm-diagnostic.sh "$VIDEOPREP_DIAG_DIR"
-      # Trial only: the same integration tests with videoprep's ffmpeg. It does not change this job's result.
-      - name: Trial - integration tests with videoprep's ffmpeg
-        id: apptests
-        if: always()
-        continue-on-error: true
-        env:
-          VIDEOPREP_DIAG_DIR: ""
-        run: |
-          export VIDEOPREP_FFMPEG_DIR="$HOME/ffmpeg-videoprep/bin"
-          test -x "$VIDEOPREP_FFMPEG_DIR/ffmpeg"
-          dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResultsApp
-      - name: Trial result
-        if: always()
-        run: |
-          echo "::notice title=TRIAL app ffmpeg::integration tests with videoprep's ffmpeg: ${{ steps.apptests.outcome }}"
-      - name: Report the trial's failed tests as annotations
-        if: always() && steps.apptests.outcome == 'failure'
-        run: python3 .github/scripts/trx_annotations.py TestResultsApp
 
   publish:
     name: publish ${{ matrix.rid }}

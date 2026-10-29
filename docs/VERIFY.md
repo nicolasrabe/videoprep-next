@@ -52,7 +52,7 @@ tab, `--sleep-requests 1`. Saved as fixtures in `tests/Videoprep.Core.Tests/Fixt
 | `--match-filters` | Missing fields pass `!`/`!=` tests (phase 2). | Filters are applied by videoprep on the listing; yt-dlp filters only as a second guard when downloading. |
 | Profiles of other sites (2026-10-26, `--flat-playlist -j -I 1:3`) | Twitch `/<user>/videos`, Kick `/<user>/videos`, Vimeo `/<user>`: entries with id, title, url. Instagram `/<user>/`: `--list-extractors` says `instagram:user (CURRENTLY BROKEN)`; run gives `ERROR: [instagram:user] ...: Unable to extract data`. X `x.com/<user>`: `ERROR: Unsupported URL` (no profile extractor; only single posts). TikTok `/@user`: `ERROR: [tiktok:user] ...: Unable to extract secondary user ID`. | Explorar recognizes Instagram/X/TikTok profile links and explains instead of failing (copy post links into Download). Re-check after yt-dlp updates. |
 
-Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build): `ffprobe -count_frames` on a WebM clip printed
+Seen only on the CI (Ubuntu's own ffmpeg, not the yt-dlp FFmpeg build; see "WebM audio on Linux" below): `ffprobe -count_frames` on a WebM clip printed
 "Error parsing Opus packet header" and sometimes no count. The tests now count frames by decoding only the video stream with ffmpeg, and check separately that the audio decodes without errors. Not seen
 with the Windows build videoprep downloads; to look at again if a user reports broken Opus audio in WebM clips.
 
@@ -88,3 +88,31 @@ Run with the published `videoprep.exe`, its own data folder (`VIDEOPREP_HOME`), 
 - "Siempre encima" turns the Windows topmost flag off and on live (also saved); "Cerrar videoprep" asks "Todavía hay algo en curso..." while a download runs and "No" keeps everything; "Cerrar modo mini" brings the big window back.
 - **Size:** Windows will not make this frameless window lower than 39 px (its minimum tracking height). `Height=28`, `MinHeight=28`, `ClientSize` after opening and `SetWindowPos` were all tried; the mini measures **300 x 39 px** at 100 % scale.
 - Not touched on purpose: the real clipboard (setting it would overwrite the user's clipboard).
+
+## WebM audio on Linux: "Error parsing Opus packet header" (2026-10-29, CI run of e13320d)
+The CI failed on the WebM cut once the audio of every cut had to decode with no message (`AssertAudioDecodes`, strict: any line at
+`-v error` fails). To find out whether our cut is damaged or the reader is picky, the CI made the same cut (the "webm" case of
+`Other_video_formats_are_frame_exact`, same arguments) with two ffmpeg builds and read each file with each build:
+
+| ffmpeg | version |
+|---|---|
+| "apt" = what `ubuntu-latest` installs | 8.0.1-3ubuntu2 (not 6.1.1: the runner image moved on) |
+| "videoprep" = the Linux twin of the build videoprep downloads (yt-dlp/FFmpeg-Builds, master-latest-linux64-gpl) | N-128170-g0ea6606418-20261028 |
+
+| file made by | read by apt 8.0.1 | read by videoprep's build |
+|---|---|---|
+| apt 8.0.1 (libopus, Lavc62.11) | 1 message: `[opus] Error parsing Opus packet header.` | none |
+| videoprep's build (libopus, Lavc63.25) | 1 message: the same | none |
+
+- The message also appears when apt's ffmpeg only **reads** the file without decoding (`-c copy`), so it comes from its Opus/Matroska
+  packet parser, not from the decoder, and it comes with **both** files; the videoprep build reads **both** with no message at all.
+  Same file, different reader: the file is not what changes the result.
+- The audio streams look normal in both: Opus, 48 kHz mono, `initial_padding=312`, 45 packets, the first and the last packet about
+  twice as big as the others (924 and 953 bytes against ~520, expected at the start and the end of an Opus stream). apt's ffprobe
+  puts the audio start at -7 ms (`start_pts=-7`), the other at 0.
+- The whole integration suite (all cuts, the engine with the fake yt-dlp) was also run with the videoprep build in the same CI run:
+  all passed. On Windows the same suite passes with the Windows build of the same family (local run, N-128097).
+- **Decision:** the `integration` job now downloads that build (cached; the key `ffmpeg-ytdlp-linux64-v1` pins it, change the number to
+  take a newer one) and sets `VIDEOPREP_FFMPEG_DIR`; the Ubuntu package is no longer installed. The strict audio check, the frame count
+  and every other test are unchanged. Not proven: what exactly in apt 8.0.1's parser rejects the packet (it was not looked into further);
+  if a user ever reports damaged Opus audio in WebM clips this table is the first place to look.
