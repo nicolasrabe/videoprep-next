@@ -140,7 +140,7 @@
           </DataGridTemplateColumn>
           <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="170" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding FiltersText}" Width="*" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_profile}" Binding="{Binding ProfileText}" Width="140" IsReadOnly="True" />
+          <DataGridTextColumn Header="{s:T sc_col_profile}" Binding="{Binding ProfileText}" Width="170" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding FormatText}" Width="120" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding LastText}" Width="110" IsReadOnly="True" />
           <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding NewText}" Width="90" IsReadOnly="True" />

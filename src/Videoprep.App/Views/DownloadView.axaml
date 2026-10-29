@@ -24,14 +24,16 @@
           <TextBlock Classes="muted" Text="{s:T lbl_res}" VerticalAlignment="Center" Margin="12,0,0,0" />
           <ComboBox ItemsSource="{Binding ResolutionChoices}" SelectedItem="{Binding SelectedResolution}"
                     MinWidth="100" IsEnabled="{Binding ResolutionEnabled}" />
-          <!-- F6: a profile fills the format, the resolution and the names -->
-          <TextBlock Classes="muted" Text="{s:T lbl_profile}" VerticalAlignment="Center" Margin="12,0,0,0" />
+        </WrapPanel>
+        <!-- F6: a profile fills the format, the resolution and the names (its own line, so the label never loses its box) -->
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Classes="muted" Text="{s:T lbl_profile}" VerticalAlignment="Center" />
           <ComboBox x:Name="ProfileBox" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedProfileChoice}"
-                    PlaceholderText="{s:T ph_profile}" MinWidth="190" IsEnabled="{Binding IsIdle}"
+                    PlaceholderText="{s:T ph_profile}" MinWidth="210" IsEnabled="{Binding IsIdle}"
                     AutomationProperties.Name="{s:T lbl_profile}" />
           <Button Content="{s:T btn_saveprofile}" Command="{Binding SaveProfileCommand}" ToolTip.Tip="{s:T tip_saveprofile}"
                   IsEnabled="{Binding IsIdle}" />
-        </WrapPanel>
+        </StackPanel>
         <TextBlock Classes="muted" Text="{Binding HintText}" TextWrapping="Wrap" />
       </StackPanel>
     </Border>
