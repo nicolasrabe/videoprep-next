@@ -9,6 +9,9 @@ public sealed class ImportTests : IDisposable
 {
     private readonly string _dir = Directory.CreateTempSubdirectory("videoprep-import-").FullName;
 
+    // Windows-1252 for the test files themselves (the reader registers it on its own too).
+    public ImportTests() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
     public void Dispose()
     {
         try { Directory.Delete(_dir, true); }
