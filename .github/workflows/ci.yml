@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "feat/**"]
+    branches: [main, "feat/**", "chore/**"]
   pull_request:
   workflow_dispatch:
 
@@ -83,10 +83,10 @@ jobs:
       - name: Use videoprep's ffmpeg for the tests
         shell: pwsh
         run: |
-          $bin = Join-Path $HOME 'ffmpeg-videoprepin'
-          if (-not ((Test-Path "$binfmpeg.exe") -and (Test-Path "$binfprobe.exe"))) { throw "ffmpeg/ffprobe not found in $bin" }
+          $bin = Join-Path $HOME 'ffmpeg-videoprep/bin'
+          if (-not ((Test-Path "$bin/ffmpeg.exe") -and (Test-Path "$bin/ffprobe.exe"))) { throw "ffmpeg/ffprobe not found in $bin" }
           "VIDEOPREP_FFMPEG_DIR=$bin" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
-          & "$binfmpeg.exe" -version | Select-Object -First 1
+          & "$bin/ffmpeg.exe" -version | Select-Object -First 1
       - run: dotnet build videoprep.slnx -c Release
       - run: dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResults
       - name: Report failed tests as annotations
