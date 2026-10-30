@@ -11,12 +11,9 @@ permissions:
 
 jobs:
   build-test:
-    name: build + test (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    # Windows only until Nico says otherwise (docs/PORTING_LATER.md lists what is left out for Mac/Linux).
+    name: build + test (windows)
+    runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -38,7 +35,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: tests-${{ matrix.os }}
+          name: tests-windows
           path: |
             TestResults/
             tests/*/bin/Release/net10.0/screenshots/
@@ -47,8 +44,8 @@ jobs:
   integration:
     # Real ffmpeg on generated test videos (frame-exact cuts, the whole engine with the fake yt-dlp).
     # Never downloads from YouTube.
-    name: integration (ubuntu, real ffmpeg)
-    runs-on: ubuntu-latest
+    name: integration (windows, real ffmpeg)
+    runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -57,47 +54,50 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # The integration tests use the same ffmpeg build that videoprep downloads for its users (yt-dlp/FFmpeg-Builds, the Linux
-      # twin of the Windows build), not Ubuntu's own package: Ubuntu's ffmpeg 8.0.1 prints "Error parsing Opus packet header"
-      # when it READS our WebM audio (docs/VERIFY.md), the videoprep build never does. The download is cached.
-      # To take a newer build, change the number at the end of the cache key.
+      # The integration tests use the same ffmpeg build that videoprep downloads for its users (ToolManager.FfmpegUrl,
+      # yt-dlp/FFmpeg-Builds win64 gpl). The download is cached. To take a newer build, change the number at the end of the cache key.
       - name: Restore videoprep's ffmpeg build (cache)
         id: ffcache
         uses: actions/cache/restore@v6
         with:
           path: ~/ffmpeg-videoprep
-          key: ffmpeg-ytdlp-linux64-v1
+          key: ffmpeg-ytdlp-win64-v1
       - name: Download videoprep's ffmpeg build
         if: steps.ffcache.outputs.cache-hit != 'true'
+        shell: pwsh
         run: |
-          mkdir -p ~/ffmpeg-videoprep && cd ~/ffmpeg-videoprep
-          curl -sSL --retry 3 --fail -o ff.tar.xz "https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-linux64-gpl.tar.xz"
-          tar -xJf ff.tar.xz --strip-components=1 && rm -f ff.tar.xz
+          $dir = Join-Path $HOME 'ffmpeg-videoprep'
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          $zip = Join-Path $dir 'ff.zip'
+          Invoke-WebRequest -Uri 'https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip' -OutFile $zip
+          Expand-Archive $zip -DestinationPath (Join-Path $dir 'x')
+          Get-ChildItem (Join-Path $dir 'x') -Directory | Select-Object -First 1 | ForEach-Object { Get-ChildItem $_.FullName | Move-Item -Destination $dir }
+          Remove-Item $zip, (Join-Path $dir 'x') -Recurse -Force
       - name: Save the ffmpeg cache
         if: steps.ffcache.outputs.cache-hit != 'true'
         continue-on-error: true
         uses: actions/cache/save@v6
         with:
           path: ~/ffmpeg-videoprep
-          key: ffmpeg-ytdlp-linux64-v1
+          key: ffmpeg-ytdlp-win64-v1
       - name: Use videoprep's ffmpeg for the tests
+        shell: pwsh
         run: |
-          test -x "$HOME/ffmpeg-videoprep/bin/ffmpeg" && test -x "$HOME/ffmpeg-videoprep/bin/ffprobe"
-          echo "VIDEOPREP_FFMPEG_DIR=$HOME/ffmpeg-videoprep/bin" >> "$GITHUB_ENV"
-          "$HOME/ffmpeg-videoprep/bin/ffmpeg" -version | head -1
+          $bin = Join-Path $HOME 'ffmpeg-videoprepin'
+          if (-not ((Test-Path "$binfmpeg.exe") -and (Test-Path "$binfprobe.exe"))) { throw "ffmpeg/ffprobe not found in $bin" }
+          "VIDEOPREP_FFMPEG_DIR=$bin" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          & "$binfmpeg.exe" -version | Select-Object -First 1
       - run: dotnet build videoprep.slnx -c Release
       - run: dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResults
       - name: Report failed tests as annotations
         if: failure()
-        run: python3 .github/scripts/trx_annotations.py TestResults
+        shell: bash
+        run: python3 .github/scripts/trx_annotations.py TestResults || python .github/scripts/trx_annotations.py TestResults
 
   publish:
-    name: publish ${{ matrix.rid }}
+    name: publish win-x64
     needs: [build-test, integration]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rid: [win-x64, osx-arm64]
+    runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
       DOTNET_NOLOGO: "1"
@@ -106,16 +106,16 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - run: dotnet publish src/Videoprep.App -c Release -r ${{ matrix.rid }} -o dist/${{ matrix.rid }}
+      - run: dotnet publish src/Videoprep.App -c Release -r win-x64 -o dist/win-x64
       - name: Zip and SHA-256
+        shell: pwsh
         run: |
-          cd dist/${{ matrix.rid }}
-          zip -9 ../videoprep-ci-${{ matrix.rid }}.zip *
-          cd ..
-          sha256sum videoprep-ci-${{ matrix.rid }}.zip | tee videoprep-ci-${{ matrix.rid }}.zip.sha256
+          Compress-Archive -Path dist/win-x64/* -DestinationPath dist/videoprep-ci-win-x64.zip
+          $h = (Get-FileHash dist/videoprep-ci-win-x64.zip -Algorithm SHA256).Hash.ToLower()
+          "$h  videoprep-ci-win-x64.zip" | Tee-Object dist/videoprep-ci-win-x64.zip.sha256
       - uses: actions/upload-artifact@v7
         with:
-          name: videoprep-${{ matrix.rid }}
+          name: videoprep-win-x64
           path: |
-            dist/videoprep-ci-${{ matrix.rid }}.zip
-            dist/videoprep-ci-${{ matrix.rid }}.zip.sha256
+            dist/videoprep-ci-win-x64.zip
+            dist/videoprep-ci-win-x64.zip.sha256

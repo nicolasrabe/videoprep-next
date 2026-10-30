@@ -2,6 +2,10 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
+## Sin publicar (0.3.1)
+- CI y publicación solo para Windows: se sacaron los trabajos de macOS y Ubuntu y el `osx-arm64`; las pruebas con ffmpeg real
+  corren en Windows. El código para Mac/Linux no se tocó. Lo pendiente para portar está en `docs/PORTING_LATER.md`.
+
 ## 0.3.0 - 2026-10-29
 - "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html
   and .csv. In Word files it finds hyperlinks, HYPERLINK fields and typed links, also in headers, footers, footnotes

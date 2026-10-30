@@ -63,6 +63,8 @@ en PowerShell, `Get-FileHash videoprep-v0.3.0-win-x64.zip`.
   Por eso Windows sigue mostrando "Windows protegió su PC" la primera vez.
 - En Mac y Linux el botón solo abre la página de descargas.
 
+**Solo Windows por ahora:** el CI y los lanzamientos son únicamente para Windows (lo pendiente para Mac/Linux está en `docs/PORTING_LATER.md`).
+
 ## Sitios
 YouTube (videos, cortos, directos, listas), Twitch, Kick, Vimeo, X, Instagram, Facebook, TikTok y
 [cualquier sitio que soporte yt-dlp](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
