@@ -15,5 +15,4 @@
 ## Pruebas inestables
 Suite completa (con ffmpeg real) 3 veces seguidas en local: **0 fallas en las 3** (Core 567 ok + 2 omitidas, App 206 ok; ~52 s cada una).
 No hay pruebas para marcar `[Trait("Inestable","si")]`; el filtro `Inestable!=si` ya está en el CI y en check.ps1 para cuando haga falta.
-**Pendiente:** el CI sigue reintentando una vez cuando falla la limpieza del ejecutor de pantallas de Avalonia ("different thread owns it").
-No lo pude reproducir en local, así que no lo toqué; va contra la regla 8 y queda para decidir.
+**Reintento quitado** (a pedido de Nico, regla 8): el CI corre las pruebas una sola vez. Si vuelve a aparecer el error de limpieza de Avalonia ("different thread owns it"), se investiga o se marca `Inestable`, no se reintenta.
