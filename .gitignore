@@ -19,3 +19,7 @@ _tmp/
 
 # never commit cookies
 cookies*.txt
+
+# test results and screenshots
+TestResults*/
+screenshots/

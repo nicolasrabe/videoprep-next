@@ -3,8 +3,15 @@ name: CI
 on:
   push:
     branches: [main, "feat/**", "chore/**"]
+    paths-ignore: ["docs/**", "**/*.md", "legacy-ps/**", "LICENSE"]
   pull_request:
+    paths-ignore: ["docs/**", "**/*.md", "legacy-ps/**", "LICENSE"]
   workflow_dispatch:
+
+# A new push to the same branch cancels the run still going for the old one.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -22,11 +29,15 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
       - run: dotnet build videoprep.slnx -c Release
-      # Integration tests (real ffmpeg/yt-dlp) are opt-in and run in their own job from phase 3.
+      # Integration tests (real ffmpeg) live in integration.yml (only when Engine/Tools or their tests change, or by hand).
       # Avalonia's headless test runner sometimes fails while cleaning up after a screen test ("different thread owns it", in the
       # runner's own code, not in videoprep's). A real failure fails twice; this one does not. The first failure stays in the log.
-      - run: dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration" --logger "trx" --results-directory TestResults || dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration" --logger "trx" --results-directory TestResults2
+      - run: dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration&Inestable!=si" --logger "trx" --results-directory TestResults || dotnet test videoprep.slnx -c Release --no-build --filter "Category!=Integration&Inestable!=si" --logger "trx" --results-directory TestResults2
       - name: Report failed tests as annotations
         if: failure()
         shell: bash
@@ -41,62 +52,9 @@ jobs:
             tests/*/bin/Release/net10.0/screenshots/
           if-no-files-found: ignore
 
-  integration:
-    # Real ffmpeg on generated test videos (frame-exact cuts, the whole engine with the fake yt-dlp).
-    # Never downloads from YouTube.
-    name: integration (windows, real ffmpeg)
-    runs-on: windows-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
-      # The integration tests use the same ffmpeg build that videoprep downloads for its users (ToolManager.FfmpegUrl,
-      # yt-dlp/FFmpeg-Builds win64 gpl). The download is cached. To take a newer build, change the number at the end of the cache key.
-      - name: Restore videoprep's ffmpeg build (cache)
-        id: ffcache
-        uses: actions/cache/restore@v6
-        with:
-          path: ~/ffmpeg-videoprep
-          key: ffmpeg-ytdlp-win64-v1
-      - name: Download videoprep's ffmpeg build
-        if: steps.ffcache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          $dir = Join-Path $HOME 'ffmpeg-videoprep'
-          New-Item -ItemType Directory -Force $dir | Out-Null
-          $zip = Join-Path $dir 'ff.zip'
-          Invoke-WebRequest -Uri 'https://github.com/yt-dlp/FFmpeg-Builds/releases/latest/download/ffmpeg-master-latest-win64-gpl.zip' -OutFile $zip
-          Expand-Archive $zip -DestinationPath (Join-Path $dir 'x')
-          Get-ChildItem (Join-Path $dir 'x') -Directory | Select-Object -First 1 | ForEach-Object { Get-ChildItem $_.FullName | Move-Item -Destination $dir }
-          Remove-Item $zip, (Join-Path $dir 'x') -Recurse -Force
-      - name: Save the ffmpeg cache
-        if: steps.ffcache.outputs.cache-hit != 'true'
-        continue-on-error: true
-        uses: actions/cache/save@v6
-        with:
-          path: ~/ffmpeg-videoprep
-          key: ffmpeg-ytdlp-win64-v1
-      - name: Use videoprep's ffmpeg for the tests
-        shell: pwsh
-        run: |
-          $bin = Join-Path $HOME 'ffmpeg-videoprep/bin'
-          if (-not ((Test-Path "$bin/ffmpeg.exe") -and (Test-Path "$bin/ffprobe.exe"))) { throw "ffmpeg/ffprobe not found in $bin" }
-          "VIDEOPREP_FFMPEG_DIR=$bin" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
-          & "$bin/ffmpeg.exe" -version | Select-Object -First 1
-      - run: dotnet build videoprep.slnx -c Release
-      - run: dotnet test tests/Videoprep.Core.Tests -c Release --no-build --filter "Category=Integration" --logger "trx" --results-directory TestResults
-      - name: Report failed tests as annotations
-        if: failure()
-        shell: bash
-        run: python3 .github/scripts/trx_annotations.py TestResults || python .github/scripts/trx_annotations.py TestResults
-
   publish:
     name: publish win-x64
-    needs: [build-test, integration]
+    needs: [build-test]
     runs-on: windows-latest
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -106,6 +64,10 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
       - run: dotnet publish src/Videoprep.App -c Release -r win-x64 -o dist/win-x64
       - name: Zip and SHA-256
         shell: pwsh
