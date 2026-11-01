@@ -182,8 +182,9 @@ public sealed class ExploreTests : IDisposable
         ex.TabShorts = true;
         await ex.SearchCommand.ExecuteAsync(null);
         Assert.Empty(ex.Rows);
-        Assert.Contains(Loc.Instance["sc_blocked"], ex.StatusLine);
-        Assert.Equal(1, CallCount());                      // the second tab is not even tried
+        Assert.False(ex.HasSource);                        // the very first light request already met the check
+        Assert.Contains(Loc.Instance["sc_blocked"], ex.LoadNote);
+        Assert.Equal(1, CallCount());                      // nothing else is tried, no retry
     }
 
     private static string SourceUrlListId(string url) => System.Web.HttpUtility.ParseQueryString(new Uri(url).Query)["list"]!;

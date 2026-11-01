@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup pestaña Descargar compacta</title>
+<style>
+:root{--bg:#1e1f22;--card:#2a2b2f;--in:#1b1c1f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--ob:#6b4a26;--ot:#fbddb8;--rb:#5e2f2f;--rt:#f6cccc;--desk:#14151a}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.note{max-width:900px;margin:6px auto 10px;color:var(--mu);font-size:12px}
+.demo{max-width:900px;margin:0 auto 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.demo span{color:var(--mu)}
+.win{max-width:900px;margin:0 auto 12px;border:1px solid var(--bd);background:var(--bg);padding:10px 14px 8px}
+.tabs{display:flex;gap:22px;color:var(--mu);padding:2px 4px 8px;align-items:center}.tabs b{color:var(--tx);border-bottom:2px solid var(--tx);padding-bottom:3px;font-weight:400}
+.tabs .mini{margin-left:auto;padding:2px 12px}
+button,select,input[type=text]{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px;border-radius:2px}
+input[type=text]{background:var(--in);padding:4px 8px}
+button{cursor:pointer}
+.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}
+.dis{opacity:.45;cursor:default}
+.card{background:var(--card);border:1px solid var(--bd);padding:8px 10px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mu{color:var(--mu)}.sp{margin-left:auto}
+.ttl{color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.seg{display:inline-flex;border:1px solid var(--bd)}.seg span{padding:3px 12px;cursor:pointer}.seg span.on{background:var(--ob);color:var(--ot)}
+.mid{display:grid;grid-template-columns:1fr 330px;gap:8px;margin-top:8px}
+.left{display:flex;flex-direction:column;gap:8px;min-width:0}
+.left .frags{flex:1}
+.prev{display:flex;flex-direction:column;gap:8px}
+.th{width:100%;aspect-ratio:16/9;background:var(--in);border:1px solid var(--bd);color:var(--mu);display:flex;align-items:center;justify-content:center;position:relative}
+.th b{position:absolute;right:5px;bottom:5px;background:rgba(0,0,0,.75);padding:0 5px;font-weight:400;color:#fff}
+.frag{display:grid;grid-template-columns:18px 98px 98px 1fr 30px;gap:6px;align-items:center;margin-bottom:5px}
+.frag input{width:100%}
+.fh{display:grid;grid-template-columns:18px 98px 98px 1fr 30px;gap:6px;color:var(--mu);font-size:11px;margin-bottom:3px}
+.empty{padding:10px 8px;background:var(--in);border:1px dashed var(--bd);color:var(--mu)}
+.bar{height:7px;background:var(--in);border:1px solid var(--bd);margin-top:8px}
+.foot{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.hide{display:none}
+.off{opacity:.45;pointer-events:none}
+.info{display:inline-block;width:16px;height:16px;border:1px solid var(--mu);border-radius:50%;text-align:center;line-height:14px;font-size:11px;color:var(--mu);cursor:help}
+</style></head><body>
+
+<div class="demo"><span>Probalo:</span>
+ <button onclick="setFrag(0)">Sin fragmentos</button><button onclick="setFrag(2)">Con 2 fragmentos</button>
+ <button onclick="setLink(true)">Con enlace pegado</button><button onclick="setLink(false)">Sin enlace</button></div>
+
+<div class="win">
+  <div class="tabs"><b>Prep</b><span>Cola</span><span>Scraping</span><span>Ajustes</span><span>Registro</span><button class="mini" title="Modo mini">Modo mini</button></div>
+
+  <div class="row"><input type="text" style="flex:1;min-width:240px" placeholder="pegá acá tu enlace o ID de video"><button>Pegar</button></div>
+
+  <div class="mid">
+    <div class="left">
+      <div class="card">
+        <div class="row">
+          <span class="mu">Perfil</span>
+          <select style="min-width:190px"><option>Premiere 1080p</option><option>Elegir un perfil...</option></select>
+          <button>Guardar como perfil...</button>
+          <span class="info" id="inf" title="Compatible con Premiere Pro y casi todo. Hasta 1080p.">i</span>
+          <span class="seg sp" id="tipo"><span class="on" onclick="tipo(0)">Video</span><span onclick="tipo(1)">Solo audio</span></span>
+        </div>
+        <div class="row" style="margin-top:6px" id="vid">
+          <span class="mu">Formato</span><select><option>MP4 - H.264 + AAC</option></select>
+          <span class="mu">Máx.</span><select><option>1080p</option></select>
+          <label><input type="checkbox"> Velocidad constante</label>
+        </div>
+      </div>
+
+      <div class="card frags">
+        <div class="row" style="margin-bottom:6px"><span class="ttl">Fragmentos</span><span class="mu">(vacío = video completo) (?)</span><button class="sp">+ Agregar fragmento</button></div>
+        <div id="frs"></div>
+      </div>
+    </div>
+
+    <div class="card prev">
+      <div class="ttl">Vista previa</div>
+      <div class="th" id="th">sin enlace</div>
+      <div id="pt" class="mu">Pegá un enlace de YouTube para ver la vista previa.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:8px" id="nmbox">
+    <div class="row">
+      <span class="mu">Nombre del archivo</span>
+      <select id="nm" onchange="nm()"><option value="0">Título original del video</option><option value="1">Título personalizado</option><option value="2" selected>Serie (nombre + número)</option></select>
+      <input type="text" id="nmin" value="F" style="width:170px">
+      <span class="mu" id="ej">Ejemplo: F1.mp4, F2.mp4, F3.mp4</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="mu">Guardar en</span><input type="text" value="C:\Users\nicol\Videos" style="flex:1;min-width:200px"><button>Examinar...</button><button title="Abrir carpeta">📁</button>
+  </div>
+  <div class="foot" style="justify-content:flex-end">
+    <button>Opciones...</button>
+    <button class="o">Enviar a la cola</button><button class="g">Descargar</button><button class="dis">Detener</button>
+  </div>
+  <div class="bar"></div>
+  <div class="mu" style="margin-top:4px">Todo listo</div>
+</div>
+
+<div class="note">Qué cambió ahora: (1) Mini pasó arriba a la derecha de la barra de pestañas; (2) el bloque de Perfil y Formato quedó en dos líneas, y la descripción pasó al ícono "i" (aparece al apoyar el mouse); (3) la vista previa ocupa toda la columna derecha, con la miniatura en proporción 16:9 y la duración encima; (4) cada fragmento tiene su propia caja de nombre; (5) apenas hay un fragmento, la sección "Nombre del archivo" se apaga y avisa por qué. Si quitás todos los fragmentos, vuelve a activarse.</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let nFrag=0;
+function setFrag(n){nFrag=n;const f=$('frs');
+ if(!n){f.innerHTML='<div class="empty">Video completo. Si querés solo una parte, agregá un fragmento.</div>';}
+ else{f.innerHTML='<div class="fh"><span></span><span>Inicio</span><span>Fin</span><span>Nombre del fragmento</span><span></span></div>'+
+  [['1','00:10:00','00:12:29','Intro del invitado'],['2','00:31:15','00:33:02','']].map(x=>`<div class="frag"><span class="mu">${x[0]}</span><input type="text" value="${x[1]}"><input type="text" value="${x[2]}"><input type="text" value="${x[3]}" placeholder="vacío = Título original - parte ${x[0]}"><button class="r" title="Quitar">✕</button></div>`).join('');}
+ const b=$('nmbox');b.classList.toggle('off',n>0);
+ $('ej').textContent=n>0?'Con fragmentos, cada uno lleva su propio nombre (arriba).':ejTxt();}
+function ejTxt(){const v=$('nm').value;return v==='0'?'Se guarda con el título tal cual está en el sitio.':v==='1'?'Ejemplo: Mi entrevista.mp4':'Ejemplo: F1.mp4, F2.mp4, F3.mp4';}
+function setLink(on){$('th').innerHTML=on?'miniatura<b>38:12</b>':'sin enlace';
+ $('pt').innerHTML=on?'<b>Entrevista completa con el invitado</b><br><span class="mu">Canal de ejemplo · 21 oct 2026</span>':'Pegá un enlace de YouTube para ver la vista previa.';}
+function tipo(i){document.querySelectorAll('#tipo span').forEach((s,k)=>s.classList.toggle('on',k===i));
+ $('vid').classList.toggle('hide',i===1);
+ $('inf').title=i?'Solo el audio, sin video. Útil para música o podcasts.':'Compatible con Premiere Pro y casi todo. Hasta 1080p.';}
+function nm(){const v=$('nm').value;$('nmin').classList.toggle('hide',v==='0');if(!nFrag)$('ej').textContent=ejTxt();}
+setFrag(0);setLink(false);nm();
+</script>
+</body></html>

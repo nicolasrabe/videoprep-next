@@ -245,20 +245,23 @@ public sealed partial class MainViewModel
         RefreshCard(row);
     }
 
-    private QueueRowCard NewCard(QueueRow row) => new()
+    private QueueRowCard NewCard(QueueRow row) => NewCard(row.Url, () =>
     {
-        Link = row.Url,
-        OpenLinkCommand = new RelayCommand(() => OpenLink(row.Url)),
+        _svc.Info.Retry(row.Url, new InfoRequest(_tools, CookieChain()));
+        RefreshCard(row);
+    });
+
+    /// <summary>A card for any video link (Queue and Scraping results share it); <paramref name="retry"/> asks again after a failure.</summary>
+    internal QueueRowCard NewCard(string url, Action retry) => new()
+    {
+        Link = url,
+        OpenLinkCommand = new RelayCommand(() => OpenLink(url)),
         CopyLinkCommand = new AsyncRelayCommand(async () =>
         {
-            await CopyToClipboardAsync(row.Url);
+            await CopyToClipboardAsync(url);
             StatusText = L["st_copied"];
         }),
-        RetryCommand = new RelayCommand(() =>
-        {
-            _svc.Info.Retry(row.Url, new InfoRequest(_tools, CookieChain()));
-            RefreshCard(row);
-        }),
+        RetryCommand = new RelayCommand(retry),
     };
 
     /// <summary>Only web links are opened, in the default browser.</summary>
@@ -270,6 +273,7 @@ public sealed partial class MainViewModel
 
     private void OnInfoChanged(string key)
     {
+        VideoInfoChanged?.Invoke(key);
         var changedName = false;
         foreach (var row in QueueRows.Where(r => r.VideoKey == key))
         {
@@ -279,30 +283,53 @@ public sealed partial class MainViewModel
         if (changedName) UpdateRowNames();
     }
 
-    private void RefreshCard(QueueRow row)
+    /// <summary>
+    /// Fills a card with what the info service has; <paramref name="listed"/> (the quick-listing row, Scraping) covers what the full
+    /// data does not bring yet. Returns the info so the caller can add its own lines ("Se descargará") and then call <see cref="SetCardState"/>.
+    /// </summary>
+    internal VideoInfo? FillCard(QueueRowCard card, string videoKey, Core.Scraping.ListingEntry? listed)
     {
-        var card = row.Card;
-        if (card is null) return;
-        var info = _svc.Info.Get(row.VideoKey);
-        var preview = _svc.Preview.Get(row.VideoKey);
-        card.Title = info?.Title is { Length: > 0 } t ? t : preview?.Title ?? "";
+        var info = _svc.Info.Get(videoKey);
+        var preview = _svc.Preview.Get(videoKey);
+        card.Title = info?.Title is { Length: > 0 } t ? t : preview?.Title is { Length: > 0 } pt ? pt : listed?.Title ?? "";
         var bits = new List<string>();
         var channel = info?.Channel is { Length: > 0 } c ? c : preview?.Author ?? "";
         if (channel.Length > 0) bits.Add(channel);
         if (info?.UploadDate is { Length: 8 } d && DateTime.TryParseExact(d, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
             bits.Add(date.ToString("d MMM yyyy", L.Culture));
+        else if (listed?.Date is { } ld && info is null or { State: not InfoState.Ready })
+            bits.Add((listed.DateIsApprox ? "~" : "") + ld.ToDateTime(TimeOnly.MinValue).ToString("d MMM yyyy", L.Culture));
         if (info?.Views is { } v) bits.Add(L.Format("det_views", v.ToString("N0", L.Culture)));
+        else if (listed?.Views is { } lv && info is null or { State: not InfoState.Ready })
+            bits.Add(L.Format("det_views", lv.ToString("N0", L.Culture)));
         card.Meta = string.Join("  ·  ", bits);
-        card.Duration = info?.Duration ?? "";
+        card.Duration = info?.Duration is { Length: > 0 } dur ? dur : Core.Scraping.Filters.FormatDuration(listed?.DurationSec);
         card.Description = info?.Description ?? "";
         card.FailText = info?.State == InfoState.Failed ? L.Format("det_fail", ReasonText(info.FailReason)) : "";
         var bytes = info?.Thumbnail ?? preview?.Thumbnail;
-        var thumbKey = bytes is null ? "" : row.VideoKey + bytes.Length;
+        var thumbKey = bytes is null ? "" : videoKey + bytes.Length;
         if (thumbKey != card.ThumbKey)
         {
             card.ThumbKey = thumbKey;
             card.Thumbnail = bytes is null ? null : DecodeBitmap(bytes);
         }
+        return info;
+    }
+
+    /// <summary>Last step of filling a card: whoever waits for "ready" sees the card already filled in.</summary>
+    internal static void SetCardState(QueueRowCard card, VideoInfo? info) =>
+        card.State = info?.State switch
+        {
+            InfoState.Ready => CardState.Ready,
+            InfoState.Failed => CardState.Failed,
+            _ => CardState.Loading,
+        };
+
+    private void RefreshCard(QueueRow row)
+    {
+        var card = row.Card;
+        if (card is null) return;
+        var info = FillCard(card, row.VideoKey, null);
         var it = Items.FirstOrDefault(i => i.Id == row.ItemId);
         if (it is not null)
         {
@@ -311,13 +338,7 @@ public sealed partial class MainViewModel
             var file = (it.SubFolder.Length > 0 ? it.SubFolder + Path.DirectorySeparatorChar : "") + name + ext;
             card.Will = L.Format("det_will", $"{FormatText(it)}  ·  {file}");
         }
-        // Last: whoever waits for "ready" sees the card already filled in.
-        card.State = info?.State switch
-        {
-            InfoState.Ready => CardState.Ready,
-            InfoState.Failed => CardState.Failed,
-            _ => CardState.Loading,
-        };
+        SetCardState(card, info);
     }
 
     private static Bitmap? DecodeBitmap(byte[] bytes)

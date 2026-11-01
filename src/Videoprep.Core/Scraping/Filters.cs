@@ -26,35 +26,67 @@ public sealed record FilterSet
 
 public static class Filters
 {
+    /// <summary>What the filters say about one entry.</summary>
+    public enum Verdict
+    {
+        /// <summary>Does not pass (or is clearly outside the date range).</summary>
+        Drop,
+        /// <summary>Passes, and its date (when a date filter is set) is confirmed inside the range.</summary>
+        Show,
+        /// <summary>Passes everything else, but a date filter is set and its date is missing or only approximate and near the range:
+        /// it is NOT shown; the exact date decides (<see cref="NeedsExact"/>) or it is listed apart as "sin fecha confirmada".</summary>
+        Doubtful,
+    }
+
     /// <summary>
-    /// Keeps the entries that pass, in the chosen order, up to MaxCount (counted before "skip already downloaded"). Playlists (rows that open a list) are kept as
-    /// they are. An entry whose date (or length) is unknown passes that filter: the exact data is fetched afterwards
-    /// for those (<see cref="NeedsExact"/>), and dates are checked again when downloading.
+    /// RONDA 1 spec 1.1: with a date filter a video is shown only if its date is CONFIRMED and inside the range, ends included.
+    /// Approximate dates ("2 weeks ago") only decide when they are clearly outside the range; near the edges, or without a
+    /// date at all, the entry is <see cref="Verdict.Doubtful"/>. Length is lenient: an unknown length still passes.
     /// </summary>
-    public static IReadOnlyList<ListingEntry> Apply(IEnumerable<ListingEntry> all, FilterSet f, Func<ListingEntry, bool> isDownloaded,
-                                                    DateOnly? todayOverride = null)
+    public static Verdict Classify(ListingEntry e, FilterSet f, DateOnly today,
+                                   IReadOnlyList<string>? include = null, IReadOnlyList<string>? exclude = null)
+    {
+        if (e.IsPlaylist) return Verdict.Show;
+        if (f.SkipLive && e.IsLiveNow) return Verdict.Drop;
+        if (f.SkipMembers && e.IsMembersOnly) return Verdict.Drop;
+        if (e.DurationSec is { } s && (f.MinSec is { } min && s < min || f.MaxSec is { } max && s > max)) return Verdict.Drop;
+        include ??= f.Include.Select(Normalize).Where(t => t.Length > 0).ToList();
+        exclude ??= f.Exclude.Select(Normalize).Where(t => t.Length > 0).ToList();
+        var title = Normalize(e.Title);
+        if (include.Count > 0 && !include.Any(title.Contains)) return Verdict.Drop;
+        if (exclude.Any(title.Contains)) return Verdict.Drop;
+        if (!f.UsesDates) return Verdict.Show;
+        if (e.Date is not { } d) return Verdict.Doubtful;
+        if (!e.DateIsApprox)
+            return f.From is { } from && d < from || f.To is { } to && d > to ? Verdict.Drop : Verdict.Show;
+        // Approximate: how wrong can it be? Only what is clearly outside the range is dropped.
+        var margin = ApproxMarginDays(d, today);
+        if (f.From is { } from2 && d.AddDays(margin) < from2) return Verdict.Drop;
+        if (f.To is { } to2 && d.AddDays(-margin) > to2) return Verdict.Drop;
+        return Verdict.Doubtful;
+    }
+
+    /// <summary>Entries that pass the filters (shown), those whose date is not confirmed (apart), and how many were looked at.</summary>
+    public sealed record Evaluation(IReadOnlyList<ListingEntry> Shown, IReadOnlyList<ListingEntry> Unconfirmed, int Reviewed);
+
+    /// <summary>
+    /// Shown = the entries that pass, in the chosen order, up to MaxCount (counted before "skip already downloaded").
+    /// Unconfirmed = doubtful ones (see <see cref="Verdict.Doubtful"/>), never mixed with the shown ones. Playlists (rows that open
+    /// a list) are kept as they are.
+    /// </summary>
+    public static Evaluation Evaluate(IReadOnlyList<ListingEntry> all, FilterSet f, Func<ListingEntry, bool> isDownloaded, DateOnly? todayOverride = null)
     {
         var today = todayOverride ?? DateOnly.FromDateTime(DateTime.Today);
         var include = f.Include.Select(Normalize).Where(s => s.Length > 0).ToList();
         var exclude = f.Exclude.Select(Normalize).Where(s => s.Length > 0).ToList();
-        var kept = all.Where(e =>
-        {
-            if (e.IsPlaylist) return true;
-            if (f.SkipLive && e.IsLiveNow) return false;
-            if (f.SkipMembers && e.IsMembersOnly) return false;
-            if (e.Date is { } d)
+        var kept = new List<ListingEntry>();
+        var doubtful = new List<ListingEntry>();
+        foreach (var e in all)
+            switch (Classify(e, f, today, include, exclude))
             {
-                // Approximate dates come from "2 weeks ago"-style texts: only drop what is clearly outside the range.
-                var margin = e.DateIsApprox ? ApproxMarginDays(d, today) : 0;
-                if (f.From is { } from && d.AddDays(margin) < from) return false;
-                if (f.To is { } to && d.AddDays(-margin) > to) return false;
+                case Verdict.Show: kept.Add(e); break;
+                case Verdict.Doubtful: doubtful.Add(e); break;
             }
-            if (e.DurationSec is { } s && (f.MinSec is { } min && s < min || f.MaxSec is { } max && s > max)) return false;
-            var title = Normalize(e.Title);
-            if (include.Count > 0 && !include.Any(title.Contains)) return false;
-            if (exclude.Any(title.Contains)) return false;
-            return true;
-        });
         // Newest first by date; equal or unknown dates keep the listing order (YouTube lists newest first).
         var ordered = f.OldestFirst
             ? kept.OrderBy(e => e.Date ?? DateOnly.MaxValue).ThenByDescending(e => e.Order)
@@ -63,8 +95,14 @@ public static class Filters
         // "Cantidad máx. N" = the N newest (or oldest) that match; what is already downloaded is dropped AFTER that, so a
         // subscription with max 2 never walks back through the whole channel two videos per check (Nico, 2026-10-26).
         if (f.MaxCount is { } n && n >= 0) list = list.Take(n).ToList();
-        return f.SkipDownloaded ? list.Where(e => e.IsPlaylist || !isDownloaded(e)).ToList() : list;
+        var shown = f.SkipDownloaded ? list.Where(e => e.IsPlaylist || !isDownloaded(e)).ToList() : list;
+        return new Evaluation(shown, doubtful.OrderBy(e => e.Order).ToList(), all.Count);
     }
+
+    /// <summary>The entries that are shown (see <see cref="Evaluate"/>); the unconfirmed ones are left out.</summary>
+    public static IReadOnlyList<ListingEntry> Apply(IEnumerable<ListingEntry> all, FilterSet f, Func<ListingEntry, bool> isDownloaded,
+                                                    DateOnly? todayOverride = null) =>
+        Evaluate(all as IReadOnlyList<ListingEntry> ?? all.ToList(), f, isDownloaded, todayOverride).Shown;
 
     /// <summary>How wrong an approximate date can be: "3 days ago" is close, "2 months ago" can be weeks off.</summary>
     public static int ApproxMarginDays(DateOnly approx, DateOnly today)
@@ -73,11 +111,14 @@ public static class Filters
         return age < 7 ? 1 : age < 31 ? 7 : age < 365 ? 31 : 366;
     }
 
-    /// <summary>Entries that passed but miss data a filter needs (date or length): candidates for the exact step.</summary>
-    public static IReadOnlyList<ListingEntry> NeedsExact(IEnumerable<ListingEntry> passed, FilterSet f) =>
-        passed.Where(e => !e.IsPlaylist
-                          && (f.UsesDates && (e.Date is null || e.DateIsApprox) || f.UsesDuration && e.DurationSec is null))
-              .ToList();
+    /// <summary>
+    /// What the exact step has to look at: the doubtful entries (date missing or approximate near the range) and, with a length
+    /// filter, the ones whose length is unknown. <paramref name="candidates"/> = shown + unconfirmed.
+    /// </summary>
+    public static IReadOnlyList<ListingEntry> NeedsExact(IEnumerable<ListingEntry> candidates, FilterSet f) =>
+        candidates.Where(e => !e.IsPlaylist
+                              && (f.UsesDates && (e.Date is null || e.DateIsApprox) || f.UsesDuration && e.DurationSec is null))
+                  .ToList();
 
     /// <summary>Lower case without accents ("Entrevísta" -> "entrevista").</summary>
     public static string Normalize(string s)

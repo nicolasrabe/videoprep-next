@@ -23,6 +23,22 @@ public sealed partial class FilterInputs : ObservableObject
     [ObservableProperty] private bool _skipMembers = true;
     [ObservableProperty] private bool _skipDone = true;
 
+    /// <summary>"Omitir directos y exclusivos de miembros": the one box of Explorar; sets both flags.</summary>
+    public bool SkipLiveMembers
+    {
+        get => SkipLive && SkipMembers;
+        set
+        {
+            if (SkipLive == value && SkipMembers == value) return;
+            SkipLive = value;
+            SkipMembers = value;
+            OnPropertyChanged();
+        }
+    }
+
+    partial void OnSkipLiveChanged(bool value) => OnPropertyChanged(nameof(SkipLiveMembers));
+    partial void OnSkipMembersChanged(bool value) => OnPropertyChanged(nameof(SkipLiveMembers));
+
     public bool FromBad => !Filters.TryParseDate(FromText, out _);
     public bool ToBad => !Filters.TryParseDate(ToText, out _);
     public bool MinBad => !Filters.TryParseDuration(MinText, out _);

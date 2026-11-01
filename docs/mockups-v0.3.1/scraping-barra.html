@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup barra inferior de Scraping</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510;--desk:#c9d2dc}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8;--desk:#14151a}}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.win{max-width:860px;margin:0 auto 12px;border:1px solid var(--bd);background:var(--bg);padding:10px}
+.note{max-width:860px;margin:6px auto 10px;color:var(--mu);font-size:12px}
+button,select{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px}
+.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd);margin-bottom:8px}
+th{text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--bd)}td{padding:4px 6px;border-bottom:1px solid var(--bd)}tr.sel td{background:var(--ob);color:var(--ot)}
+.bar{display:flex;gap:10px;align-items:stretch;justify-content:space-between;flex-wrap:wrap}
+fieldset{border:1px solid var(--bd);background:var(--card);padding:4px 10px 8px;margin:0;display:flex;gap:6px;align-items:center}
+legend{color:var(--mu);font-size:11px;padding:0 4px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mu{color:var(--mu)}
+.dlg{width:380px;margin:12px auto 0;border:1px solid var(--bd);background:var(--bg);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.dlg .tt{padding:6px 10px;border-bottom:1px solid var(--bd);background:var(--card);font-weight:600}.dlg .in{padding:10px}
+</style></head><body>
+<div class="win">
+  <table>
+    <tr><th style="width:26px"></th><th>Título</th><th style="width:92px">Fecha</th><th style="width:64px">Duración</th><th style="width:96px">Estado</th></tr>
+    <tr class="sel"><td><input type="checkbox" checked></td><td>Entrevista completa con el invitado</td><td>2026-10-27</td><td>38:12</td><td>Nuevo</td></tr>
+    <tr class="sel"><td><input type="checkbox" checked></td><td>Review del equipo de edición</td><td>2026-10-25</td><td>12:40</td><td>Nuevo</td></tr>
+    <tr><td><input type="checkbox"></td><td>Detrás de escena</td><td>2026-10-23</td><td>24:05</td><td>Nuevo</td></tr>
+  </table>
+
+  <div class="bar">
+    <div class="row">
+      <fieldset><legend>Selección</legend><button>Todo</button><button>Nada</button><button>Invertir</button><span class="mu">2 de 3</span></fieldset>
+      <button class="r" style="align-self:center" title="Borra lo cargado, el enlace y los filtros">Reiniciar</button>
+    </div>
+    <div class="row" style="align-self:center">
+      <span class="mu">Formato</span><select><option>Perfil: Premiere 1080p</option></select>
+      <button class="o">Enviar a la cola</button><button class="g">Suscribirme a esto...</button>
+    </div>
+  </div>
+</div>
+<div class="note">Reiniciar queda al lado del grupo "Selección", en rojo, y no se confunde con las acciones de la derecha. Borra la tabla, el enlace, los filtros y la fila abierta. Pregunta antes solo si hay una búsqueda en curso o casillas marcadas:</div>
+<div class="dlg"><div class="tt">¿Reiniciar la búsqueda?</div>
+  <div class="in">Se va a borrar lo cargado (3 videos, 2 marcados) y los filtros vuelven a sus valores iniciales.
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><button>Cancelar</button><button class="r">Reiniciar</button></div></div></div>
+</body></html>

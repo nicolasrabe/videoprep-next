@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup flujo de Scraping</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510;--desk:#c9d2dc}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8;--desk:#14151a}}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.note{max-width:860px;margin:6px auto 10px;color:var(--mu);font-size:12px}
+.win{max-width:860px;margin:0 auto 12px;border:1px solid var(--bd);background:var(--bg);padding:10px}
+.demo{max-width:860px;margin:0 auto 8px;display:flex;gap:6px}
+.demo button{cursor:pointer}
+button,select,input[type=text]{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px}input[type=text]{padding:4px 6px}
+.on{outline:2px solid var(--ot)}
+.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}
+.card{background:var(--card);border:1px solid var(--bd);padding:9px 10px;margin-bottom:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mu{color:var(--mu)}
+.steps{display:flex;gap:6px;margin-bottom:8px;color:var(--mu)}.steps b{color:var(--tx)}
+.chip{border:1px solid var(--bd);background:var(--card);padding:2px 10px;border-radius:12px;cursor:default}.chip.on{background:var(--ob);color:var(--ot);border-color:var(--ob);outline:none}
+.ch{display:flex;gap:10px;align-items:center}.av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#d96b9a,#7a4fb5);flex:none}
+.sum{background:var(--bg);border:1px dashed var(--bd);padding:6px 8px;margin-top:8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--bd);margin-bottom:8px}
+th{text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--bd)}td{padding:4px 6px;border-bottom:1px solid var(--bd)}tr.sel td{background:var(--ob);color:var(--ot)}
+fieldset{border:1px solid var(--bd);background:var(--card);padding:4px 10px 8px;margin:0;display:flex;gap:6px;align-items:center}legend{color:var(--mu);font-size:11px;padding:0 4px}
+.hide{display:none}.spread{justify-content:space-between}
+.pill{font-size:11px;padding:1px 7px;border:1px solid var(--bd);color:var(--mu)}
+.bar{height:8px;background:var(--bg);border:1px solid var(--bd);flex:1;min-width:120px}.bar i{display:block;height:100%;background:var(--gb);width:100%}
+</style></head><body>
+<div class="demo"><span class="mu" style="padding-top:5px">Mirá cada paso:</span>
+  <button id="d1" onclick="go(1)" class="on">1 · Pegar enlace</button><button id="d2" onclick="go(2)">2 · Filtros</button><button id="d3" onclick="go(3)">3 · Resultados</button></div>
+
+<div class="win">
+  <div class="steps"><span id="s1"><b>① Enlace</b></span> › <span id="s2">② Filtros</span> › <span id="s3">③ Resultados</span></div>
+
+  <!-- ENLACE -->
+  <div class="card">
+    <div class="row"><input type="text" id="url" style="flex:1;min-width:240px" value=""><button class="o" id="cargar">Cargar</button></div>
+    <div class="mu" id="hint" style="margin-top:6px">Pegá el enlace de un canal o de una lista. Al pegarlo se carga solo: es un único pedido liviano y todavía no baja la lista de videos.</div>
+    <div class="ch hide" id="chan" style="margin-top:8px"><div class="av"></div>
+      <div><b>Canal de ejemplo</b> <span class="mu">@canal-de-ejemplo</span><br><span class="mu">Listo para buscar. Elegí dónde y cómo filtrar.</span></div>
+      <span class="row" style="margin-left:auto"><label><input type="checkbox" checked> Videos</label><label><input type="checkbox"> Shorts</label><label><input type="checkbox"> Directos</label></span></div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="card hide" id="filt">
+    <div class="row"><span class="mu">Publicados</span>
+      <span class="chip">Últimas 24 h</span><span class="chip">Últimos 7 días</span><span class="chip">Este mes</span><span class="chip on">Entre fechas</span>
+      <input type="text" value="2026-10-23" style="width:100px"><span class="mu">y</span><input type="text" value="2026-10-27" style="width:100px"></div>
+    <div class="row" style="margin-top:8px"><span class="mu">Mostrar hasta</span><input type="text" value="" placeholder="todos" style="width:60px"><span class="mu">videos · Orden</span>
+      <select><option>Más nuevos primero</option><option>Más viejos primero</option></select>
+      <label><input type="checkbox" checked> Omitir directos y exclusivos de miembros</label>
+      <label><input type="checkbox" checked> Omitir los ya descargados</label></div>
+    <div class="row" style="margin-top:8px"><span class="chip">▸ Más filtros (duración, título incluye/excluye)</span></div>
+    <div class="sum"><b>Se va a buscar:</b> Videos de @canal-de-ejemplo publicados del 23 al 27 de octubre de 2026, sin límite de cantidad.<br>
+      <span class="mu">Pedidos estimados: <b>1 a 3</b> (la lectura se corta sola al llegar a videos anteriores al 23). Sin cuenta ni cookies.</span></div>
+    <div class="row spread" style="margin-top:8px"><span class="mu">Enter en cualquier filtro también busca.</span><button class="o">Buscar videos</button></div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div class="hide" id="res">
+    <div class="row spread" style="margin-bottom:6px"><span><b>6 videos</b> <span class="mu">pasan los filtros (se revisaron 14)</span></span>
+      <span class="row"><span class="mu">Fechas confirmadas: 6 de 6</span><div class="bar"><i></i></div><button>Cancelar</button></span></div>
+    <table>
+      <tr><th style="width:26px"></th><th>Título</th><th style="width:92px">Fecha</th><th style="width:64px">Duración</th><th style="width:100px">Estado</th></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>▾ Entrevista completa con el invitado</td><td>2026-10-27</td><td>38:12</td><td>Nuevo</td></tr>
+      <tr><td colspan="5" style="background:var(--card)"><div class="row" style="align-items:flex-start"><div style="width:200px;height:112px;background:linear-gradient(135deg,#3c6f9e,#222);color:#fff;display:flex;align-items:center;justify-content:center;flex:none">miniatura</div>
+        <div><b>Entrevista completa con el invitado</b><div class="mu">Canal de ejemplo · 27 oct 2026 · 41 mil vistas</div><div style="margin-top:4px">En este episodio charlamos con nuestro invitado sobre cómo empezó su proyecto...</div></div></div></td></tr>
+      <tr class="sel"><td><input type="checkbox" checked></td><td>▸ Review del equipo de edición</td><td>2026-10-25</td><td>12:40</td><td>Nuevo</td></tr>
+      <tr><td><input type="checkbox"></td><td>▸ Detrás de escena</td><td>2026-10-23</td><td>24:05</td><td><span class="pill">Ya descargado</span></td></tr>
+    </table>
+    <div class="row spread">
+      <div class="row"><fieldset><legend>Selección</legend><button>Todo</button><button>Nada</button><button>Invertir</button><span class="mu">2 de 6</span></fieldset><button class="r">Reiniciar</button></div>
+      <div class="row"><select><option>Perfil: Premiere 1080p</option></select><button class="o">Enviar a la cola</button><button class="g">Suscribirme a esto...</button></div>
+    </div>
+  </div>
+</div>
+<div class="note" id="cap"></div>
+<script>
+const cap={1:'Paso 1: la tabla ni siquiera existe todavía. Al pegar el enlace se identifica qué es y se muestra el canal, sin traer ningún video.',
+2:'Paso 2: filtros claros arriba, con atajos (últimas 24 h, 7 días, este mes). Una frase resume qué se va a pedir y cuántos pedidos se estiman, así sabés de antemano la carga que genera.',
+3:'Paso 3: recién acá se llena la tabla, solo con lo que pasa los filtros, y se corta sola al pasar el límite de fecha. Cada fila se abre para ver miniatura y descripción.'};
+function go(n){['chan','filt','res'].forEach(i=>document.getElementById(i).classList.add('hide'));
+ if(n>=1){}; if(n>=2){document.getElementById('chan').classList.remove('hide');document.getElementById('filt').classList.remove('hide');}
+ if(n===3){document.getElementById('chan').classList.remove('hide');document.getElementById('res').classList.remove('hide');document.getElementById('filt').classList.add('hide');}
+ document.getElementById('url').value=n===1?'':'https://www.youtube.com/@canal-de-ejemplo';
+ document.getElementById('hint').classList.toggle('hide',n!==1);
+ [1,2,3].forEach(k=>{document.getElementById('d'+k).classList.toggle('on',k===n);const s=document.getElementById('s'+k);s.innerHTML=(k===n)?'<b>'+s.textContent+'</b>':s.textContent;});
+ document.getElementById('cap').textContent=cap[n];}
+go(1);
+</script>
+</body></html>

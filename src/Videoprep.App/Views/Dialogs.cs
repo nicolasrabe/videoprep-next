@@ -66,6 +66,20 @@ internal static class Dialogs
         return await w.ShowDialog<bool>(owner);
     }
 
+    /// <summary>A question with three buttons named by the caller; returns 0, 1 or 2 (closing the window = 2, the "Cancelar").</summary>
+    public static async Task<int> Three(Window owner, string title, string text, string first, string second, string third)
+    {
+        var a = Btn(first, "o");
+        var b = Btn(second);
+        var c = Btn(third);
+        var panel = new StackPanel { Spacing = 16, Children = { Text(text), Buttons(a, b, c) } };
+        var w = Shell(title, panel, 560);
+        a.Click += (_, _) => w.Close(0);
+        b.Click += (_, _) => w.Close(1);
+        c.Click += (_, _) => w.Close(2);
+        return await w.ShowDialog<int>(owner) is var r && r is >= 0 and <= 2 ? r : 2;
+    }
+
     /// <summary>One line of text asked from the user; Enter accepts, null = Cancelar.</summary>
     public static async Task<string?> Text(Window owner, string title, string prompt, string initial)
     {

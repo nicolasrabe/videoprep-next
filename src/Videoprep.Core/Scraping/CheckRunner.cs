@@ -143,8 +143,9 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
         }
 
         var filters = sub.Filters.ToFilterSet();
-        var passed = Filters.Apply(videos, filters, archive.Contains);
-        var need = Filters.NeedsExact(passed, filters);
+        var eval = Filters.Evaluate(videos, filters, archive.Contains);
+        var passed = eval.Shown;
+        var need = Filters.NeedsExact(eval.Shown.Concat(eval.Unconfirmed), filters);
         var exactBlocked = false;
         if (need.Count > 0)
         {

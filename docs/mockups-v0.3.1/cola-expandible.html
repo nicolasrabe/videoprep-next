@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup cola expandible</title>
+<style>
+:root{--bg:#f1f1ee;--card:#fff;--tx:#1f1f1d;--mu:#6b6b66;--bd:#d6d6cf;--gb:#cdeccf;--gt:#1f5a26;--rb:#f6cccc;--rt:#7a1f1f;--ob:#fbddb8;--ot:#7a4510;--desk:#c9d2dc}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--rb:#5e2f2f;--rt:#f6cccc;--ob:#5e4426;--ot:#fbddb8;--desk:#14151a}}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.note{max-width:860px;margin:6px auto 10px;color:var(--mu);font-size:12px}
+.win{max-width:860px;margin:0 auto 12px;border:1px solid var(--bd);background:var(--bg);padding:10px}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:3px 10px}
+.hdr,.hd{display:grid;grid-template-columns:28px 1fr 130px 130px 90px;gap:6px;padding:5px 8px}
+.hdr{font-weight:600;background:var(--card);border:1px solid var(--bd);border-bottom:0}
+.item{background:var(--card);border:1px solid var(--bd);border-top:0;cursor:pointer}
+.item:hover .hd{background:color-mix(in srgb,var(--ob) 35%,transparent)}
+.item.open{border-color:var(--ot);border-top:1px solid var(--ot);background:var(--card)}
+.item.open .hd{background:var(--ob);color:var(--ot)}
+.arrow{color:var(--mu)}
+.det{display:none;gap:12px;padding:10px;border-top:1px solid var(--bd);cursor:default}
+.item.open .det{display:flex}
+.thumb{width:224px;height:126px;flex:none;border:1px solid var(--bd);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;position:relative}
+.thumb b{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.75);padding:0 5px;font-weight:400}
+.info{flex:1;min-width:0}.t{font-weight:600;font-size:14px}.meta{color:var(--mu);margin:2px 0 6px}
+.desc{max-height:70px;overflow:auto;border-top:1px solid var(--bd);padding-top:6px;white-space:pre-wrap}
+.row{display:flex;gap:8px;align-items:center;margin-top:7px;flex-wrap:wrap}.mu{color:var(--mu)}
+.lnk{color:var(--ot);text-decoration:underline}
+.sk{background:var(--bg);height:12px;margin:6px 0}
+.lock{color:var(--mu)}
+</style></head><body>
+<div class="note"><b>Probalo:</b> hacé clic en cualquier fila. Se estira esa misma fila y muestra su miniatura y descripción; al tocar otra, la anterior se cierra y se abre la nueva. Otro clic sobre la fila abierta la cierra.</div>
+
+<div class="win" id="list">
+  <div class="hdr"><span>#</span><span>Nombre</span><span>Formato</span><span>Fragmento</span><span>Estado</span></div>
+</div>
+
+<div class="note">Cómo se comporta: solo una fila abierta a la vez. Con las flechas del teclado también se abre la fila seleccionada. Si seleccionás varias filas (Ctrl o Mayús), no se estira ninguna y el Registro/barra muestra el resumen. La primera vez que abrís una fila se piden sus datos (la espera se ve como en la segunda fila de ejemplo) y después queda guardado hasta cerrar el programa. Las filas con candado (Descargando, Listo) también se pueden abrir para ver su ficha.</div>
+
+<script>
+const data=[
+ {n:'Big Buck Bunny 60fps 4K...',f:'MP4 · 480p',c:'00:10:00 → 00:12:29',s:'Listo 🔒',col:'#7aa56b',dur:'10:34',t:'Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film',m:'Blender · 2014 · 8,1 M vistas',d:'Big Buck Bunny es una película corta animada, hecha con software libre por el equipo de Blender Foundation.\n\nLicencia Creative Commons.',u:'youtube.com/watch?v=aqz-KE-bpKQ',w:'H.264 480p30 + AAC'},
+ {n:'Entrevista al invitado - parte 1',f:'MP4 · 1080p',c:'Video completo',s:'En cola',col:'#3c6f9e',dur:'38:12',t:'Entrevista completa con el invitado',m:'Canal de ejemplo · 21 oct 2026 · 41 mil vistas',d:'En este episodio charlamos con nuestro invitado sobre cómo empezó su proyecto, los problemas que tuvo con la edición y lo que haría distinto hoy.\n\n00:00 Introducción\n02:15 El comienzo\n14:40 Los problemas de edición\n21:05 Lo que haría distinto',u:'youtube.com/watch?v=Qw3r7yTz9Aa',w:'H.264 1080p30 + AAC'},
+ {n:'Me at the zoo',f:'MP4 · 1080p',c:'Video completo',s:'En cola',col:'#b0794a',dur:'0:19',t:'Me at the zoo',m:'jawed · 2005 · 330 M vistas',d:'El primer video subido a YouTube.',u:'youtube.com/watch?v=jNQXAC9IVRw',w:'H.264 240p + AAC (es lo máximo que hay)'},
+ {n:'Clip de la transmisión',f:'MP4 · 1080p',c:'Video completo',s:'En cola',col:'#6b5a9e',dur:'0:45',t:'Clip de la transmisión',m:'twitch.tv · hace 2 días',d:'Mejor momento de la transmisión de ayer.',u:'twitch.tv/ejemplo/clip/AbCdEf',w:'Mejor calidad disponible, convertido a H.264 + AAC'}
+];
+const L=document.getElementById('list');let openIdx=-1;
+data.forEach((x,i)=>{
+ const e=document.createElement('div');e.className='item';
+ e.innerHTML=`<div class="hd${x.s.includes('🔒')?' lock':''}"><span>${i+1}</span><span><span class="arrow">▸ </span>${x.n}</span><span>${x.f}</span><span>${x.c}</span><span>${x.s}</span></div>
+ <div class="det"><div class="thumb" style="background:linear-gradient(135deg,${x.col},#222)">miniatura<b>${x.dur}</b></div>
+ <div class="info"><div class="t">${x.t}</div><div class="meta">${x.m}</div><div class="desc">${x.d.replace(/</g,'&lt;')}</div>
+ <div class="row"><a class="lnk">${x.u}</a><button>Abrir en el navegador</button><button>Copiar enlace</button></div>
+ <div class="row mu">Se descargará: <b>${x.w}</b></div></div></div>`;
+ e.querySelector('.hd').addEventListener('click',()=>toggle(i));
+ L.appendChild(e);
+});
+function toggle(i){
+ const items=L.querySelectorAll('.item');
+ items.forEach((el,k)=>{const op=(k===i&&openIdx!==i);el.classList.toggle('open',op);el.querySelector('.arrow').textContent=op?'▾ ':'▸ ';});
+ openIdx=(openIdx===i)?-1:i;
+ if(openIdx===i&&i===2&&!data[2].loaded){
+  const info=L.querySelectorAll('.item')[2].querySelector('.info'),h=info.innerHTML;
+  info.innerHTML='<div class="t">Me at the zoo</div><div class="sk" style="width:60%"></div><div class="sk"></div><div class="sk" style="width:80%"></div>';
+  setTimeout(()=>{info.innerHTML=h;data[2].loaded=true;},900);
+ }
+}
+toggle(1);
+</script>
+</body></html>

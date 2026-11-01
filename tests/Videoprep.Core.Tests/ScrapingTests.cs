@@ -155,9 +155,11 @@ public class FiltersTests
         // 3 months old, approximate: margin 31 days.
         ListingEntry[] all = [E("near", "x", "2026-08-10", approx: true), E("far", "x", "2026-06-01", approx: true), E("unknown", "x")];
         var f = new FilterSet { From = new DateOnly(2026, 9, 1) };
-        var passed = Apply(all, f);
-        Assert.Equal(["near", "unknown"], Ids(passed).Order());
-        Assert.Equal(["near", "unknown"], Ids(Filters.NeedsExact(passed, f)).Order());
+        // RONDA 1: neither the near-the-edge approximate date nor the missing date is SHOWN; both wait for the exact step.
+        var eval = Filters.Evaluate(all, f, _ => false, Today);
+        Assert.Empty(eval.Shown);
+        Assert.Equal(["near", "unknown"], Ids(eval.Unconfirmed).Order());
+        Assert.Equal(["near", "unknown"], Ids(Filters.NeedsExact(eval.Shown.Concat(eval.Unconfirmed), f)).Order());
         Assert.Equal(1, Filters.ApproxMarginDays(new DateOnly(2026, 10, 24), Today));
         Assert.Equal(366, Filters.ApproxMarginDays(new DateOnly(2024, 1, 1), Today));
     }

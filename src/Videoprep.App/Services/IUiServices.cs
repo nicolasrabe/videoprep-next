@@ -24,6 +24,8 @@ public interface IUiServices : IClipboardSource
     Task<string?> AskText(string title, string prompt, string initial);
     /// <summary>Question with the buttons named by the caller ("Continuar" / "Cancelar").</summary>
     Task<bool> AskChoice(string title, string text, string yes, string no);
+    /// <summary>Question with three buttons; returns 0, 1 or 2 (closing the window counts as the third, which is "Cancelar").</summary>
+    Task<int> AskThree(string title, string text, string first, string second, string third);
     Task<string?> PickColor(string current);
     Task<bool> ShowOptions(ViewModels.OptionsViewModel options);
     /// <summary>Agregar/Editar suscripción; true = Aceptar with valid data.</summary>

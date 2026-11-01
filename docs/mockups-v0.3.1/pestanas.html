@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoprep - mockup pestañas Prep (con ícono)</title>
+<style>
+:root{--bg:#1e1f22;--card:#2a2b2f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--desk:#14151a}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.35 "Segoe UI",system-ui,sans-serif;padding:16px}
+.win{max-width:900px;margin:0 auto 6px;border:1px solid var(--bd);background:var(--bg);padding:10px 14px 0}
+.lang{max-width:900px;margin:14px auto 4px;color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.tabs{display:flex;gap:22px;color:var(--mu);align-items:center;height:34px}
+.tabs .t{display:flex;gap:6px;align-items:center;height:34px;padding-top:2px;border-bottom:2px solid transparent}
+.tabs .t.on{color:var(--tx);border-bottom-color:var(--tx)}
+svg.i{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button{margin-left:auto;display:flex;gap:6px;align-items:center;font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:3px 12px;border-radius:2px;cursor:pointer}
+.note{max-width:900px;margin:12px auto;color:var(--mu);font-size:12px}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-prep" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></symbol>
+<symbol id="i-queue" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></symbol>
+<symbol id="i-scrap" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+<symbol id="i-set" viewBox="0 0 24 24"><path d="M5 8h9M18 8h1M5 16h1M10 16h9"/><circle cx="16" cy="8" r="2"/><circle cx="8" cy="16" r="2"/></symbol>
+<symbol id="i-log" viewBox="0 0 24 24"><path d="M7 4h8l4 4v12H7z"/><path d="M10 12h6M10 16h6"/></symbol>
+<symbol id="i-mini" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><rect x="12" y="12" width="7" height="5" rx="1"/></symbol>
+</defs></svg>
+
+<div class="lang">Español</div>
+<div class="win"><div class="tabs">
+ <span class="t on"><svg class="i"><use href="#i-prep"/></svg>Prep</span><span class="t"><svg class="i"><use href="#i-queue"/></svg>Cola</span><span class="t"><svg class="i"><use href="#i-scrap"/></svg>Scraping</span><span class="t"><svg class="i"><use href="#i-set"/></svg>Ajustes</span><span class="t"><svg class="i"><use href="#i-log"/></svg>Registro</span>
+ <button title="Pasar a modo mini"><svg class="i"><use href="#i-mini"/></svg>Modo mini</button></div></div>
+
+<div class="lang">English</div>
+<div class="win"><div class="tabs">
+ <span class="t on"><svg class="i"><use href="#i-prep"/></svg>Prep</span><span class="t"><svg class="i"><use href="#i-queue"/></svg>Queue</span><span class="t"><svg class="i"><use href="#i-scrap"/></svg>Scraping</span><span class="t"><svg class="i"><use href="#i-set"/></svg>Settings</span><span class="t"><svg class="i"><use href="#i-log"/></svg>Log</span>
+ <button title="Switch to mini mode"><svg class="i"><use href="#i-mini"/></svg>Mini mode</button></div></div>
+
+<div class="note">El botón de la derecha ahora dice "Modo mini" / "Mini mode", con un ícono de ventana chica. Al apoyar el mouse sobre "Prep" aparece "Preparar y descargar un video" / "Prepare and download a video".</div>
+</body></html>

@@ -189,3 +189,16 @@ Checked by running (all on COPIES in a temporary folder, with its own `VIDEOPREP
 
 NOT verified: a real release on GitHub (none has the new files until one is published, so the real download from github.com was never run); the real reaction of Windows Defender / SmartScreen / third-party antivirus to
 the replaced exe; Windows 11; macOS (the build exists but nobody ran it); a signed exe. People who have 0.2.0 have no updater: they must download 0.3.0 by hand once (README and release notes say so).
+
+## 0.3.1 RONDA 1 - Scraping (yt-dlp 2026.10.21, run for real on Windows 10, public channel @BlenderStudio, 3 listing requests in total)
+
+| What | Result | Used as |
+|---|---|---|
+| Does a channel tell its total video count? `--flat-playlist -J -I 0` on `/@BlenderStudio/videos` | **No**: `playlist_count` is null (so is `n_entries`). It does give `channel`, `uploader_id` (`@handle`), `channel_follower_count` and square avatar thumbnails (the banner is wide). `-I 0` returns **no entries**: one light request, no video. | Step 1 uses it. The "este canal tiene unos N videos" question can only appear when a site does give `playlist_count` (playlists, other sites); for YouTube channels the search stops at 50 and asks. |
+| `--break-match-filters "upload_date >= 20261001"` with `--flat-playlist -j --lazy-playlist` | **Does not cut**: it listed the whole channel (136 entries, down to 2014). The filter is not applied to flat entries. | Not used. The listing is cut by videoprep itself: it kills yt-dlp after 2 entries in a row older than the "from" date (approximate date plus its error margin). |
+| Approximate dates (`youtubetab:approximate_date`) | Day precision only for videos under about a week old; older ones come rounded to the 1st of the month (`20261001`, `20260801`, `20251101`...) and, for years, to the 1st of November. They are **not** the real date. | The margin in `Filters.ApproxMarginDays` (1 / 7 / 31 / 366 days) stays; entries inside the margin of a range edge are "doubtful" and get the exact date. |
+| `-I N:` (open end) | Used for "Seguir" after 50 videos (the next reading starts at entry N). Tested only against the fake yt-dlp and the unit tests, not against YouTube. | |
+
+Date rule (spec 1.1), checked by tests with an in-memory yt-dlp (`DateRangeTests`, `SearchFlowTests`): a video is shown only if its exact date is confirmed and inside the range, both ends included; entries without a date or with a doubtful approximate date are listed apart ("sin fecha confirmada"); the bug was reproduced first (undated and approximate-date entries passed the filter; the test failed before the fix).
+
+NOT verified in RONDA 1: the real listing of the Sparkles channel (waiting for its link); the cut-early and `-I N:` behaviour against YouTube beyond the 3 requests above; cookies for the sites that demand them (not implemented, see docs/informes/ronda-1.md).

@@ -65,9 +65,22 @@ if (argv.Contains("--flat-playlist") && Environment.GetEnvironmentVariable("FAKE
         Console.Error.WriteLine($"ERROR: [youtube:tab] @fake: This channel does not have a {tabName} tab");
         return 1;
     }
-    var max = int.MaxValue;
-    if (Opt("-I") is { } range && range.StartsWith("1:", StringComparison.Ordinal)) max = int.Parse(range[2..]);
-    foreach (var l in File.ReadLines(file).Where(l => l.StartsWith('{')).Take(max)) Console.WriteLine(l);
+    // "-J -I 0" = the light identification request (Scraping step 1): the page's own data, no entries.
+    if (argv.Contains("-J") && Opt("-I") == "0")
+    {
+        var total = Environment.GetEnvironmentVariable("FAKE_YTDLP_TOTAL");
+        Console.WriteLine("{\"_type\":\"playlist\",\"title\":\"Fake channel - Videos\",\"channel\":\"Fake channel\",\"uploader_id\":\"@fake\"," +
+                          "\"playlist_count\":" + (string.IsNullOrEmpty(total) ? "null" : total) + ",\"entries\":[]}");
+        return 0;
+    }
+    // -I "a:b", "a:" (open end) or "1:N".
+    int skip = 0, max = int.MaxValue;
+    if (Opt("-I") is { } range && range.Split(':') is { Length: 2 } ab)
+    {
+        skip = int.TryParse(ab[0], out var a) ? Math.Max(0, a - 1) : 0;
+        if (int.TryParse(ab[1], out var b)) max = Math.Max(0, b - skip);
+    }
+    foreach (var l in File.ReadLines(file).Where(l => l.StartsWith('{')).Skip(skip).Take(max)) Console.WriteLine(l);
     return 0;
 }
 

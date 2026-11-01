@@ -1,7 +1,9 @@
+using System.Net.Http;
 using Videoprep.App.Services;
 using Videoprep.Core;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Models;
+using Videoprep.Core.Preview;
 using Videoprep.Core.Scraping;
 using Videoprep.Core.Storage;
 using Videoprep.Core.Text;
@@ -33,6 +35,46 @@ public sealed partial class MainViewModel
     }
 
     internal SourceLister NewLister() => new(_svc.Runner, _svc.Log);
+
+    /// <summary>The Scraping search (listing, cache, questions): one per Explorar, so what was read is kept while the program is open.</summary>
+    internal ScrapeSearch NewSearch() => new(_svc.Runner, _svc.Log);
+
+    /// <summary>Raised (on the UI thread) when the info service has new data for a video; Explorar refreshes its open row.</summary>
+    internal event Action<string>? VideoInfoChanged;
+
+    /// <summary>A row of the results was opened: ask for its description, one request at a time. No cookies unless the user chose them for listings.</summary>
+    internal void RequestVideoInfo(string url)
+    {
+        RefreshTools();
+        _svc.Info.Request(url, new InfoRequest(_tools, [ListingCookies()]));
+    }
+
+    internal void RetryVideoInfo(string url) => _svc.Info.Retry(url, new InfoRequest(_tools, [ListingCookies()]));
+
+    /// <summary>A small picture from a static address (the channel avatar); null when it cannot be read.</summary>
+    internal async Task<byte[]?> FetchBytes(string url)
+    {
+        try
+        {
+            if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return null;
+            return await _svc.Http.GetByteArrayAsync(url).ConfigureAwait(true);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>"Se descargará: formato · nombre" for a video that has not been queued yet (same naming as AddToQueue).</summary>
+    internal string WillText(string formatKey, int cap, string title)
+    {
+        var it = new QueueItem { Id = 0, Url = "", Format = formatKey, Cap = cap };
+        var ext = Core.Formats.FormatCatalog.Get(formatKey).Extension;
+        var name = NameSeries
+            ? SafeName.Make(SeriesText.Trim().Length > 0 ? SeriesText.Trim() : "Video", "Video") + " NN"
+            : title.Length > 0 ? SafeName.Make(title) : "(" + L["det_name_title"] + ")";
+        return L.Format("det_will", $"{FormatText(it)}  ·  {name}{ext}");
+    }
 
     internal CookieSource ListingCookies() => CookieStrategy.ForListing(Settings, _svc.InstalledBrowsers());
 

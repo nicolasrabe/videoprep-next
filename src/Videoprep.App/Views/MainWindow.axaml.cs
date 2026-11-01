@@ -75,6 +75,9 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<bool> AskChoice(string title, string text, string yes, string no) => Dialogs.Choice(DialogOwner, title, text, yes, no);
 
+    public Task<int> AskThree(string title, string text, string first, string second, string third) =>
+        Dialogs.Three(DialogOwner, title, text, first, second, third);
+
     public Task<string?> AskText(string title, string prompt, string initial) => Dialogs.Text(DialogOwner, title, prompt, initial);
 
     public async Task<string?> PickFolder(string? start)

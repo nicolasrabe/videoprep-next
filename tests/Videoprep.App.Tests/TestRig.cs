@@ -69,6 +69,13 @@ internal sealed class FakeUi : IUiServices
         Choices.Add(text);
         return Task.FromResult(ChoiceAnswers.Count > 0 && ChoiceAnswers.Dequeue());
     }
+    public List<string> ThreeWay { get; } = [];
+    public Queue<int> ThreeAnswers { get; } = new();
+    public Task<int> AskThree(string title, string text, string first, string second, string third)
+    {
+        ThreeWay.Add(text);
+        return Task.FromResult(ThreeAnswers.Count > 0 ? ThreeAnswers.Dequeue() : 2);
+    }
     public string? SavePath { get; set; }
     public string? OpenPath { get; set; }
     public Task<string?> PickSaveFileAs(string suggestedName, string label, IReadOnlyList<string> patterns) => Task.FromResult(SavePath);
