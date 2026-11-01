@@ -47,6 +47,31 @@ public sealed partial class ExploreViewModel : ObservableObject
     private string _loadedSource = "";
     private SourceProbe? _probe;
     private IReadOnlyList<SourceUrl.Target> _lastTargets = [];
+    /// <summary>Browser cookies the person agreed to for THIS link, after the site asked for a login. Never set by videoprep itself.</summary>
+    private CookieSource? _sessionCookies;
+
+    /// <summary>What the requests use: the browser cookies agreed for this link, else what Settings say for listings (none by default).</summary>
+    private CookieSource Cookies => _sessionCookies ?? _host.ListingCookies();
+
+    /// <summary>
+    /// The site asked for a login: say so clearly and OFFER the retry with the browser's cookies. Only an explicit "Reintentar con las
+    /// cookies de tu navegador" counts as the OK; nothing is read before. True = the person agreed (the caller retries once).
+    /// </summary>
+    private async Task<bool> OfferCookieRetry(string error, bool blocked)
+    {
+        if (_sessionCookies is not null || Cookies.Kind != CookieKind.None) return false;   // already with cookies: more would not help
+        if (!CookieStrategy.AsksForLogin(error) && !(blocked && !error.Contains("429", StringComparison.Ordinal))) return false;
+        if (_host.BrowserCookies() is not { } browser)
+        {
+            await _host.Ui.ShowMessage(L["sc_login_nobrowser"], warning: true);
+            return false;
+        }
+        if (!await _host.Ui.AskChoice(L["sc_login_title"], L.Format("sc_login_ask", browser.Value), L["sc_login_yes"], L["btn_cancel"])) return false;
+        _sessionCookies = browser;
+        _host.LogLine($"Scraping: retrying with {browser.Label} (the person agreed)");
+        UpdateSummary();
+        return true;
+    }
 
     public ExploreViewModel(MainViewModel host)
     {
@@ -108,6 +133,7 @@ public sealed partial class ExploreViewModel : ObservableObject
         HasSource = false;
         _probe = null;
         _loadedSource = "";
+        _sessionCookies = null;
         LoadNote = "";
         UpdateSummary();
         if (SourceUrl.Targets(trimmed, CheckedTabs()).Count == 0 || SourceUrl.UnsupportedProfile(trimmed) is not null) return;
@@ -171,7 +197,9 @@ public sealed partial class ExploreViewModel : ObservableObject
         LoadNote = L["sc_loading"];
         try
         {
-            var probe = await Task.Run(() => _host.NewLister().ProbeAsync(targets[0], tools, _host.ListingCookies(), CancellationToken.None));
+            var probe = await Task.Run(() => _host.NewLister().ProbeAsync(targets[0], tools, Cookies, CancellationToken.None));
+            if (probe.Outcome is ListOutcome.Blocked or ListOutcome.Failed && await OfferCookieRetry(probe.Error, probe.Outcome == ListOutcome.Blocked))
+                probe = await Task.Run(() => _host.NewLister().ProbeAsync(targets[0], tools, Cookies, CancellationToken.None));
             if (text != SourceText.Trim()) return;   // the link changed while loading
             if (probe.Outcome != ListOutcome.Ok)
             {
@@ -270,7 +298,7 @@ public sealed partial class ExploreViewModel : ObservableObject
         var tools = _host.CurrentTools();
         if (tools.YtDlp is null) return null;
         var archive = ArchiveStore.Load(_host.ArchivePath);
-        return new SearchRequest(SourceText.Trim(), CheckedTabs(), filters, archive.Contains, Today(), tools, _host.ListingCookies(), _probe?.TotalCount);
+        return new SearchRequest(SourceText.Trim(), CheckedTabs(), filters, archive.Contains, Today(), tools, Cookies, _probe?.TotalCount);
     }
 
     /// <summary>"Se va a buscar: ..." and "Pedidos estimados: X a Y", worked out from the boxes and from what is already read.</summary>
@@ -295,7 +323,7 @@ public sealed partial class ExploreViewModel : ObservableObject
                  : est.Min == est.Max ? L.Format("sc_est_one", est.Min)
                  : L.Format("sc_est", est.Min, est.Max);
         if (f.UsesDates) line += L.Format("sc_est_dates", _search.ExactRequestCap);
-        line += _host.ListingCookies().Kind == CookieKind.None ? L["sc_est_nocookies"] : L["sc_est_cookies"];
+        line += Cookies.Kind == CookieKind.None ? L["sc_est_nocookies"] : L["sc_est_cookies"];
         EstimateText = line;
     }
 
@@ -381,6 +409,15 @@ public sealed partial class ExploreViewModel : ObservableObject
             StatusLine = L.Format("sc_searching", 0);
             var result = await Task.Run(() => _search.RunAsync(req, new Prompts(this), p => _host.Post(() => OnProgress(p)), token));
             await _host.FlushPosts();
+            var failedTab = result.Tabs.FirstOrDefault(t => t.Outcome is ListOutcome.Blocked or ListOutcome.Failed);
+            if (result.Status is SearchStatus.Blocked or SearchStatus.Failed
+                && await OfferCookieRetry(failedTab?.Error ?? result.Error, result.Status == SearchStatus.Blocked))
+            {
+                // Once, with the cookies the person agreed to. What was already read is kept; only what is missing is asked again.
+                req = BuildRequest(filters)!;
+                result = await Task.Run(() => _search.RunAsync(req, new Prompts(this), p => _host.Post(() => OnProgress(p)), token));
+                await _host.FlushPosts();
+            }
 
             var notes = new List<string>();
             foreach (var r in result.Tabs)
@@ -540,6 +577,7 @@ public sealed partial class ExploreViewModel : ObservableObject
         (TabVideos, TabShorts, TabStreams, TabPlaylists) = (true, false, false, false);
         _loadedSource = "";
         _probe = null;
+        _sessionCookies = null;
         HasSource = false;
         Avatar = null;
         LoadNote = "";
@@ -567,7 +605,7 @@ public sealed partial class ExploreViewModel : ObservableObject
             var before = _extra.Count;
             var lister = _host.NewLister();
             var target = new SourceUrl.Target(SourceTab.Single, row.Entry.Url);
-            var results = await Task.Run(() => lister.ListAsync([target], tools, _host.ListingCookies(),
+            var results = await Task.Run(() => lister.ListAsync([target], tools, Cookies,
                 e => _host.Post(() => { if (_extra.All(x => x.Id != e.Id)) _extra.Add(e with { Order = 100_000 + e.Order }); }), _cts.Token));
             await _host.FlushPosts();
             row.Expanded = true;
@@ -617,7 +655,7 @@ public sealed partial class ExploreViewModel : ObservableObject
         row.Card ??= NewCard(row);
         row.Expanded = true;
         ExpandedChanged?.Invoke();
-        _host.RequestVideoInfo(row.Entry.Url);
+        _host.RequestVideoInfo(row.Entry.Url, Cookies);
         RefreshCard(row);
     }
 
@@ -636,7 +674,7 @@ public sealed partial class ExploreViewModel : ObservableObject
 
     private QueueRowCard NewCard(ExploreRow row) => _host.NewCard(row.Entry.Url, () =>
     {
-        _host.RetryVideoInfo(row.Entry.Url);
+        _host.RetryVideoInfo(row.Entry.Url, Cookies);
         RefreshCard(row);
     });
 

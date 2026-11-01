@@ -520,5 +520,9 @@
   "sc_btn_stop": "Stop",
   "sc_truncated": "It stopped before reading everything: these are the videos read so far.",
   "sc_none_pass": "No video passes the filters.",
-  "sc_no_load": "Load a link first."
+  "sc_no_load": "Load a link first.",
+  "sc_login_title": "Signing in is needed",
+  "sc_login_ask": "The site asked you to sign in or to confirm you are not a robot. videoprep does not retry by itself.\n\nIf you want, it can retry this request with your browser's cookies ({0}). Only yt-dlp reads them, on your computer, and they are not sent anywhere else. Making many requests with your account can put it at risk: if you can, use a secondary account.",
+  "sc_login_yes": "Retry with your browser's cookies",
+  "sc_login_nobrowser": "The site asked you to sign in, but there is no browser to read cookies from (or you chose not to use cookies). Choose one in Settings and try again."
 }

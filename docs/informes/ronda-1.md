@@ -34,18 +34,29 @@ Spec: `docs/V0_3_1_SPEC.md` (secciones 0 y RONDA 1). El informe de la ronda de e
 - Capturas (tema oscuro, español): `tests/Videoprep.App.Tests/bin/Release/net10.0/screenshots/v031r1-scraping-{1-enlace,2-filtros,3-resultados}.png`.
 
 ## Decisiones y cosas que NO quedaron como pide el spec
-1. **Cookies (1.4.4)**: el listado nunca usa cookies salvo que Nico las haya elegido en Ajustes (ya era así). El **reintento automático con la cadena de cookies** cuando el sitio las exige
-   **no se hizo**: leería cookies del navegador sin preguntar (regla de CLAUDE.md). Hoy, ante la verificación, la búsqueda se frena y lo dice. Si Nico quiere el reintento, hay que decidir cómo pedir permiso.
+1. **Cookies (1.4.4)**: el listado nunca usa cookies salvo que Nico las haya elegido en Ajustes. Cuando el sitio pide iniciar sesión (verificación de robot, video privado, solo miembros, edad), videoprep **no reintenta solo**:
+   muestra un aviso claro con el botón **"Reintentar con las cookies de tu navegador"** (explica qué navegador, que solo lo lee yt-dlp en la computadora y el riesgo para la cuenta). Solo con ese botón reintenta, **una vez**, y las cookies valen solo para ese enlace
+   (se olvidan al cambiar de enlace o Reiniciar). Con 429 (demasiados pedidos) o 404 no se ofrece nada: las cookies no lo arreglan. Si no hay navegador, o Nico eligió "sin cookies" en Ajustes, solo explica. Cubierto por 5 pruebas de pantalla y una de reglas.
 2. **Miniatura (1.4.6)**: viene con el pedido de la descripción de la fila abierta (servicio de la Cola), no de una URL del listado; sigue siendo solo de la fila abierta y de a una.
 3. **Pestañas**: además de Videos / Shorts / Directos dejé **Listas de reproducción** (la función ya existía; el spec no la menciona).
 4. **Suscripciones**: "Suscribirme a esto..." copia las fechas escritas (un atajo como "Últimos 7 días" queda como fechas fijas); se revisa en la ronda 3.
 5. Con la ventana chica, la tabla de resultados queda baja si la fila abierta es alta; no se ajustó el alto de las tarjetas de arriba.
 6. Pedidos de confirmación: cada video es un pedido (se lanzan de a 10 por llamada con `--sleep-requests 1`); la estimación con fechas cuenta el tope de 150 como máximo.
 
-## Pruebas inestables
-Una prueba de pantalla (`ExtrasScreensTests.Queue_dialog_and_subscriptions_with_profiles`, en/gray) falló **una vez** en una corrida completa temprana y no volvió a fallar en 2 corridas completas
-y 3 de su clase. No pude capturar el mensaje. Sin causa conocida y sin reproducir; si aparece en el CI se investiga (regla 8), no se reintenta.
+## Pruebas inestables (regla 8)
+Las pruebas de pantalla fallaban al azar (la 2.ª y la 3.ª vez que las corrí tras esta ronda: 2 de 6 corridas de sus clases; antes, una vez en una corrida completa). Mensaje exacto, siempre el mismo y siempre en el 1 ms
+de una prueba distinta: `[Test Case Cleanup Failure (...)]: System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.`
+en `Avalonia.Headless ... HeadlessUnitTestSession.EnsureIsolatedApplication -> AvaloniaHeadlessPlatform.Initialize -> DefaultRenderLoop.Add` (código de Avalonia, no de videoprep: al armar la aplicación de pruebas de la prueba siguiente).
+Es el mismo error que el CI reintentaba antes. **Arreglo**: una sola aplicación de pruebas para toda la corrida (`AvaloniaTestIsolation(PerAssembly)`) en vez de una nueva por prueba. Resultado: **8 de 8** corridas de esas clases sin falla
+(antes 2 de 6 fallaban) y 2 corridas completas verdes (562 + 228). **Costo**: las pruebas de la app tardan más (de unos 50 s a unos 2 min 45 s en esta máquina; con una aplicación por prueba se limpiaba todo entre pruebas).
+Si el tiempo molesta se puede recuperar cerrando las ventanas que las pruebas dejan abiertas; no lo hice en esta ronda. Ninguna prueba quedó marcada `Inestable`.
+
+## Prueba real de listado (sin descargar nada)
+Canal https://www.youtube.com/@AgerGames/videos, rango 2026-10-20 a 2026-10-30 (ambos incluidos), hoy 2026-11-01, sin cookies, sin ninguna pregunta. Prueba manual `RealListingTests` (categoría Integration + `Real`, se salta sola si no están las variables).
+- **Pedidos: 11** (2 ejecuciones de yt-dlp: 1 listado + 1 de confirmación de fechas con 10 videos, un pedido por video). Se leyeron 12 entradas (el listado se cortó solo al pasar el 20).
+- **Pasaron 4 videos**: 2026-10-30, 2026-10-29, 2026-10-24 y 2026-10-23, todos con fecha confirmada. **Sin fecha confirmada: 0. Fuera del rango: 0.**
+- Detalle completo (títulos, ids y los comandos usados): `D:ideoprep
+eal-listing-report.txt` (fuera del repositorio).
 
 ## Pendiente
-- **Prueba real de listado del canal Sparkles** (2026-10-23 a 2026-10-27, solo listar, sin descargar): falta el enlace de Nico.
-- Un solo push y una corrida de CI para esta ronda; sin tag ni release.
+- Un solo push y una corrida de CI para estas dos tareas; después merge a main, sin tag ni release.

@@ -32,6 +32,17 @@ public static partial class CookieStrategy
     [GeneratedRegex(@"Sign in to confirm|not a bot|HTTP Error 429|Too Many Requests", RegexOptions.IgnoreCase)]
     public static partial Regex BlockedOutput();
 
+    /// <summary>The site wants a login or cookies (bot check, private or members-only page, age check).</summary>
+    [GeneratedRegex(@"Sign in|Log ?in|login required|cookies|authenticat|not a bot|confirm your age|members-only|private video", RegexOptions.IgnoreCase)]
+    private static partial Regex LoginAsked();
+
+    /// <summary>
+    /// True when a failed or blocked request means "log in / give cookies" (not a rate limit: <c>429</c> is not solved by cookies).
+    /// Used to OFFER a retry with the browser's cookies; videoprep never does it by itself.
+    /// </summary>
+    public static bool AsksForLogin(string? output) =>
+        !string.IsNullOrEmpty(output) && !output.Contains("429", StringComparison.Ordinal) && LoginAsked().IsMatch(output);
+
     /// <summary>Browsers whose profile folder exists (Windows). <paramref name="exists"/> is injectable for tests.</summary>
     public static IReadOnlyList<string> InstalledBrowsers(Func<string, bool>? exists = null)
     {

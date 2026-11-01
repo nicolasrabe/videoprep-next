@@ -64,9 +64,12 @@ internal sealed class FakeUi : IUiServices
     public Task<string?> AskText(string title, string prompt, string initial) { TextAnswers.Add(prompt); return Task.FromResult(Texts.Count > 0 ? Texts.Dequeue() : null); }
     public List<string> Choices { get; } = [];
     public Queue<bool> ChoiceAnswers { get; } = new();
+    /// <summary>The "yes" button label of each two-button question, in the same order as <see cref="Choices"/>.</summary>
+    public List<string> ChoiceYes { get; } = [];
     public Task<bool> AskChoice(string title, string text, string yes, string no)
     {
         Choices.Add(text);
+        ChoiceYes.Add(yes);
         return Task.FromResult(ChoiceAnswers.Count > 0 && ChoiceAnswers.Dequeue());
     }
     public List<string> ThreeWay { get; } = [];
@@ -155,7 +158,7 @@ internal sealed class TestRig : IDisposable
             Tools = new ToolManager(Paths.ToolsDir, http, exeDir: Path.Combine(Dir, "noexe"), pathVariable: ""),
             Preview = new PreviewService(runner, http, Log),
             Info = new VideoInfoService(runner, http, Log) { Debounce = TimeSpan.Zero },
-            InstalledBrowsers = () => [],
+            InstalledBrowsers = () => Browsers.ToList(),
             ClipboardTimer = false,
             Delay = (t, _) => { lock (Pauses) Pauses.Add(t); return Task.CompletedTask; },
             SchTasks = args => { SchTaskCalls.Add(args); return Task.FromResult((SchTaskExit, "fake schtasks")); },
@@ -170,6 +173,9 @@ internal sealed class TestRig : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(InstalledExe)!);
         File.WriteAllBytes(InstalledExe, UpdateKit.FakeExe("installed"));
     }
+
+    /// <summary>Browsers the program believes are installed (none by default).</summary>
+    public List<string> Browsers { get; } = [];
 
     public MainViewModel Create() => new(Services, Ui, a => a());
 

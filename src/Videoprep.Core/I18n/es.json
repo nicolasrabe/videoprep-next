@@ -520,5 +520,9 @@
   "sc_btn_stop": "Parar",
   "sc_truncated": "Se detuvo antes de leer todo: estos son los videos leídos hasta acá.",
   "sc_none_pass": "Ningún video pasa los filtros.",
-  "sc_no_load": "Primero cargá un enlace."
+  "sc_no_load": "Primero cargá un enlace.",
+  "sc_login_title": "Hace falta iniciar sesión",
+  "sc_login_ask": "El sitio pidió iniciar sesión o verificar que no sos un robot. videoprep no reintenta solo.\n\nSi querés, puede reintentar este pedido con las cookies de tu navegador ({0}). Las lee solo yt-dlp, en tu computadora, y no se envían a ningún otro lado. Pedir muchas cosas con tu cuenta puede ponerla en riesgo: si podés, usá una cuenta secundaria.",
+  "sc_login_yes": "Reintentar con las cookies de tu navegador",
+  "sc_login_nobrowser": "El sitio pidió iniciar sesión, pero no hay un navegador desde donde leer cookies (o elegiste no usar cookies). Elegí uno en Ajustes y volvé a intentar."
 }

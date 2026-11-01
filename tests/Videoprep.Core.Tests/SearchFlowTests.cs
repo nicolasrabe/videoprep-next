@@ -287,4 +287,15 @@ public class SearchFlowTests
         var call = Assert.Single(runner.Calls);
         Assert.Equal("0", call[call.ToList().IndexOf("-I") + 1]);   // asks for no video at all
     }
+
+    [Theory]
+    [InlineData("ERROR: [youtube:tab] x: Sign in to confirm you’re not a bot. Use --cookies-from-browser", true)]
+    [InlineData("ERROR: [youtube] abc: Private video. Sign in if you've been granted access to this video", true)]
+    [InlineData("ERROR: [youtube] abc: This video is available to this channel's members-only", true)]
+    [InlineData("ERROR: [youtube] abc: Sign in to confirm your age", true)]
+    [InlineData("ERROR: HTTP Error 429: Too Many Requests", false)]
+    [InlineData("ERROR: [generic] Unable to download webpage: HTTP Error 404: Not Found", false)]
+    [InlineData("", false)]
+    public void The_offer_of_cookies_is_only_for_logins_not_for_rate_limits_or_missing_pages(string error, bool offer) =>
+        Assert.Equal(offer, CookieStrategy.AsksForLogin(error));
 }

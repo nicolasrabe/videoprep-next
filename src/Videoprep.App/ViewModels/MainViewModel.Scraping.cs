@@ -43,13 +43,19 @@ public sealed partial class MainViewModel
     internal event Action<string>? VideoInfoChanged;
 
     /// <summary>A row of the results was opened: ask for its description, one request at a time. No cookies unless the user chose them for listings.</summary>
-    internal void RequestVideoInfo(string url)
+    internal void RequestVideoInfo(string url, CookieSource? cookies = null)
     {
         RefreshTools();
-        _svc.Info.Request(url, new InfoRequest(_tools, [ListingCookies()]));
+        _svc.Info.Request(url, new InfoRequest(_tools, [cookies ?? ListingCookies()]));
     }
 
-    internal void RetryVideoInfo(string url) => _svc.Info.Retry(url, new InfoRequest(_tools, [ListingCookies()]));
+    internal void RetryVideoInfo(string url, CookieSource? cookies = null) => _svc.Info.Retry(url, new InfoRequest(_tools, [cookies ?? ListingCookies()]));
+
+    /// <summary>
+    /// The browser whose cookies could be offered when a site asks for a login: the first installed browser of the cookie chain.
+    /// Null when the person chose "no cookies", a file, or no browser is installed. Nothing is read from it here.
+    /// </summary>
+    internal CookieSource? BrowserCookies() => CookieChain().FirstOrDefault(c => c.Kind == CookieKind.Browser);
 
     /// <summary>A small picture from a static address (the channel avatar); null when it cannot be read.</summary>
     internal async Task<byte[]?> FetchBytes(string url)

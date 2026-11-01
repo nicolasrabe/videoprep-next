@@ -45,6 +45,7 @@ public sealed class ScrapingFlowTests : IDisposable
         Environment.SetEnvironmentVariable("FAKE_YTDLP_LISTING", null);
         Environment.SetEnvironmentVariable("FAKE_YTDLP_CALLS", null);
         Environment.SetEnvironmentVariable("FAKE_YTDLP_TOTAL", null);
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", null);
         _rig.Dispose();
     }
 
@@ -338,6 +339,95 @@ public sealed class ScrapingFlowTests : IDisposable
 
         ex.ToggleRow(ex.Rows[1]);
         Assert.DoesNotContain(ex.Rows, r => r.Expanded);
+    }
+
+    // ---- a site that asks for a login: no retry by itself, an offer that needs the person's OK
+
+    private const string RetryLabel = "Reintentar con las cookies de tu navegador";
+
+    private static bool UsesBrowserCookies(string call) => call.Contains("--cookies-from-browser", StringComparison.Ordinal);
+
+    [AvaloniaFact]
+    public async Task A_site_asking_for_a_login_gets_a_clear_offer_and_nothing_is_retried_without_the_OK()
+    {
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", "bot-unless-chrome");
+        _rig.Browsers.Add("chrome");
+        _rig.Ui.ChoiceAnswers.Enqueue(false);   // the person says no
+        var ex = NewExplore();
+        ex.SourceText = "@fake";
+        await ex.LoadTask;
+
+        Assert.Equal(RetryLabel, Assert.Single(_rig.Ui.ChoiceYes));
+        var text = Assert.Single(_rig.Ui.Choices);
+        Assert.Contains("no reintenta solo", text);
+        Assert.Contains("chrome", text);
+        Assert.Contains("puede ponerla en riesgo", text);
+        Assert.False(ex.HasSource);
+        Assert.Contains(Loc.Instance["sc_blocked"].Split('.')[0], ex.LoadNote);
+        var call = Assert.Single(Calls());
+        Assert.False(UsesBrowserCookies(call), "cookies were used without asking");
+    }
+
+    [AvaloniaFact]
+    public async Task With_the_OK_it_retries_once_with_the_browser_cookies_and_the_rest_of_the_search_keeps_them()
+    {
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", "bot-unless-chrome");
+        _rig.Browsers.Add("chrome");
+        _rig.Ui.ChoiceAnswers.Enqueue(true);
+        var ex = NewExplore();
+        ex.SourceText = "@fake";
+        await ex.LoadTask;
+
+        Assert.True(ex.HasSource);
+        var calls = Calls();
+        Assert.Equal(2, calls.Length);
+        Assert.False(UsesBrowserCookies(calls[0]));
+        Assert.Contains("--cookies-from-browserchrome", calls[1]);
+        Assert.Contains("Con las cookies que elegiste", ex.EstimateText);
+
+        await ex.SearchCommand.ExecuteAsync(null);
+        Assert.Equal(3, ex.Rows.Count);
+        Assert.Single(_rig.Ui.Choices);   // asked once; the search does not ask again
+        Assert.All(Calls().Skip(2), c => Assert.Contains("--cookies-from-browserchrome", c));
+    }
+
+    [AvaloniaFact]
+    public async Task A_second_failure_after_the_OK_does_not_ask_or_retry_again()
+    {
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", "bot");   // cookies do not help here
+        _rig.Browsers.Add("chrome");
+        _rig.Ui.ChoiceAnswers.Enqueue(true);
+        var ex = NewExplore();
+        ex.SourceText = "@fake";
+        await ex.LoadTask;
+        Assert.False(ex.HasSource);
+        Assert.Equal(2, Calls().Length);
+        Assert.Single(_rig.Ui.Choices);
+    }
+
+    [AvaloniaFact]
+    public async Task Without_a_browser_to_read_cookies_from_it_only_explains_and_changes_nothing()
+    {
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", "bot-unless-chrome");   // no browser installed in the test rig
+        var ex = NewExplore();
+        ex.SourceText = "@fake";
+        await ex.LoadTask;
+        Assert.Empty(_rig.Ui.Choices);
+        Assert.Contains(Loc.Instance["sc_login_nobrowser"], _rig.Ui.Messages);
+        Assert.Single(Calls());
+    }
+
+    [AvaloniaFact]
+    public async Task Choosing_no_cookies_in_Settings_is_respected()
+    {
+        Environment.SetEnvironmentVariable("FAKE_YTDLP_SCENARIO", "bot-unless-chrome");
+        _rig.Browsers.Add("chrome");
+        var ex = NewExplore();
+        _vm.Settings.CookieSource = "none";
+        ex.SourceText = "@fake";
+        await ex.LoadTask;
+        Assert.Empty(_rig.Ui.Choices);
+        Assert.Single(Calls());
     }
 
     // ---- the screen

@@ -201,4 +201,6 @@ the replaced exe; Windows 11; macOS (the build exists but nobody ran it); a sign
 
 Date rule (spec 1.1), checked by tests with an in-memory yt-dlp (`DateRangeTests`, `SearchFlowTests`): a video is shown only if its exact date is confirmed and inside the range, both ends included; entries without a date or with a doubtful approximate date are listed apart ("sin fecha confirmada"); the bug was reproduced first (undated and approximate-date entries passed the filter; the test failed before the fix).
 
-NOT verified in RONDA 1: the real listing of the Sparkles channel (waiting for its link); the cut-early and `-I N:` behaviour against YouTube beyond the 3 requests above; cookies for the sites that demand them (not implemented, see docs/informes/ronda-1.md).
+Real run, 2026-11-01 (listing only, nothing downloaded): `https://www.youtube.com/@AgerGames/videos`, range 2026-10-20..2026-10-30, no cookies, no questions: 11 requests (1 listing, 10 exact-date), 12 entries read (cut early), 4 videos shown (2026-10-30, 10-29, 10-24, 10-23), 0 without a confirmed date, **0 outside the range**. Cookies offer: when a site asks for a login the program only offers "Reintentar con las cookies de tu navegador"; it was tested against the fake yt-dlp (`bot-unless-chrome`), not against a real site that demands a login.
+
+NOT verified in RONDA 1: the cut-early and `-I N:` behaviour against YouTube beyond the requests above; the cookie retry against a real site that asks for a login.

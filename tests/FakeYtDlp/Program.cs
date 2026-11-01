@@ -46,7 +46,9 @@ if (argv.Contains("-U"))
 if (argv.Contains("--flat-playlist") && Environment.GetEnvironmentVariable("FAKE_YTDLP_LISTING") is { Length: > 0 } listingDir)
 {
     var listUrl = argv.Last();
-    if (Environment.GetEnvironmentVariable("FAKE_YTDLP_SCENARIO") == "bot")
+    var listScenario = Environment.GetEnvironmentVariable("FAKE_YTDLP_SCENARIO") ?? "";
+    // "bot" = always the bot check; "bot-unless-<browser>" = the bot check unless --cookies-from-browser <browser> is given.
+    if (listScenario == "bot" || listScenario.StartsWith("bot-unless-", StringComparison.Ordinal) && Opt("--cookies-from-browser") != listScenario["bot-unless-".Length..])
     {
         Console.Error.WriteLine("ERROR: [youtube:tab] x: Sign in to confirm you’re not a bot.");
         return 1;
