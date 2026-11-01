@@ -44,12 +44,15 @@ Spec: `docs/V0_3_1_SPEC.md` (secciones 0 y RONDA 1). El informe de la ronda de e
 6. Pedidos de confirmación: cada video es un pedido (se lanzan de a 10 por llamada con `--sleep-requests 1`); la estimación con fechas cuenta el tope de 150 como máximo.
 
 ## Pruebas inestables (regla 8)
-Las pruebas de pantalla fallaban al azar (la 2.ª y la 3.ª vez que las corrí tras esta ronda: 2 de 6 corridas de sus clases; antes, una vez en una corrida completa). Mensaje exacto, siempre el mismo y siempre en el 1 ms
-de una prueba distinta: `[Test Case Cleanup Failure (...)]: System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.`
-en `Avalonia.Headless ... HeadlessUnitTestSession.EnsureIsolatedApplication -> AvaloniaHeadlessPlatform.Initialize -> DefaultRenderLoop.Add` (código de Avalonia, no de videoprep: al armar la aplicación de pruebas de la prueba siguiente).
-Es el mismo error que el CI reintentaba antes. **Arreglo**: una sola aplicación de pruebas para toda la corrida (`AvaloniaTestIsolation(PerAssembly)`) en vez de una nueva por prueba. Resultado: **8 de 8** corridas de esas clases sin falla
-(antes 2 de 6 fallaban) y 2 corridas completas verdes (562 + 228). **Costo**: las pruebas de la app tardan más (de unos 50 s a unos 2 min 45 s en esta máquina; con una aplicación por prueba se limpiaba todo entre pruebas).
-Si el tiempo molesta se puede recuperar cerrando las ventanas que las pruebas dejan abiertas; no lo hice en esta ronda. Ninguna prueba quedó marcada `Inestable`.
+Fallaban al azar las pruebas de pantalla de `ExtrasScreensTests` (sin falta en las otras clases de pantalla en ~25 corridas). Error exacto, siempre el mismo y siempre en el 1 ms de la prueba SIGUIENTE:
+`[Test Case Cleanup Failure (...)]: System.InvalidOperationException : The calling thread cannot access this object because a different thread owns it.`
+en `Avalonia.Headless ... HeadlessUnitTestSession.EnsureIsolatedApplication -> AvaloniaHeadlessPlatform.Initialize -> DefaultRenderLoop.Add` (código de Avalonia, al armar la aplicación de pruebas de la prueba que sigue). Es lo que el CI reintentaba antes.
+- Intento 1: una sola aplicación de pruebas para toda la corrida (`AvaloniaTestIsolation(PerAssembly)`): 8 de 8 corridas locales sin falla, **pero en el CI el proceso de pruebas se cayó** (`Test process crashed with exit code -1073741819`, a los 3 min y 147 pruebas) y localmente la suite tardaba 3 veces más. **Revertido.**
+- Intento 2: hacer asincrónicas esas pruebas: seguía fallando 1 de 10. **Revertido.**
+- **Resolución:** las 3 pruebas de 12 combinaciones que se vieron afectadas (`Mini_window_in_its_states`, `Settings_and_download_with_the_new_options`, `Queue_dialog_and_subscriptions_with_profiles`; 36 casos) quedaron con
+  `[Trait("Inestable","si")]`: **fuera del CI normal y de `scripts/check.ps1`**, a mano con `dotnet test tests/Videoprep.App.Tests -c Release --filter "Inestable=si"` (pasan 36/36 la mayoría de las veces). Pierde cobertura automática de textos sin traducir en esas
+  pantallas (diálogo de la Cola, mini, Ajustes extra); hay que correrlas a mano en la última ronda de la versión. **Causa de fondo sin resolver** (está en Avalonia.Headless); queda anotado para revisar si se actualiza esa librería.
+- Suite normal: 562 (motor) + 192 (app) pruebas.
 
 ## Prueba real de listado (sin descargar nada)
 Canal https://www.youtube.com/@AgerGames/videos, rango 2026-10-20 a 2026-10-30 (ambos incluidos), hoy 2026-11-01, sin cookies, sin ninguna pregunta. Prueba manual `RealListingTests` (categoría Integration + `Real`, se salta sola si no están las variables).

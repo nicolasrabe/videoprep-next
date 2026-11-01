@@ -77,6 +77,10 @@ public sealed partial class ExtrasScreensTests : IDisposable
         Assert.DoesNotContain(texts, t => t.Contains("{0}", StringComparison.Ordinal));
     }
 
+    // Unstable (rule 8): about 1 run in 4, Avalonia.Headless fails while setting up the NEXT test ("Test Case Cleanup Failure ... a different
+    // thread owns it", HeadlessUnitTestSession.EnsureIsolatedApplication). Only these three screen tests of 12 combinations were ever hit.
+    // Left out of the normal CI and of scripts/check.ps1; run by hand: dotnet test tests/Videoprep.App.Tests -c Release --filter "Inestable=si"
+    [Trait("Inestable", "si")]
     [AvaloniaTheory]
     [MemberData(nameof(Combos))]
     public void Mini_window_in_its_states(string lang, string theme)
@@ -128,6 +132,10 @@ public sealed partial class ExtrasScreensTests : IDisposable
         Dispatcher.UIThread.RunJobs();
     }
 
+    // Unstable (rule 8): about 1 run in 4, Avalonia.Headless fails while setting up the NEXT test ("Test Case Cleanup Failure ... a different
+    // thread owns it", HeadlessUnitTestSession.EnsureIsolatedApplication). Only these three screen tests of 12 combinations were ever hit.
+    // Left out of the normal CI and of scripts/check.ps1; run by hand: dotnet test tests/Videoprep.App.Tests -c Release --filter "Inestable=si"
+    [Trait("Inestable", "si")]
     [AvaloniaTheory]
     [MemberData(nameof(Combos))]
     public void Settings_and_download_with_the_new_options(string lang, string theme)
@@ -146,6 +154,10 @@ public sealed partial class ExtrasScreensTests : IDisposable
         NoRawKeys(w);
     }
 
+    // Unstable (rule 8): about 1 run in 4, Avalonia.Headless fails while setting up the NEXT test ("Test Case Cleanup Failure ... a different
+    // thread owns it", HeadlessUnitTestSession.EnsureIsolatedApplication). Only these three screen tests of 12 combinations were ever hit.
+    // Left out of the normal CI and of scripts/check.ps1; run by hand: dotnet test tests/Videoprep.App.Tests -c Release --filter "Inestable=si"
+    [Trait("Inestable", "si")]
     [AvaloniaTheory]
     [MemberData(nameof(Combos))]
     public void Queue_dialog_and_subscriptions_with_profiles(string lang, string theme)
