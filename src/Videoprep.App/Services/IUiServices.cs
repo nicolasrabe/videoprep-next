@@ -37,9 +37,9 @@ public interface IUiServices : IClipboardSource
     /// <summary>A web link in the default browser (the caller only passes http/https).</summary>
     void OpenUrl(string url);
     void PlayDoneSound();
-    /// <summary>F4: show the mini window (without taking the keyboard focus) and minimize the big one.</summary>
-    void ShowMini();
-    /// <summary>F4: close the mini window and bring the big one back.</summary>
+    /// <summary>RONDA 2: show the card (mini) or the bar (micro) at the top right corner of the full window's monitor, or move between them; the big window gets out of the way.</summary>
+    void SetMiniLevel(MiniLevel level);
+    /// <summary>F4: close the small window and bring the big one back to its size and place.</summary>
     void CloseMini();
     /// <summary>"Cerrar videoprep" from the mini window: closes the big window, which asks first when something runs.</summary>
     void CloseApp();

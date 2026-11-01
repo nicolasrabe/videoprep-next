@@ -100,7 +100,8 @@ public static class YtDlpArgs
         if (opt.LimitMBps > 0) a.AddRange(["--limit-rate", opt.LimitMBps.ToString(CultureInfo.InvariantCulture) + "M"]);
         if (archiveFile is not null && (opt.SkipDownloaded || forceArchive)) a.AddRange(["--download-archive", archiveFile]);
 
-        var name = job.Label ?? TitleTemplate;
+        // Fragments with their own names (PartWord set): the full file keeps the video title, which the unnamed fragments are built from.
+        var name = hasClips && job.PartWord.Length > 0 ? TitleTemplate : job.Label ?? TitleTemplate;
         if (hasClips) name += "__full";
         a.AddRange(["-P", folder, "-o", name + ".%(ext)s"]);
 

@@ -22,6 +22,8 @@ public sealed record Job
     public required int Cap { get; init; }
     /// <summary>Series or custom name; null = use the video title.</summary>
     public string? Label { get; init; }
+    /// <summary>With no <see cref="Label"/> and a fragment: the file is "Título - {PartWord} N" (empty = the older "Título - N").</summary>
+    public string PartWord { get; init; } = "";
     public string Start { get; init; } = "";
     public string End { get; init; } = "";
     public bool IsRange => Start.Length > 0 || End.Length > 0;

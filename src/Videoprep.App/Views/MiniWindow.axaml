@@ -5,11 +5,11 @@
         x:Class="Videoprep.App.Views.MiniWindow"
         x:DataType="vm:MainViewModel"
         Title="{s:T mini_title}"
-        Width="300" Height="28" CanResize="False" SizeToContent="Manual"
+        Width="340" Height="296" CanResize="False" SizeToContent="Manual"
         SystemDecorations="None" ShowInTaskbar="False" ShowActivated="False"
         Topmost="{Binding MiniOnTop}">
-  <!-- F4, variante B: one line. The progress is the filled background behind the text; a red frame means something failed.
-       It never takes the keyboard focus (see MiniWindow.axaml.cs). -->
+  <!-- RONDA 2: two levels in one window. The card (mini, about 340 wide) has the link, the profile, a fragment, "A la cola" and "Descargar";
+       the bar (micro, about 380 x 40) shows the state and "Detener". A red frame means something failed. -->
   <Border x:Name="Frame" Classes="mini" Classes.problem="{Binding MiniIsProblem}" BorderThickness="1"
           Background="{DynamicResource Card}" BorderBrush="{DynamicResource Bd}">
     <Border.ContextMenu>
@@ -21,17 +21,65 @@
       </ContextMenu>
     </Border.ContextMenu>
     <Panel>
-      <ProgressBar Classes="mini" Minimum="0" Maximum="100" Value="{Binding MiniPercent}" IsHitTestVisible="False" />
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="6,0,2,0" VerticalAlignment="Center">
-        <TextBlock Text="{Binding MiniText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                   Classes.problem="{Binding MiniIsProblem}" />
-        <TextBlock Grid.Column="1" Text="{Binding MiniPercentText}" VerticalAlignment="Center" Margin="8,0,0,0" />
-        <TextBlock Grid.Column="2" Text="{Binding MiniCounter}" Classes="muted" VerticalAlignment="Center" Margin="8,0,0,0" />
-        <ToggleButton Grid.Column="3" x:Name="PinButton" Classes="miniicon" Content="📌" IsChecked="{Binding MiniOnTop}"
-                      ToolTip.Tip="{s:T mini_ontop_tip}" AutomationProperties.Name="{s:T mnu_mini_ontop}" Margin="8,0,0,0" />
-        <Button Grid.Column="4" x:Name="BackButton" Classes="miniicon" Content="⤢" Command="{Binding CloseMiniCommand}"
-                ToolTip.Tip="{s:T mini_close_tip}" AutomationProperties.Name="{s:T mnu_mini_close}" Margin="3,0,0,0" />
+      <!-- MINI: the card -->
+      <Grid x:Name="Card" IsVisible="{Binding IsMiniCard}" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" RowSpacing="6" Margin="8">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="4">
+          <Button x:Name="BackButton" Classes="miniicon" Content="⤢" Command="{Binding PromoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_close_tip}" AutomationProperties.Name="{s:T mnu_mini_close}" />
+          <TextBlock Grid.Column="1" x:Name="CardTitle" Text="videoprep" FontWeight="SemiBold" VerticalAlignment="Center" Margin="4,0" />
+          <Button Grid.Column="2" x:Name="MicroButton" Classes="miniicon" Content="▁" Command="{Binding DemoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_micro_tip}" AutomationProperties.Name="{s:T mini_micro_tip}" />
+          <ToggleButton Grid.Column="3" x:Name="PinButton" Classes="miniicon pin" Content="📌" IsChecked="{Binding MiniOnTop}"
+                        ToolTip.Tip="{s:T mini_ontop_tip}" AutomationProperties.Name="{s:T mnu_mini_ontop}" />
+        </Grid>
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+          <TextBox x:Name="CardLink" Text="{Binding LinkText}" PlaceholderText="{s:T ph_link}" IsEnabled="{Binding IsIdle}" />
+          <Button Grid.Column="1" x:Name="CardPaste" Content="{s:T btn_paste}" Command="{Binding PasteLinkCommand}" IsEnabled="{Binding IsIdle}" />
+        </Grid>
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <ComboBox x:Name="CardProfile" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedProfileChoice}"
+                    PlaceholderText="{s:T ph_profile}" HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}"
+                    AutomationProperties.Name="{s:T lbl_profile}" />
+          <CheckBox Grid.Column="1" x:Name="CardFragment" Content="{s:T chk_fragment}" IsChecked="{Binding MiniHasFragment}" IsEnabled="{Binding IsIdle}" />
+        </Grid>
+        <!-- The fragment: start and end (the first fragment of the draft) -->
+        <Grid Grid.Row="3" x:Name="CardFragmentRow" ColumnDefinitions="Auto,*,Auto,*" ColumnSpacing="6" IsVisible="{Binding MiniHasFragment}">
+          <TextBlock Classes="muted" Text="{s:T lbl_start}" VerticalAlignment="Center" />
+          <TextBox Grid.Column="1" Text="{Binding MiniClip.Start}" Classes.bad="{Binding MiniClip.StartBad}" PlaceholderText="00:00:00:00" />
+          <TextBlock Grid.Column="2" Classes="muted" Text="{s:T lbl_end}" VerticalAlignment="Center" />
+          <TextBox Grid.Column="3" Text="{Binding MiniClip.End}" Classes.bad="{Binding MiniClip.EndBad}" PlaceholderText="00:00:00:00" />
+        </Grid>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+          <Button x:Name="CardQueue" Classes="o" Content="{s:T btn_to_queue_short}" Command="{Binding SendToQueueCommand}" IsEnabled="{Binding IsIdle}" />
+          <Button x:Name="CardDownload" Classes="g" Content="{s:T btn_download}" Command="{Binding DownloadCommand}" FontWeight="Bold" IsEnabled="{Binding IsIdle}" />
+        </StackPanel>
+        <!-- State: text, percentage, speed; the progress bar under it -->
+        <Grid Grid.Row="6" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+          <TextBlock x:Name="CardStatus" Text="{Binding MiniText}" TextTrimming="CharacterEllipsis" Classes.problem="{Binding MiniIsProblem}" />
+          <TextBlock Grid.Column="1" Text="{Binding MiniPercentText}" />
+          <TextBlock Grid.Column="2" Classes="muted" Text="{Binding MiniSpeed}" />
+          <TextBlock Grid.Column="3" Classes="muted" Text="{Binding MiniCounter}" />
+        </Grid>
+        <ProgressBar Grid.Row="7" Minimum="0" Maximum="100" Value="{Binding MiniPercent}" Height="6" />
       </Grid>
+
+      <!-- MICRO: the one-line bar -->
+      <Panel x:Name="Bar" IsVisible="{Binding IsMicroBar}">
+        <ProgressBar Classes="mini" Minimum="0" Maximum="100" Value="{Binding MiniPercent}" IsHitTestVisible="False" />
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="6,0,6,0" VerticalAlignment="Center">
+          <Button x:Name="BarBack" Classes="miniicon" Content="⤢" Command="{Binding PromoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_card_tip}" AutomationProperties.Name="{s:T mini_card_tip}" />
+          <Grid Grid.Column="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
+            <TextBlock x:Name="BarText" Text="{Binding MiniText}" TextTrimming="CharacterEllipsis"
+                       VerticalAlignment="Center" Classes.problem="{Binding MiniIsProblem}" />
+            <TextBlock Grid.Column="1" Text="{Binding MiniPercentText}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Classes="muted" Text="{Binding MiniSpeed}" VerticalAlignment="Center" />
+          </Grid>
+          <TextBlock Grid.Column="2" Text="{Binding MiniCounter}" Classes="muted" VerticalAlignment="Center" Margin="8,0" />
+          <Button Grid.Column="3" x:Name="BarStop" Classes="miniicon r" Content="{s:T btn_stop}" Command="{Binding StopCommand}"
+                  IsVisible="{Binding IsRunning}" />
+        </Grid>
+      </Panel>
     </Panel>
   </Border>
 </Window>

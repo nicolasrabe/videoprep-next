@@ -53,9 +53,6 @@ public sealed class Settings
 
     /// <summary>F4: the mini window stays on top of the others (a new setting, on by default).</summary>
     [JsonPropertyName("miniOnTop")] public bool MiniOnTop { get; set; } = true;
-    /// <summary>F4: where the mini window was left (screen pixels); null = never moved.</summary>
-    [JsonPropertyName("miniX")] public int? MiniX { get; set; }
-    [JsonPropertyName("miniY")] public int? MiniY { get; set; }
     /// <summary>F5: add the video links I copy to the queue (off by default; videoprep reads the clipboard only while on).</summary>
     [JsonPropertyName("clipboardWatch")] public bool ClipboardWatch { get; set; }
     /// <summary>F8: new queue items start with "velocidad constante" on (off by default; it re-encodes, only variable-rate videos are touched).</summary>

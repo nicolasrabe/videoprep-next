@@ -72,12 +72,15 @@ public sealed class MainViewModelTests : IDisposable
         vm.SeriesText = "Toma";
         vm.SelectedFormat = vm.FormatChoices.First(f => f.Key == "movp");
         vm.SelectedResolution = "4K";
-        Assert.Equal("Ejemplo: Toma1.mov, Toma2.mov, Toma3.mov", vm.ExampleText);
+        // With fragments the name section is off: each fragment has its own name.
+        Assert.Equal("Con fragmentos, cada uno lleva su propio nombre", vm.ExampleText);
+        Assert.False(vm.NamesEnabled);
+        vm.Clips[0].Name = "Entrada";
 
         vm.SendToQueueCommand.Execute(null);
         var it = Assert.Single(vm.Items);
-        Assert.Equal(("movp", 2160, NamingMode.Series, "Toma"), (it.Format, it.Cap, it.Naming, it.Prefix));
-        Assert.Equal([new ClipRange("00:00:01:00", "00:00:02:00"), new ClipRange("-00:00:00:15", "")], it.Clips);
+        Assert.Equal(("movp", 2160, NamingMode.Original, "parte"), (it.Format, it.Cap, it.Naming, it.PartWord));
+        Assert.Equal([new ClipRange("00:00:01:00", "00:00:02:00", "Entrada"), new ClipRange("-00:00:00:15", "")], it.Clips);
         Assert.Equal(2, vm.QueueRows.Count);
         Assert.Equal("00:00:01:00 -> 00:00:02:00", vm.QueueRows[0].Clip);
         Assert.Equal("-00:00:00:15 -> final", vm.QueueRows[1].Clip);
@@ -117,9 +120,16 @@ public sealed class MainViewModelTests : IDisposable
     {
         var vm = _rig.Create();
         Assert.Equal("Ejemplo: Título del video.mp4", vm.ExampleText);
+        Assert.True(vm.NamesEnabled);
         vm.AddClipCommand.Execute(null);
+        // One fragment or several: the name box is off and says why; removing them all turns it on again.
+        Assert.Equal("Con fragmentos, cada uno lleva su propio nombre", vm.ExampleText);
+        Assert.False(vm.NamesEnabled);
         vm.AddClipCommand.Execute(null);
-        Assert.Equal("Ejemplo: Título del video - 1.mp4, Título del video - 2.mp4", vm.ExampleText);
+        Assert.False(vm.NamesEnabled);
+        vm.Clips.Clear();
+        Assert.True(vm.NamesEnabled);
+        Assert.Equal("Ejemplo: Título del video.mp4", vm.ExampleText);
     }
 
     [AvaloniaFact]

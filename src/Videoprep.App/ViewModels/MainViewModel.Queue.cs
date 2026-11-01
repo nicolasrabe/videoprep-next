@@ -582,7 +582,7 @@ public sealed partial class MainViewModel
             case NamingMode.Series: NameSeries = true; SeriesText = it.Prefix; break;
             default: NameOriginal = true; break;
         }
-        foreach (var c in it.Clips) AddClipRow(c.Start, c.End);
+        foreach (var c in it.Clips) AddClipRow(c.Start, c.End, c.Name);
         UpdateHint();
         UpdateExample();
         SelectedTab = TabDownload;

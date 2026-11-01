@@ -55,13 +55,16 @@ public sealed partial class MainWindowTests : IDisposable
         return path;
     }
 
+    /// <summary>The words of a tab (the header is an icon plus a text).</summary>
+    private static string HeaderText(TabItem tab) => tab.Header is Panel p ? p.Children.OfType<TextBlock>().Select(t => t.Text).First() ?? "" : tab.Header?.ToString() ?? "";
+
     [AvaloniaFact]
     public void Window_is_resizable_and_titled()
     {
         var (w, _) = Open("es", "light");
         Assert.Equal("videoprep", w.Title);
         Assert.True(w.CanResize);
-        Assert.Equal((900, 640), (w.MinWidth, w.MinHeight));
+        Assert.Equal((900, 560), (w.MinWidth, w.MinHeight));   // lower than before: the Prep tab is compact
         Assert.Equal(AppInfo.Name, w.Title);
     }
 
@@ -123,12 +126,14 @@ public sealed partial class MainWindowTests : IDisposable
         vm.SelectedTab = MainViewModel.TabQueue;
         Dispatcher.UIThread.RunJobs();
         var tabs = w.GetVisualDescendants().OfType<TabItem>().ToList();
-        Assert.Equal("Descargar", tabs[0].Header);
+        Assert.Equal("Prep", HeaderText(tabs[0]));
+        Assert.Equal("Cola", HeaderText(tabs[1]));
         Assert.Equal("Video completo", vm.QueueRows[0].Clip);
 
         vm.SelectedLanguageIndex = 1;   // English, from the Settings tab
         Dispatcher.UIThread.RunJobs();
-        Assert.Equal("Download", tabs[0].Header);
+        Assert.Equal("Prep", HeaderText(tabs[0]));
+        Assert.Equal("Queue", HeaderText(tabs[1]));
         Assert.Equal("Whole video", vm.QueueRows[0].Clip);
         Assert.Equal("Queued", vm.QueueRows[0].Status);
         var shown = w.GetVisualDescendants().OfType<TextBlock>().Select(t => t.Text).ToList();

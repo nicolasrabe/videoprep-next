@@ -233,6 +233,14 @@
       <Setter Property="Height" Value="20" />
       <Setter Property="FontSize" Value="11" />
     </Style>
+    <!-- The pin is red while "siempre encima" is on -->
+    <Style Selector="ToggleButton.miniicon.pin:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Rt}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Rt}" />
+    </Style>
+    <Style Selector="Border.dim">
+      <Setter Property="Opacity" Value="0.55" />
+    </Style>
     <Style Selector="ToggleButton.miniicon:checked /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource Ob}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />

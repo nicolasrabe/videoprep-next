@@ -1,6 +1,8 @@
+using System.Collections.Specialized;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Videoprep.App.Services;
 using Videoprep.Core.Engine;
 using Videoprep.Core.Models;
 
@@ -10,13 +12,39 @@ namespace Videoprep.App.ViewModels;
 public enum MiniKind { Idle, Downloading, Busy, Problems, Notice }
 
 /// <summary>
-/// The mini window (F4, variante B: one line). Shows the file being saved and its percentage, "N/M" with several videos,
-/// "Todo listo" when idle, red text when something failed, and brief notices (links added from the clipboard).
-/// It never shows a link or a cookie: while a title is unknown it says "Descargando...".
+/// The small windows (F4, RONDA 2): the card (mini) and the one-line bar (micro). They show the file being saved and its percentage,
+/// "N/M" with several videos, "Copiá un enlace para descargar" when idle, red text when something failed, and brief notices
+/// (links added from the clipboard). They never show a link or a cookie: while a title is unknown they say "Descargando...".
 /// </summary>
 public sealed partial class MainViewModel
 {
     [ObservableProperty] private bool _isMiniActive;
+
+    /// <summary>Maxi = the full window, Mini = the card, Micro = the one-line bar.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMiniCard), nameof(IsMicroBar))]
+    private MiniLevel _miniLevel = MiniLevel.Maxi;
+
+    public bool IsMiniCard => MiniLevel == MiniLevel.Mini;
+    public bool IsMicroBar => MiniLevel == MiniLevel.Micro;
+
+    /// <summary>Speed of the current download ("2,1MiB/s"), for the card's status line.</summary>
+    [ObservableProperty] private string _miniSpeed = "";
+
+    /// <summary>The card's "Fragmento" box: on = one fragment row (start and end) is open in the draft; off = no fragments.</summary>
+    public bool MiniHasFragment
+    {
+        get => Clips.Count > 0;
+        set
+        {
+            if (value == Clips.Count > 0) return;
+            if (value) AddClipRow("", "");
+            else Clips.Clear();
+        }
+    }
+
+    /// <summary>The first fragment of the draft (what the card's start and end boxes edit).</summary>
+    public ClipRowViewModel? MiniClip => Clips.FirstOrDefault();
     [ObservableProperty] private string _miniText = "";
     [ObservableProperty] private string _miniPercentText = "";
     [ObservableProperty] private string _miniCounter = "";
@@ -46,16 +74,6 @@ public sealed partial class MainViewModel
     private string? _miniNotice;
     private DispatcherTimer? _miniNoticeTimer;
 
-    /// <summary>Last place of the mini window (screen pixels); saved with the settings.</summary>
-    public void SetMiniPosition(int x, int y)
-    {
-        Settings.MiniX = x;
-        Settings.MiniY = y;
-    }
-
-    public int? MiniX => Settings.MiniX;
-    public int? MiniY => Settings.MiniY;
-
     [RelayCommand]
     private void ToggleMini()
     {
@@ -67,8 +85,34 @@ public sealed partial class MainViewModel
     {
         // The big window may be hidden by a question that is waiting: only the idle window shrinks.
         IsMiniActive = true;
+        MiniLevel = MiniLevel.Mini;
         RefreshMini();
-        _ui.ShowMini();
+        _ui.SetMiniLevel(MiniLevel.Mini);
+    }
+
+    /// <summary>"⤢" and the double click: one level up (micro to card, card to the full window).</summary>
+    [RelayCommand]
+    public void PromoteMini()
+    {
+        if (!IsMiniActive) return;
+        if (MiniLevel == MiniLevel.Micro)
+        {
+            MiniLevel = MiniLevel.Mini;
+            _ui.SetMiniLevel(MiniLevel.Mini);
+        }
+        else
+        {
+            CloseMini();
+        }
+    }
+
+    /// <summary>"▁": the card shrinks to the bar.</summary>
+    [RelayCommand]
+    public void DemoteMini()
+    {
+        if (!IsMiniActive || MiniLevel != MiniLevel.Mini) return;
+        MiniLevel = MiniLevel.Micro;
+        _ui.SetMiniLevel(MiniLevel.Micro);
     }
 
     /// <summary>"Cerrar modo mini": the big window comes back. Also called when the user restores it from the taskbar.</summary>
@@ -77,7 +121,7 @@ public sealed partial class MainViewModel
     {
         if (!IsMiniActive) return;
         IsMiniActive = false;
-        SaveSettings();
+        MiniLevel = MiniLevel.Maxi;
         _ui.CloseMini();
         _ = ResolvePendingClipboardAsync();
     }
@@ -88,6 +132,7 @@ public sealed partial class MainViewModel
 
     private void ResetMiniRun()
     {
+        MiniSpeed = "";
         _miniName = null;
         _miniNumber = _miniTotal = 0;
         _miniJobActive = false;
@@ -174,6 +219,7 @@ public sealed partial class MainViewModel
     private void MiniJobStarted(Job job, int number, int total)
     {
         _miniName = MiniNameFor(job);
+        MiniSpeed = "";
         (_miniNumber, _miniTotal, _miniJobActive) = (number, total, true);
         RefreshMini();
     }
@@ -181,6 +227,7 @@ public sealed partial class MainViewModel
     private void MiniRunFinished(BatchResult result)
     {
         _miniJobActive = false;
+        MiniSpeed = "";
         _miniStopped = result.Cancelled;
         _miniResult = result.Cancelled ? null : (result.Ok + result.Warn, result.Fail);
         RefreshMini();

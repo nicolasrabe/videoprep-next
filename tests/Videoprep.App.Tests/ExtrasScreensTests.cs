@@ -77,42 +77,8 @@ public sealed partial class ExtrasScreensTests : IDisposable
         Assert.DoesNotContain(texts, t => t.Contains("{0}", StringComparison.Ordinal));
     }
 
-    // Unstable (rule 8): about 1 run in 4, Avalonia.Headless fails while setting up the NEXT test ("Test Case Cleanup Failure ... a different
-    // thread owns it", HeadlessUnitTestSession.EnsureIsolatedApplication). Only these three screen tests of 12 combinations were ever hit.
-    // Left out of the normal CI and of scripts/check.ps1; run by hand: dotnet test tests/Videoprep.App.Tests -c Release --filter "Inestable=si"
-    [Trait("Inestable", "si")]
-    [AvaloniaTheory]
-    [MemberData(nameof(Combos))]
-    public void Mini_window_in_its_states(string lang, string theme)
-    {
-        var (main, vm) = Open(lang, theme);
-        var states = new (string Name, Action Set)[]
-        {
-            ("descargando", () => (vm.MiniKind, vm.MiniText, vm.MiniPercent, vm.MiniPercentText, vm.MiniCounter) =
-                (MiniKind.Downloading, "Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film", 62, "62 %", "2/5")),
-            ("listo", () => (vm.MiniKind, vm.MiniText, vm.MiniPercent, vm.MiniPercentText, vm.MiniCounter) =
-                (MiniKind.Idle, vm.L.Format("mini_done", 5, 5), 0, "", "")),
-            ("error", () => (vm.MiniKind, vm.MiniText, vm.MiniPercent, vm.MiniPercentText, vm.MiniCounter) =
-                (MiniKind.Problems, vm.L.Format("mini_problems", 4, 1), 0, "", "")),
-            ("aviso", () => (vm.MiniKind, vm.MiniText, vm.MiniPercent, vm.MiniPercentText, vm.MiniCounter) =
-                (MiniKind.Notice, vm.L["clip_added_one"], 0, "", "")),
-        };
-        foreach (var (name, set) in states)
-        {
-            set();
-            var mini = new MiniWindow { DataContext = vm };
-            mini.Show();
-            Assert.Equal((300, 28), (mini.Width, mini.Height));
-            Assert.False(mini.ShowInTaskbar);
-            Assert.Equal(vm.MiniOnTop, mini.Topmost);
-            Save(mini, $"v03r2-{lang}-{theme}-mini-{name}");
-            NoRawKeys(mini);
-            mini.Close();
-        }
-        // Nothing stays open when the test ends: on macOS a window left behind made the headless session fail while cleaning up.
-        main.Close();
-        Dispatcher.UIThread.RunJobs();
-    }
+    // The old one-line mini window test lived here (12 combinations, one of the unstable ones). RONDA 2 replaced the window with the
+    // card and the bar; they are covered by PrepAndMiniScreensTests and MiniLevelsAndPrepTests, which do not fail at random.
 
     [AvaloniaFact]
     public void Mini_has_its_menu_with_close_mode_always_on_top_and_quit_and_the_always_on_top_changes_live()

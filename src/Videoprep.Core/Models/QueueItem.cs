@@ -8,8 +8,11 @@ public enum NamingMode { Original, Custom, Series }
 
 public enum Site { Youtube, Other }
 
-/// <summary>One clip typed by the user (timecode text as typed; empty End = until the end).</summary>
-public sealed record ClipRange(string Start, string End);
+/// <summary>
+/// One clip typed by the user (timecode text as typed; empty End = until the end). <see cref="Name"/> is the file name of this
+/// fragment (RONDA 2); empty = "Título original - parte N".
+/// </summary>
+public sealed record ClipRange(string Start, string End, string Name = "");
 
 /// <summary>
 /// One link in the queue with its choices (port of New-Item-Object). Clips empty = whole video.
@@ -27,6 +30,11 @@ public sealed record QueueItem
     public NamingMode Naming { get; init; } = NamingMode.Original;
     public string Custom { get; init; } = "";
     public string Prefix { get; init; } = "Video";
+    /// <summary>
+    /// The word of "Título original - parte N" for fragments without a name ("parte" / "part", the language of the program when the
+    /// item was queued). Empty = the older "Título original - N".
+    /// </summary>
+    public string PartWord { get; init; } = "";
     public IReadOnlyList<ClipRange> Clips { get; init; } = [];
     public double? Fps { get; init; }
     /// <summary>Folder inside the destination ("" = the destination itself). Set by "Guardar en una subcarpeta" (F1).</summary>

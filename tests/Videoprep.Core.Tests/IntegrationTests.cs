@@ -304,6 +304,23 @@ public sealed class EngineWithFfmpegTests : IDisposable
     }
 
     [Fact]
+    public async Task Fragments_are_saved_with_their_own_name_or_Titulo_original_parte_N()
+    {
+        Ffmpeg.SkipIfMissing();
+        var jobs = JobPlanner.Build([new QueueItem
+        {
+            Id = 1, Url = "https://fake.test/ok/v1", Format = "mp4", PartWord = "parte",
+            Clips = [new("00:00:01:00", "00:00:01:29", "Entrada"), new("00:00:02:10", "00:00:03:00"), new("-00:00:00:15", "", "Final")],
+        }], new Dictionary<string, int>());
+        var r = await _rig.Engine.RunAsync(jobs, Ctx(), TestContext.Current.CancellationToken);
+
+        Assert.Equal((3, 0, 0), (r.Ok, r.Warn, r.Fail));
+        Assert.Single(_rig.Calls());
+        Assert.Equal(["Entrada.mp4", "Fake video v1 - parte 2.mp4", "Final.mp4"], r.Files.OrderBy(kv => kv.Key).Select(kv => kv.Value));
+        Assert.All(r.Files.Values, f => Assert.True(File.Exists(Path.Combine(_rig.Folder, f))));
+    }
+
+    [Fact]
     public async Task A_full_file_that_was_already_there_is_never_deleted_AUDIT_X6()
     {
         Ffmpeg.SkipIfMissing();

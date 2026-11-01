@@ -6,8 +6,17 @@
         x:Class="Videoprep.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="videoprep"
-        Width="1000" Height="740" MinWidth="900" MinHeight="640"
+        Width="1000" Height="700" MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen">
+  <Window.Resources>
+    <!-- Tab icons (docs/mockups-v0.3.1/pestanas.html): simple strokes in the color of the text, 24 x 24 -->
+    <StreamGeometry x:Key="IconPrep">M12 4v11 M7 11l5 5 5-5 M5 20h14</StreamGeometry>
+    <StreamGeometry x:Key="IconQueue">M5 7h14 M5 12h14 M5 17h9</StreamGeometry>
+    <StreamGeometry x:Key="IconScrap">M5 11a6 6 0 1 0 12 0a6 6 0 1 0 -12 0 M20 20l-4.5-4.5</StreamGeometry>
+    <StreamGeometry x:Key="IconSettings">M5 8h9 M18 8h1 M5 16h1 M10 16h9 M14 8a2 2 0 1 0 4 0a2 2 0 1 0 -4 0 M6 16a2 2 0 1 0 4 0a2 2 0 1 0 -4 0</StreamGeometry>
+    <StreamGeometry x:Key="IconLog">M7 4h8l4 4v12H7z M10 12h6 M10 16h6</StreamGeometry>
+    <StreamGeometry x:Key="IconMini">M4.5 5h15a1.5 1.5 0 0 1 1.5 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-15a1.5 1.5 0 0 1-1.5-1.5v-11a1.5 1.5 0 0 1 1.5-1.5z M13 12h5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1z</StreamGeometry>
+  </Window.Resources>
   <!-- Resizable (AUDIT M7: the legacy window was a fixed 760x640). -->
   <Grid RowDefinitions="Auto,*">
   <!-- F9: a newer videoprep exists. Installing always waits for the click on "Actualizar". -->
@@ -19,22 +28,68 @@
       <Button Grid.Column="3" Content="{s:T upd_later}" Command="{Binding DismissUpdateCommand}" />
     </Grid>
   </Border>
-  <TabControl Grid.Row="1" x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
-    <TabItem x:Name="TabDownload" Header="{s:T tab_dl}">
-      <v:DownloadView />
-    </TabItem>
-    <TabItem x:Name="TabQueue" Header="{s:T tab_q}">
-      <v:QueueView />
-    </TabItem>
-    <TabItem x:Name="TabScraping" Header="{s:T tab_scraping}">
-      <v:ScrapingView DataContext="{Binding Scraping}" />
-    </TabItem>
-    <TabItem x:Name="TabSettings" Header="{s:T tab_st}">
-      <v:SettingsView />
-    </TabItem>
-    <TabItem x:Name="TabLog" Header="{s:T tab_log}">
-      <v:LogView />
-    </TabItem>
-  </TabControl>
+  <Panel Grid.Row="1">
+    <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
+      <TabItem x:Name="TabDownload" ToolTip.Tip="{s:T tip_prep}">
+        <TabItem.Header>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="{StaticResource IconPrep}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+                  Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
+            <TextBlock Text="{s:T tab_dl}" VerticalAlignment="Center" />
+          </StackPanel>
+        </TabItem.Header>
+        <v:DownloadView />
+      </TabItem>
+      <TabItem x:Name="TabQueue">
+        <TabItem.Header>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="{StaticResource IconQueue}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+                  Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
+            <TextBlock Text="{s:T tab_q}" VerticalAlignment="Center" />
+          </StackPanel>
+        </TabItem.Header>
+        <v:QueueView />
+      </TabItem>
+      <TabItem x:Name="TabScraping">
+        <TabItem.Header>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="{StaticResource IconScrap}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+                  Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
+            <TextBlock Text="{s:T tab_scraping}" VerticalAlignment="Center" />
+          </StackPanel>
+        </TabItem.Header>
+        <v:ScrapingView DataContext="{Binding Scraping}" />
+      </TabItem>
+      <TabItem x:Name="TabSettings">
+        <TabItem.Header>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="{StaticResource IconSettings}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+                  Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
+            <TextBlock Text="{s:T tab_st}" VerticalAlignment="Center" />
+          </StackPanel>
+        </TabItem.Header>
+        <v:SettingsView />
+      </TabItem>
+      <TabItem x:Name="TabLog">
+        <TabItem.Header>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Data="{StaticResource IconLog}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+                  Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
+            <TextBlock Text="{s:T tab_log}" VerticalAlignment="Center" />
+          </StackPanel>
+        </TabItem.Header>
+        <v:LogView />
+      </TabItem>
+    </TabControl>
+    <!-- Mini mode: top right of the tab bar -->
+    <Button x:Name="MiniButton" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,14,0" Padding="10,4"
+            Command="{Binding ToggleMiniCommand}" ToolTip.Tip="{s:T tip_minimode}" AutomationProperties.Name="{s:T btn_minimode}">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Path Data="{StaticResource IconMini}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
+              Stroke="{Binding $parent[Button].Foreground}" VerticalAlignment="Center" />
+        <TextBlock Text="{s:T btn_minimode}" VerticalAlignment="Center" />
+      </StackPanel>
+    </Button>
+  </Panel>
   </Grid>
 </Window>

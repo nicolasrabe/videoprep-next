@@ -88,7 +88,14 @@ internal sealed class FakeUi : IUiServices
     public int AppClosed { get; private set; }
     public bool MainActive { get; set; } = true;
     public bool IsMainActive => MainActive && !MiniShown;
-    public void ShowMini() { MiniShown = true; MiniShows++; }
+    /// <summary>Every level the small window was set to, in order.</summary>
+    public List<Videoprep.App.Services.MiniLevel> MiniLevels { get; } = [];
+    public void SetMiniLevel(Videoprep.App.Services.MiniLevel level)
+    {
+        if (!MiniShown) MiniShows++;
+        MiniShown = true;
+        MiniLevels.Add(level);
+    }
     public void CloseMini() => MiniShown = false;
     public void CloseApp() => AppClosed++;
     // The "user" copies something: the text and the change number go together.

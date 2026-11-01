@@ -13,10 +13,12 @@ public partial class MainWindow : Window, IUiServices
 {
     private bool _closeConfirmed;
     private MiniWindow? _mini;
+    private readonly MiniPlacer _placer;
 
     public MainWindow()
     {
         InitializeComponent();
+        _placer = new MiniPlacer(new WindowScreens(this), new WindowSurfaces(this));
         Closing += OnClosing;
         Closed += (_, _) => _mini?.CloseForReal();
         // F4: the big window comes back from the taskbar -> the mini closes; F5: a question that waited can be asked now.
@@ -146,28 +148,9 @@ public partial class MainWindow : Window, IUiServices
 
     // ---------------- F4: mini window ----------------
 
-    public void ShowMini()
-    {
-        if (_mini is not null || DataContext is not MainViewModel vm) return;
-        _mini = new MiniWindow { DataContext = vm };
-        var scale = Screens.ScreenFromWindow(this)?.Scaling ?? 1.0;
-        var areas = Screens.All.OrderByDescending(sc => sc.IsPrimary)
-            .Select(sc => new PixelBox(sc.WorkingArea.X, sc.WorkingArea.Y, sc.WorkingArea.Width, sc.WorkingArea.Height)).ToList();
-        var (x, y) = MiniPlacement.Place(vm.MiniX, vm.MiniY, (int)(_mini.Width * scale), (int)(_mini.Height * scale), areas);
-        _mini.WindowStartupLocation = WindowStartupLocation.Manual;
-        _mini.Position = new PixelPoint(x, y);
-        _mini.Show();   // ShowActivated="false": the program where the user is typing keeps the keyboard
-        WindowState = WindowState.Minimized;   // one taskbar button (this one) and a way back
-    }
+    public void SetMiniLevel(MiniLevel level) => _placer.Show(level);
 
-    public void CloseMini()
-    {
-        var mini = _mini;
-        _mini = null;
-        mini?.CloseForReal();
-        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
-        Activate();
-    }
+    public void CloseMini() => _placer.Close();
 
     public void CloseApp() => Close();
 
@@ -210,4 +193,63 @@ public partial class MainWindow : Window, IUiServices
     }
 
     public void PlayDoneSound() => Platform.PlayDoneSound();
+
+    // ---------------- the monitors and the windows, for MiniPlacer ----------------
+
+    private sealed class WindowScreens(MainWindow w) : IScreenSource
+    {
+        public IReadOnlyList<ScreenArea> All => w.Screens.All.OrderByDescending(s => s.IsPrimary)
+            .Select(s => new ScreenArea(Box(s.Bounds), Box(s.WorkingArea), s.Scaling)).ToList();
+
+        private static PixelBox Box(PixelRect r) => new(r.X, r.Y, r.Width, r.Height);
+    }
+
+    private sealed class WindowSurfaces(MainWindow w) : IMiniSurfaces
+    {
+        public PixelBox FullBounds => BoxOf(w);
+        public bool FullMaximized => w.WindowState == WindowState.Maximized;
+        public PixelBox? MiniBounds => w._mini is { } m ? BoxOf(m) : null;
+
+        private static PixelBox BoxOf(Window win)
+        {
+            var scale = win.RenderScaling;
+            var size = win.FrameSize ?? win.ClientSize;
+            return new PixelBox(win.Position.X, win.Position.Y, (int)Math.Round(size.Width * scale), (int)Math.Round(size.Height * scale));
+        }
+
+        public void ShowMini(MiniLevel level, int x, int y)
+        {
+            if (w.DataContext is not MainViewModel vm) return;
+            var first = w._mini is null;
+            w._mini ??= new MiniWindow { DataContext = vm, WindowStartupLocation = WindowStartupLocation.Manual };
+            w._mini.ApplyLevel(level);
+            w._mini.Position = new PixelPoint(x, y);
+            // The bar never takes the keyboard from the program where the user is typing; the card has a box to type in.
+            if (first) w._mini.Show();
+            w._mini.Position = new PixelPoint(x, y);
+        }
+
+        public void CloseMini()
+        {
+            var mini = w._mini;
+            w._mini = null;
+            mini?.CloseForReal();
+        }
+
+        public void HideFull() => w.WindowState = WindowState.Minimized;   // one taskbar button (this one) and a way back
+
+        public void RestoreFull(PixelBox bounds, bool maximized)
+        {
+            w.WindowState = WindowState.Normal;
+            if (bounds.Width > 0 && bounds.Height > 0)
+            {
+                w.Position = new PixelPoint(bounds.X, bounds.Y);
+                var scale = w.RenderScaling;
+                w.Width = bounds.Width / scale;
+                w.Height = bounds.Height / scale;
+            }
+            if (maximized) w.WindowState = WindowState.Maximized;
+            w.Activate();
+        }
+    }
 }

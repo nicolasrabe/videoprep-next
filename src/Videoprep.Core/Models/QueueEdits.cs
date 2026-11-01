@@ -90,6 +90,12 @@ public static class QueueEdits
             var count = Math.Max(1, it.Clips.Count);
             for (var i = 0; i < count; i++)
             {
+                // A fragment with its own name (RONDA 2) wins over the naming of the item.
+                if (it.Clips.Count > 0 && it.Clips[i].Name.Trim().Length > 0)
+                {
+                    names.Add(SafeName.Make(it.Clips[i].Name));
+                    continue;
+                }
                 switch (it.Naming)
                 {
                     case NamingMode.Series:
@@ -102,13 +108,18 @@ public static class QueueEdits
                         names.Add(SafeName.Make(it.Custom) + (count > 1 ? " - " + (i + 1) : ""));
                         break;
                     default:
-                        names.Add(title(it) is { Length: > 0 } t ? t + (it.Clips.Count > 1 ? " - " + (i + 1) : "") : null);
+                        names.Add(title(it) is { Length: > 0 } t ? t + PartSuffix(it, i) : null);
                         break;
                 }
             }
         }
         return names;
     }
+
+    /// <summary>" - parte 2" for the fragment <paramref name="index"/> without a name; the older " - 2" without the word; nothing for a whole video.</summary>
+    private static string PartSuffix(QueueItem it, int index) =>
+        it.PartWord.Length > 0 && it.Clips.Count > 0 ? $" - {it.PartWord} {index + 1}"
+        : it.Clips.Count > 1 ? " - " + (index + 1) : "";
 
     /// <summary>
     /// "El video dura 38:12": the clip's start or end is beyond the known duration. Negative starts count from the end.

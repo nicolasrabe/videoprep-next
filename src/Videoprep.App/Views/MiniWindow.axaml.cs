@@ -10,23 +10,29 @@ using Videoprep.App.ViewModels;
 namespace Videoprep.App.Views;
 
 /// <summary>
-/// The mini window (F4). Rules that matter more than looks:
-/// it never takes the keyboard focus (shown without activating, plus the "do not activate" window style on Windows);
-/// it can be dragged from anywhere; the right-click menu opens and closes (Esc, click outside) even though a window
-/// that is never activated gets no keys of its own, and closing the menu leaves the focus where the user was typing.
+/// The small window (F4, RONDA 2): the card (mini) or the one-line bar (micro). Rules that matter more than looks:
+/// the bar never takes the keyboard focus (shown without activating, plus the "do not activate" window style on Windows); the card
+/// can, because it has a text box; it can be dragged from any empty place; a double click on an empty place or a text goes one level
+/// up (never on a button, a box or a list); the right-click menu opens and closes (Esc, click outside) even though a window that is
+/// never activated gets no keys of its own, and closing the menu leaves the focus where the user was typing.
 /// </summary>
 public partial class MiniWindow : Window
 {
     private bool _closingForReal;
     private DispatcherTimer? _menuWatch;
     private IntPtr _focusBeforeMenu;
+    private MiniLevel _level = MiniLevel.Mini;
+    private PointerPressedEventArgs? _dragStart;
+    private Point _dragFrom;
 
     public MiniWindow()
     {
         InitializeComponent();
-        Opened += (_, _) => Platform.MakeNoActivate(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
+        Opened += (_, _) => ApplyActivation();
         PointerPressed += OnPointerPressed;
-        PositionChanged += (_, e) => (DataContext as MainViewModel)?.SetMiniPosition(e.Point.X, e.Point.Y);
+        PointerMoved += OnPointerMoved;
+        PointerReleased += (_, _) => _dragStart = null;
+        DoubleTapped += OnDoubleTapped;
         Closing += (_, _) =>
         {
             // Closed by something other than "Cerrar modo mini" (the system, a script): the big window must come back.
@@ -38,6 +44,19 @@ public partial class MiniWindow : Window
         Menu.Closed += (_, _) => OnMenuClosed();
     }
 
+    /// <summary>Sets the size and the activation of a level (the position is the placement's business).</summary>
+    public void ApplyLevel(MiniLevel level)
+    {
+        _level = level;
+        var (w, h) = MiniPlacer.SizeOf(level);
+        Width = w;
+        Height = h;
+        ApplyActivation();
+    }
+
+    private void ApplyActivation() =>
+        Platform.SetNoActivate(TryGetPlatformHandle()?.Handle ?? IntPtr.Zero, _level == MiniLevel.Micro);
+
     public void CloseForReal()
     {
         _closingForReal = true;
@@ -45,13 +64,38 @@ public partial class MiniWindow : Window
         Close();
     }
 
+    /// <summary>True when the pointer is on something that does its own job (button, box, list...): no drag, no double click.</summary>
+    private static bool OnControl(object? source) =>
+        source is Visual v && (v.FindAncestorOfType<Button>(includeSelf: true) is not null
+                               || v.FindAncestorOfType<ToggleButton>(includeSelf: true) is not null
+                               || v.FindAncestorOfType<TextBox>(includeSelf: true) is not null
+                               || v.FindAncestorOfType<ComboBox>(includeSelf: true) is not null
+                               || v.FindAncestorOfType<CheckBox>(includeSelf: true) is not null);
+
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
-        // Buttons are buttons; anywhere else drags the window.
-        if (e.Source is Visual v && (v.FindAncestorOfType<Button>(includeSelf: true) is not null || v.FindAncestorOfType<ToggleButton>(includeSelf: true) is not null)) return;
-        try { BeginMoveDrag(e); }
+        _dragStart = null;
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed || OnControl(e.Source)) return;
+        // The drag starts only when the pointer really moves: a plain click or a double click stays a click.
+        _dragStart = e;
+        _dragFrom = e.GetPosition(this);
+    }
+
+    private void OnPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_dragStart is not { } start) return;
+        var now = e.GetPosition(this);
+        if (Math.Abs(now.X - _dragFrom.X) < 4 && Math.Abs(now.Y - _dragFrom.Y) < 4) return;
+        _dragStart = null;
+        try { BeginMoveDrag(start); }
         catch (InvalidOperationException) { /* the pointer was released already */ }
+    }
+
+    /// <summary>Double click on an empty place or a text: micro goes to the card, the card goes to the full window.</summary>
+    private void OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (OnControl(e.Source)) return;
+        (DataContext as MainViewModel)?.PromoteMiniCommand.Execute(null);
     }
 
     // ---- right-click menu without keyboard focus

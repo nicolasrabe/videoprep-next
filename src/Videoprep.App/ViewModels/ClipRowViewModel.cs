@@ -17,6 +17,9 @@ public sealed partial class ClipRowViewModel(Action<ClipRowViewModel> remove) : 
     [NotifyPropertyChangedFor(nameof(EndValid), nameof(EndBeyond), nameof(EndBad), nameof(Warning), nameof(HasWarning))]
     private string _end = "";
 
+    /// <summary>File name of this fragment (RONDA 2). Empty = "Título original - parte N".</summary>
+    [ObservableProperty] private string _name = "";
+
     private double? _duration;
     private string _durationText = "";
     private double? _fps;

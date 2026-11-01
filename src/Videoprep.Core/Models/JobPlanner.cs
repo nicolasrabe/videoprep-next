@@ -19,7 +19,12 @@ public static class JobPlanner
             for (var i = 0; i < total; i++)
             {
                 string? label = null;
-                if (it.Naming == NamingMode.Series)
+                if (outs[i].Name.Trim().Length > 0)
+                {
+                    // The fragment has its own name: it wins over everything else.
+                    label = SafeName.Make(outs[i].Name);
+                }
+                else if (it.Naming == NamingMode.Series)
                 {
                     var key = SeriesKey(it);
                     var n = nextSeriesNumber.TryGetValue(key, out var v) ? v : 1;
@@ -35,7 +40,7 @@ public static class JobPlanner
                 {
                     GroupId = it.Id, Index = i, Count = total, Url = it.Url, Site = it.Site, Format = it.Format,
                     Cap = it.Cap, Label = label, Start = outs[i].Start, End = outs[i].End, Download = i == 0, Fps = it.Fps,
-                    SubFolder = it.SubFolder, ConstantRate = it.ConstantRate,
+                    SubFolder = it.SubFolder, ConstantRate = it.ConstantRate, PartWord = it.PartWord,
                 });
             }
         }

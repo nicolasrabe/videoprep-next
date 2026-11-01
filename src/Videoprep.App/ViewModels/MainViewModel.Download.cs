@@ -46,16 +46,38 @@ public sealed partial class MainViewModel
 
     // ---- names
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CustomEnabled))]
+    [NotifyPropertyChangedFor(nameof(CustomEnabled), nameof(NameModeIndex))]
     private bool _nameOriginal = true;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CustomEnabled))]
+    [NotifyPropertyChangedFor(nameof(CustomEnabled), nameof(NameModeIndex), nameof(CustomFieldEnabled))]
     private bool _nameCustom;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SeriesEnabled))]
+    [NotifyPropertyChangedFor(nameof(SeriesEnabled), nameof(NameModeIndex), nameof(SeriesFieldEnabled))]
     private bool _nameSeries;
+
+    /// <summary>The single "Nombre del archivo" box: 0 = Título original, 1 = Título personalizado, 2 = Serie.</summary>
+    public int NameModeIndex
+    {
+        get => NameCustom ? 1 : NameSeries ? 2 : 0;
+        set
+        {
+            if (value == NameModeIndex) return;
+            if (value == 1) NameCustom = true;
+            else if (value == 2) NameSeries = true;
+            else NameOriginal = true;
+        }
+    }
+
+    /// <summary>With at least one fragment the file name section is off: each fragment carries its own name.</summary>
+    public bool HasClips => Clips.Count > 0;
+
+    /// <summary>The name section can be changed (no fragments and nothing running).</summary>
+    public bool NamesEnabled => Clips.Count == 0 && !IsRunning;
+
+    public bool CustomFieldEnabled => NameCustom && NamesEnabled;
+    public bool SeriesFieldEnabled => NameSeries && NamesEnabled;
 
     /// <summary>F8 "Velocidad constante": the next link sent to the queue asks for it. Starts with the setting in Opciones.</summary>
     [ObservableProperty] private bool _constantRate;
@@ -69,6 +91,8 @@ public sealed partial class MainViewModel
     // ---- preview
     [ObservableProperty] private string _previewTitle = "";
     [ObservableProperty] private string _previewMeta = "";
+    /// <summary>The video length over the corner of the thumbnail ("" while unknown).</summary>
+    [ObservableProperty] private string _previewDuration = "";
     [ObservableProperty] private Bitmap? _previewImage;
 
     // ---- folder
@@ -87,7 +111,14 @@ public sealed partial class MainViewModel
         if (Settings.Naming == "series") NameSeries = true; else NameOriginal = true;
         RebuildFormatLists();
         ClearPreviewPanel();
-        Clips.CollectionChanged += (_, _) => UpdateExample();
+        Clips.CollectionChanged += (_, _) =>
+        {
+            UpdateExample();
+            OnPropertyChanged(nameof(MiniHasFragment));
+            OnPropertyChanged(nameof(MiniClip));
+            OnPropertyChanged(nameof(HasClips));
+            OnPropertyChanged(nameof(NamesEnabled));
+        };
     }
 
     private static string DefaultFolder()
@@ -180,6 +211,13 @@ public sealed partial class MainViewModel
 
     private void UpdateExample()
     {
+        OnPropertyChanged(nameof(CustomFieldEnabled));
+        OnPropertyChanged(nameof(SeriesFieldEnabled));
+        if (Clips.Count > 0)
+        {
+            ExampleText = L["names_frag_note"];
+            return;
+        }
         var ext = FormatCatalog.Get(SelectedFormatKey).Extension;
         string text;
         if (NameSeries)
@@ -195,14 +233,29 @@ public sealed partial class MainViewModel
         ExampleText = L["ex_label"] + text;
     }
 
+    // ---------------- paste button, video / audio switch ----------------
+
+    /// <summary>"Pegar": the clipboard goes to the link box like pasting by hand (links are taken, other text is just put in).</summary>
+    [RelayCommand]
+    private async Task PasteLink()
+    {
+        var text = await _ui.ReadClipboardTextAsync();
+        if (string.IsNullOrWhiteSpace(text)) return;
+        if (!SmartPaste(text)) LinkText = text.Trim();
+    }
+
+    /// <summary>The "Video / Solo audio" switch: "video" or "audio".</summary>
+    [RelayCommand]
+    private void SetKind(string? kind) => IsAudio = kind == "audio";
+
     // ---------------- clips ----------------
 
     [RelayCommand]
     private void AddClip() => AddClipRow("", "");
 
-    private void AddClipRow(string start, string end)
+    private void AddClipRow(string start, string end, string name = "")
     {
-        var row = new ClipRowViewModel(r => Clips.Remove(r)) { Start = start, End = end };
+        var row = new ClipRowViewModel(r => Clips.Remove(r)) { Start = start, End = end, Name = name };
         row.SetDuration(_clipDuration, _clipDurationText, _clipFps);
         row.PropertyChanged += (_, _) => UpdateExample();
         Clips.Add(row);
@@ -294,10 +347,12 @@ public sealed partial class MainViewModel
                     return false;
                 }
             }
-            clips.Add(new ClipRange(row.Start.Trim(), row.End.Trim()));
+            clips.Add(new ClipRange(row.Start.Trim(), row.End.Trim(), row.Name.Trim()));
         }
 
-        var naming = NameCustom ? NamingMode.Custom : NameSeries ? NamingMode.Series : NamingMode.Original;
+        // With fragments the name section is off: each fragment has its own name ("Título original - parte N" when empty).
+        var naming = clips.Count > 0 ? NamingMode.Original
+                   : NameCustom ? NamingMode.Custom : NameSeries ? NamingMode.Series : NamingMode.Original;
         if (naming == NamingMode.Custom && CustomText.Trim().Length == 0)
         {
             if (interactive) { _ = _ui.ShowMessage(L["msg_custom"], warning: true); return false; }
@@ -313,7 +368,7 @@ public sealed partial class MainViewModel
         var item = new QueueItem
         {
             Url = _draftUrl, Format = SelectedFormatKey, Cap = SelectedCap, Naming = naming, Custom = CustomText.Trim(),
-            Prefix = SafeName.Make(prefix.Length > 0 ? prefix : "Video", "Video"), Clips = clips,
+            Prefix = SafeName.Make(prefix.Length > 0 ? prefix : "Video", "Video"), Clips = clips, PartWord = clips.Count > 0 ? L["part_word"] : "",
             Fps = _svc.Preview.Get(_draftKey)?.Detail?.Fps,
             SubFolder = _editId > 0 ? _editSubFolder : "", ConstantRate = ConstantRate && SelectedFormat is { } f && FormatCatalog.Get(f.Key).Kind == MediaKind.Video,
         };
@@ -390,6 +445,7 @@ public sealed partial class MainViewModel
         PreviewImage = null;
         PreviewTitle = L["prev_hint"];
         PreviewMeta = "";
+        PreviewDuration = "";
     }
 
     private string? _shownImageKey;
@@ -411,6 +467,7 @@ public sealed partial class MainViewModel
     {
         var current = _draftKey.Length > 0 ? _svc.Preview.Get(_draftKey) : null;
         UpdateClipDuration(current);
+        PreviewDuration = _clipDurationText;
         if (current is not { } p)
         {
             ClearPreviewPanel();

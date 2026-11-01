@@ -6,32 +6,71 @@ public readonly record struct PixelBox(int X, int Y, int Width, int Height)
     public int Right => X + Width;
     public int Bottom => Y + Height;
     public bool Intersects(PixelBox o) => X < o.Right && o.X < Right && Y < o.Bottom && o.Y < Bottom;
+
+    /// <summary>Area of the overlap with <paramref name="o"/> (0 when they do not touch).</summary>
+    public long OverlapArea(PixelBox o)
+    {
+        var w = Math.Min(Right, o.Right) - Math.Max(X, o.X);
+        var h = Math.Min(Bottom, o.Bottom) - Math.Max(Y, o.Y);
+        return w > 0 && h > 0 ? (long)w * h : 0;
+    }
 }
 
+/// <summary>One monitor: its full area, the part not covered by the taskbar, and its scale (1.0 = 100 %, 1.5 = 150 %...).</summary>
+public readonly record struct ScreenArea(PixelBox Bounds, PixelBox WorkArea, double Scale);
+
 /// <summary>
-/// Where the mini window opens (F4): where the user left it, unless that is no longer on any screen (a monitor was
-/// unplugged, the resolution changed), then the top right corner of the main screen.
+/// Where the mini and micro windows go (RONDA 2, spec 2.3): on the SAME monitor as the full window and stuck to its top right
+/// corner, inside the work area (never over the taskbar), counting each monitor's own scale. Changes between mini and micro keep
+/// that corner. Pure arithmetic: the windows and the monitors are reached through <c>IScreens</c> in the app.
 /// </summary>
 public static class MiniPlacement
 {
-    /// <summary>At least this part (pixels) of the window must be on a screen to count as reachable.</summary>
-    private const int MinVisible = 60;
-
-    public const int Margin = 24;
-
-    public static (int X, int Y) Place(int? savedX, int? savedY, int width, int height, IReadOnlyList<PixelBox> workAreas)
+    /// <summary>The monitor where most of <paramref name="window"/> is; the first one (the main one) when it is on none.</summary>
+    public static ScreenArea? ScreenOf(IReadOnlyList<ScreenArea> screens, PixelBox window)
     {
-        if (workAreas.Count == 0) return (savedX ?? 100, savedY ?? 100);
-        if (savedX is { } x && savedY is { } y)
+        if (screens.Count == 0) return null;
+        var best = screens[0];
+        var bestArea = 0L;
+        foreach (var s in screens)
         {
-            foreach (var a in workAreas)
-            {
-                var overlapW = Math.Min(x + width, a.Right) - Math.Max(x, a.X);
-                var overlapH = Math.Min(y + height, a.Bottom) - Math.Max(y, a.Y);
-                if (overlapW >= Math.Min(MinVisible, width) && overlapH >= Math.Min(height, 12)) return (x, y);
-            }
+            var a = window.OverlapArea(s.Bounds);
+            if (a > bestArea) (best, bestArea) = (s, a);
         }
-        var main = workAreas[0];
-        return (main.Right - width - Margin, main.Y + Margin);
+        return best;
+    }
+
+    /// <summary>Size in pixels of a window of <paramref name="dipWidth"/> x <paramref name="dipHeight"/> (device independent) on this monitor.</summary>
+    public static (int Width, int Height) PixelSize(ScreenArea screen, double dipWidth, double dipHeight) =>
+        ((int)Math.Round(dipWidth * screen.Scale), (int)Math.Round(dipHeight * screen.Scale));
+
+    /// <summary>
+    /// Top right corner of the work area of the monitor of <paramref name="fullWindow"/> (maximized or not: its monitor decides).
+    /// Returns the position of the new window's top left corner and the monitor used.
+    /// </summary>
+    public static (int X, int Y, ScreenArea Screen)? TopRightOfWindowScreen(IReadOnlyList<ScreenArea> screens, PixelBox fullWindow, double dipWidth, double dipHeight)
+    {
+        if (ScreenOf(screens, fullWindow) is not { } screen) return null;
+        var (w, h) = PixelSize(screen, dipWidth, dipHeight);
+        return Clamp(screen, screen.WorkArea.Right - w, screen.WorkArea.Y, w, h) is var (x, y) ? (x, y, screen) : null;
+    }
+
+    /// <summary>
+    /// Changing level (mini to micro or back): the top right corner of <paramref name="current"/> stays where it is, in the same monitor;
+    /// only the width and height change. Kept inside the work area.
+    /// </summary>
+    public static (int X, int Y)? KeepTopRight(IReadOnlyList<ScreenArea> screens, PixelBox current, double dipWidth, double dipHeight)
+    {
+        if (ScreenOf(screens, current) is not { } screen) return null;
+        var (w, h) = PixelSize(screen, dipWidth, dipHeight);
+        return Clamp(screen, current.Right - w, current.Y, w, h);
+    }
+
+    private static (int X, int Y) Clamp(ScreenArea s, int x, int y, int w, int h)
+    {
+        var a = s.WorkArea;
+        x = Math.Max(a.X, Math.Min(x, a.Right - w));
+        y = Math.Max(a.Y, Math.Min(y, a.Bottom - h));
+        return (x, y);
     }
 }

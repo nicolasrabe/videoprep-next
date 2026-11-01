@@ -18,7 +18,7 @@ public sealed partial class MainViewModel
     private string? _runFolder;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsIdle), nameof(ResolutionEnabled), nameof(CustomEnabled), nameof(SeriesEnabled), nameof(CanRetry))]
+    [NotifyPropertyChangedFor(nameof(IsIdle), nameof(ResolutionEnabled), nameof(CustomEnabled), nameof(SeriesEnabled), nameof(CanRetry), nameof(NamesEnabled), nameof(CustomFieldEnabled), nameof(SeriesFieldEnabled))]
     private bool _isRunning;
 
     /// <summary>Nothing is downloading or being replaced (an update in progress also blocks the buttons that start work).</summary>
@@ -252,6 +252,7 @@ public sealed partial class MainViewModel
             case ProgressEvent p:
                 ProgressIndeterminate = false;
                 Progress = p.Progress.Percent;
+                MiniSpeed = p.Progress.Speed;
                 StatusText = string.Format(L.Culture, L["st_progress"], p.Number, p.Total,
                     p.Progress.Percent.ToString("0.0", L.Culture), p.Progress.Speed, p.Progress.Eta);
                 break;

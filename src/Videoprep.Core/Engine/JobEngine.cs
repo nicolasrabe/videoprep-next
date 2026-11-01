@@ -421,7 +421,8 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
         {
             var fmt = FormatCatalog.Get(job.Format);
             var dir = Path.GetDirectoryName(file)!;
-            var baseName = job.Label ?? (isRange && job.Count > 1 ? $"{g.Stem} - {job.Index + 1}" : g.Stem);
+            var baseName = job.Label ?? (isRange && job.PartWord.Length > 0 ? $"{g.Stem} - {job.PartWord} {job.Index + 1}"
+                                   : isRange && job.Count > 1 ? $"{g.Stem} - {job.Index + 1}" : g.Stem);
             var tmp = Path.Combine(dir, baseName + ".__tmp" + fmt.Extension);
 
             var src = await ProbeAsync(file).ConfigureAwait(false);

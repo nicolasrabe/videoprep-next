@@ -89,11 +89,15 @@ internal static partial class Platform
     /// Tells Windows this window never takes the keyboard focus, not even when clicked (the "do not activate" window
     /// style): the program where the user is typing keeps the cursor. No effect on other systems.
     /// </summary>
-    public static void MakeNoActivate(IntPtr hwnd)
+    public static void MakeNoActivate(IntPtr hwnd) => SetNoActivate(hwnd, true);
+
+    /// <summary>Turns the "never takes the focus" style on (the micro bar) or off (the mini card, which has a text box to type in).</summary>
+    public static void SetNoActivate(IntPtr hwnd, bool on)
     {
         if (!OperatingSystem.IsWindows() || hwnd == IntPtr.Zero) return;
         var style = GetWindowLongPtr(hwnd, GwlExStyle).ToInt64();
-        if ((style & WsExNoActivate) == 0) SetWindowLongPtr(hwnd, GwlExStyle, (IntPtr)(style | WsExNoActivate));
+        var wanted = on ? style | WsExNoActivate : style & ~WsExNoActivate;
+        if (wanted != style) SetWindowLongPtr(hwnd, GwlExStyle, (IntPtr)wanted);
     }
 
     /// <summary>The window that has the keyboard focus now (0 = unknown).</summary>

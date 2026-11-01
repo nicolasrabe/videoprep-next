@@ -45,7 +45,7 @@ public sealed class ExtrasFeatureTests : IDisposable
         vm.ToggleMiniCommand.Execute(null);
         Assert.True(vm.IsMiniActive);
         Assert.True(_rig.Ui.MiniShown);
-        Assert.Equal(("Todo listo", MiniKind.Idle), (vm.MiniText, vm.MiniKind));
+        Assert.Equal(("Copiá un enlace para descargar", MiniKind.Idle), (vm.MiniText, vm.MiniKind));
 
         await vm.StartBatchAsync();
         Assert.Equal("Todo listo · 2 de 2 terminados", vm.MiniText);
@@ -74,12 +74,10 @@ public sealed class ExtrasFeatureTests : IDisposable
     {
         var vm = Vm();
         vm.ToggleMiniCommand.Execute(null);
-        vm.SetMiniPosition(120, 340);
         vm.CloseMiniCommand.Execute(null);
         Assert.False(vm.IsMiniActive);
         Assert.False(_rig.Ui.MiniShown);
-        // The place is kept for the next time (also in the settings file).
-        Assert.Equal((120, 340), (SettingsStore.Load(_rig.Paths.SettingsFile, out _).MiniX, SettingsStore.Load(_rig.Paths.SettingsFile, out _).MiniY));
+        Assert.Equal(MiniLevel.Maxi, vm.MiniLevel);
 
         vm.ToggleMiniCommand.Execute(null);
         vm.QuitFromMiniCommand.Execute(null);
