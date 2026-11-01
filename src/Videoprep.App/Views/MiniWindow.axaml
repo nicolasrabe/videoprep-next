@@ -8,6 +8,11 @@
         Width="340" Height="296" CanResize="False" SizeToContent="Manual"
         SystemDecorations="None" ShowInTaskbar="False" ShowActivated="False"
         Topmost="{Binding MiniOnTop}">
+  <Window.Resources>
+    <!-- Drawn icons, not font characters: no font on the machine can be missing them -->
+    <StreamGeometry x:Key="IconExpand">M14 4h6v6 M10 20H4v-6 M20 4l-7 7 M4 20l7-7</StreamGeometry>
+    <StreamGeometry x:Key="IconShrink">M5 19h14</StreamGeometry>
+  </Window.Resources>
   <!-- RONDA 2: two levels in one window. The card (mini, about 340 wide) has the link, the profile, a fragment, "A la cola" and "Descargar";
        the bar (micro, about 380 x 40) shows the state and "Detener". A red frame means something failed. -->
   <Border x:Name="Frame" Classes="mini" Classes.problem="{Binding MiniIsProblem}" BorderThickness="1"
@@ -24,11 +29,17 @@
       <!-- MINI: the card -->
       <Grid x:Name="Card" IsVisible="{Binding IsMiniCard}" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto" RowSpacing="6" Margin="8">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="4">
-          <Button x:Name="BackButton" Classes="miniicon" Content="⤢" Command="{Binding PromoteMiniCommand}"
-                  ToolTip.Tip="{s:T mini_close_tip}" AutomationProperties.Name="{s:T mnu_mini_close}" />
+          <Button x:Name="BackButton" Classes="miniicon" Command="{Binding PromoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_close_tip}" AutomationProperties.Name="{s:T mnu_mini_close}">
+            <Path Data="{StaticResource IconExpand}" Width="12" Height="12" Stretch="Uniform" StrokeThickness="1.8" StrokeLineCap="Round"
+                  StrokeJoin="Round" Stroke="{Binding $parent[Button].Foreground}" />
+          </Button>
           <TextBlock Grid.Column="1" x:Name="CardTitle" Text="videoprep" FontWeight="SemiBold" VerticalAlignment="Center" Margin="4,0" />
-          <Button Grid.Column="2" x:Name="MicroButton" Classes="miniicon" Content="▁" Command="{Binding DemoteMiniCommand}"
-                  ToolTip.Tip="{s:T mini_micro_tip}" AutomationProperties.Name="{s:T mini_micro_tip}" />
+          <Button Grid.Column="2" x:Name="MicroButton" Classes="miniicon" Command="{Binding DemoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_micro_tip}" AutomationProperties.Name="{s:T mini_micro_tip}">
+            <Path Data="{StaticResource IconShrink}" Width="12" Height="12" Stretch="Uniform" StrokeThickness="2.2" StrokeLineCap="Round"
+                  Stroke="{Binding $parent[Button].Foreground}" />
+          </Button>
           <ToggleButton Grid.Column="3" x:Name="PinButton" Classes="miniicon pin" Content="📌" IsChecked="{Binding MiniOnTop}"
                         ToolTip.Tip="{s:T mini_ontop_tip}" AutomationProperties.Name="{s:T mnu_mini_ontop}" />
         </Grid>
@@ -67,8 +78,11 @@
       <Panel x:Name="Bar" IsVisible="{Binding IsMicroBar}">
         <ProgressBar Classes="mini" Minimum="0" Maximum="100" Value="{Binding MiniPercent}" IsHitTestVisible="False" />
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="6,0,6,0" VerticalAlignment="Center">
-          <Button x:Name="BarBack" Classes="miniicon" Content="⤢" Command="{Binding PromoteMiniCommand}"
-                  ToolTip.Tip="{s:T mini_card_tip}" AutomationProperties.Name="{s:T mini_card_tip}" />
+          <Button x:Name="BarBack" Classes="miniicon" Command="{Binding PromoteMiniCommand}"
+                  ToolTip.Tip="{s:T mini_card_tip}" AutomationProperties.Name="{s:T mini_card_tip}">
+            <Path Data="{StaticResource IconExpand}" Width="12" Height="12" Stretch="Uniform" StrokeThickness="1.8" StrokeLineCap="Round"
+                  StrokeJoin="Round" Stroke="{Binding $parent[Button].Foreground}" />
+          </Button>
           <Grid Grid.Column="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="8,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="BarText" Text="{Binding MiniText}" TextTrimming="CharacterEllipsis"
                        VerticalAlignment="Center" Classes.problem="{Binding MiniIsProblem}" />

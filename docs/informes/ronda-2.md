@@ -45,5 +45,10 @@ Spec: `docs/V0_3_1_SPEC.md` (secciones 0 y RONDA 2). Capturas (tema oscuro, espa
 5. La velocidad en la ficha sale del texto que da yt-dlp (por ejemplo "7.16MiB/s"); no la convertí al formato de la app.
 6. Los íconos son trazos propios copiados del mockup (sin librería de íconos).
 
+## CI
+La primera corrida terminó con las 569 + 211 pruebas en verde **pero** el ejecutor de pruebas de la app informó `[FATAL ERROR] System.ArgumentException : Destination is too short. (Parameter 'destination')`
+(error propio de la tubería de xUnit/Avalonia, sin prueba asociada, a los 14 s) y salió con código 1; en la máquina de Nico no se reproduce. Lo único nuevo en pantalla desde el último verde era el carácter `▁` (botón "micro"), que depende de la tipografía
+del equipo. Se reemplazaron `▁` y `⤢` por íconos dibujados (sin tipografía). Segunda (y última permitida) corrida: ver el resultado en el mensaje final.
+
 ## Pendiente
-- Un solo push y una corrida de CI; merge a main sin tag. Ronda 3 (Suscripciones y cierre) después.
+- Ronda 3 (Suscripciones y cierre) después.
