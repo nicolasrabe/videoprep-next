@@ -3,8 +3,25 @@
 Versions below 1.0.0 are early releases: things can change between them.
 
 ## Sin publicar (0.3.1)
+- **Scraping, bug de fechas**: con un filtro de fechas aparecían videos fuera del rango (los sin fecha y los de fecha aproximada pasaban el filtro). Ahora un video solo
+  se muestra si su fecha está **confirmada** y dentro del rango, extremos incluidos; los que no se pueden confirmar se cuentan aparte ("N videos sin fecha confirmada", "Ver cuáles") y nunca se mezclan. Vale también para
+  Últimas 24 h / 7 días / Este mes y para las suscripciones. Comprobado con un canal real (11 pedidos, 4 videos, 0 fuera del rango).
+- **Scraping en tres pasos**: ① al pegar un enlace se identifica solo con un único pedido liviano (nombre, usuario, avatar; ningún video), ② filtros con atajos y la frase "Se va a buscar / Pedidos estimados",
+  ③ "Buscar videos" llena la tabla con lo que pasa. "Mostrar hasta" vacío = todos. Filas expandibles con la misma ficha de la Cola, barra inferior con el grupo "Selección" y el botón rojo "Reiniciar".
+- **Cuidado de los servidores**: un único listado por pestaña, de lo nuevo a lo viejo y cortado al pasar la fecha "desde"; fecha exacta solo para las dudosas (tope de 150 pedidos, después pregunta);
+  caché de unos minutos para cambiar filtros sin repetir pedidos; sin cookies salvo que las hayas elegido; aviso a los 50 videos (y antes de empezar cuando el sitio informa el total).
+  Si un sitio pide iniciar sesión, videoprep **no reintenta solo**: muestra un aviso con el botón "Reintentar con las cookies de tu navegador".
+- **Suscripciones**: cada revisión lee de lo más nuevo hacia atrás y se detiene al llegar a un video que ya tiene registrado; mismas fechas estrictas y mismos topes que Scraping (sin preguntar: lo que sobra espera a la próxima revisión);
+  la **primera revisión nunca baja el historial**: "Desde hoy" (por defecto), "Desde hace 7 días" o "Desde esta fecha". Las revisiones siguen siendo una por una, con pausas.
+- **Pestaña Prep** (antes Descargar): barra de pestañas con íconos y botón "Modo mini"; botón Pegar; perfil primero, descripción del formato en un ícono "i", interruptor Video / Solo audio; vista previa grande;
+  **fragmentos con su propio nombre** ("Título original - parte N" si la caja queda vacía); un solo desplegable para el nombre del archivo, que se apaga cuando hay fragmentos.
+- **Modo mini en tres niveles**: ventana completa, ficha (enlace, perfil, fragmento, A la cola, Descargar) y barra de una línea ("Copiá un enlace para descargar"). Doble clic o los botones ⤢ y ▁ para cambiar de nivel.
+  La ficha o la barra aparecen en el mismo monitor que la ventana completa, pegadas a su esquina superior derecha (con la escala de ese monitor); ya no se recuerda la última posición.
+- Cambios para quien mira el código: `ScrapeSearch`, `MiniPlacer`, `VideoCard`; `ClipRange.Name` y `QueueItem.PartWord` (las colas guardadas antes se siguen cargando); se quitó `miniX`/`miniY` de los ajustes.
+- Pruebas: una que lee los archivos de textos y de pantallas sin Avalonia (claves en es/en, textos vacíos, textos fijos sin traducir); `RealListingTests` (listado real a mano); las pruebas de pantalla que fallaban al azar
+  por un error de la librería de Avalonia quedaron marcadas `Inestable` y se corren a mano.
 - CI y publicación solo para Windows: se sacaron los trabajos de macOS y Ubuntu y el `osx-arm64`; las pruebas con ffmpeg real
-  corren en Windows. El código para Mac/Linux no se tocó. Lo pendiente para portar está en `docs/PORTING_LATER.md`.
+  corren en Windows (en su propio flujo, solo cuando cambia el motor). El código para Mac/Linux no se tocó. Lo pendiente para portar está en `docs/PORTING_LATER.md`.
 
 ## 0.3.0 - 2026-10-29
 - "Cargar archivo..." (also by dragging a file onto the Download or Queue tab) reads links from .txt, .docx, .md, .html

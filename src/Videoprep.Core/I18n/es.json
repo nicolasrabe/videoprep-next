@@ -197,8 +197,6 @@
   "sc_task_config": "Configurar...",
   "sc_task_remove": "Quitar tarea",
   "sc_firstrun": "La primera vez:",
-  "sc_firstrun_new": "Bajar solo lo nuevo desde ahora",
-  "sc_firstrun_backfill": "Bajar también lo anterior que cumpla los filtros",
   "sc_subs_note": "Cada suscripción lleva su propio historial: no se baja dos veces lo mismo. Los videos nuevos se bajan solos a la carpeta de la suscripción. Pausa entre pedidos para no cargar a YouTube.",
   "sc_never": "nunca",
   "sc_nofilters": "sin filtros",
@@ -540,5 +538,10 @@
   "lbl_preview": "Vista previa",
   "lbl_clips_hint": "(vacío = video completo)",
   "tip_hint_i": "Qué hace este formato",
-  "tip_frag_name": "Si lo dejás vacío, el archivo se llama «Título original - parte N»."
+  "tip_frag_name": "Si lo dejás vacío, el archivo se llama «Título original - parte N».",
+  "sc_firstrun_today": "Desde hoy (no baja nada de lo que ya hay)",
+  "sc_firstrun_week": "Desde hace 7 días",
+  "sc_firstrun_date": "Desde esta fecha:",
+  "sc_firstrun_hint": "La primera revisión nunca baja todo el historial del canal.",
+  "sc_unconfirmed_sub": "{0}: {1} videos sin fecha confirmada (no se bajaron)."
 }

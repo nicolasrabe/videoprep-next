@@ -204,3 +204,18 @@ Date rule (spec 1.1), checked by tests with an in-memory yt-dlp (`DateRangeTests
 Real run, 2026-11-01 (listing only, nothing downloaded): `https://www.youtube.com/@AgerGames/videos`, range 2026-10-20..2026-10-30, no cookies, no questions: 11 requests (1 listing, 10 exact-date), 12 entries read (cut early), 4 videos shown (2026-10-30, 10-29, 10-24, 10-23), 0 without a confirmed date, **0 outside the range**. Cookies offer: when a site asks for a login the program only offers "Reintentar con las cookies de tu navegador"; it was tested against the fake yt-dlp (`bot-unless-chrome`), not against a real site that demands a login.
 
 NOT verified in RONDA 1: the cut-early and `-I N:` behaviour against YouTube beyond the requests above; the cookie retry against a real site that asks for a login.
+
+## 0.3.1 RONDAS 2 y 3 - Prep, mini y Suscripciones
+
+Comprobado ejecutando (Windows 10, yt-dlp 2026.10.21, ffmpeg del repo):
+- Fragmentos con nombre propio: con ffmpeg real salen `Entrada.mp4`, `<título> - parte 2.mp4`, `Final.mp4` desde una sola descarga (`EngineWithFfmpegTests.Fragments_are_saved_with_their_own_name_or_Titulo_original_parte_N`).
+  Hubo que dejar el archivo completo con el nombre del título cuando hay fragmentos (si no, tomaba el nombre del primer fragmento).
+- Posición de la ficha y la barra mini: la cuenta (monitor de la ventana completa, esquina superior derecha, escala de ese monitor, área de trabajo) está probada con monitores y ventanas falsos (`MiniPlacementTests`, `MiniPlacerTests`).
+  El doble clic se probó con la entrada simulada de Avalonia (texto vs. caja, lista y casilla). **No verificado**: un monitor real con otra escala ni dos monitores reales (lo prueba Nico con la lista de pasos).
+- Suscripciones: la revisión corta al llegar al primer video ya registrado; "Desde hace 7 días / desde una fecha" no baja el historial; las fechas sin confirmar no se bajan; el tope de 150 pedidos no pregunta y lo que sobra espera;
+  cuando una revisión tiene más para bajar que su cupo, baja **los más viejos primero** (la siguiente revisión llega a los más nuevos antes de tocar un video conocido; si fuera al revés, los más viejos quedarían tapados). Todo con yt-dlp falso y con ffmpeg real donde hace falta; **no verificado** contra un canal real en una revisión completa.
+- Las pantallas se probaron renderizadas sin pantalla real y se sacaron 120 capturas (10 pantallas x 6 temas x 2 idiomas) en `docs/capturas/0.3.1/`, sin textos sin traducir.
+
+Pruebas de pantalla marcadas `Inestable` (2 pruebas, 24 casos), corridas a mano al cierre: 3 corridas, 71 de 72 casos pasaron; el que falló fue `[Test Case Cleanup Failure ... a different thread owns it]` de `Avalonia.Headless`
+(código de la librería, al preparar la prueba siguiente; no es de la app). Detalle en `docs/informes/ronda-3.md`.
+

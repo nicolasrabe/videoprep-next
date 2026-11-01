@@ -28,7 +28,8 @@ public interface ISearchPrompts
 public sealed record SearchProgress(string Phase, int Reviewed, int Passing, int DatesConfirmed, int DatesTotal, int Requests);
 
 public sealed record SearchRequest(string Source, IReadOnlyList<SourceTab> Tabs, FilterSet Filters, Func<ListingEntry, bool> IsDownloaded, DateOnly Today,
-                                   ToolPaths Tools, CookieSource Cookies, int? KnownTotal = null);
+                                   ToolPaths Tools, CookieSource Cookies, int? KnownTotal = null,
+                                   Func<ListingEntry, bool>? StopAtKnown = null);
 
 public sealed record SearchResult(SearchStatus Status, Filters.Evaluation Eval, IReadOnlyList<TabResult> Tabs, FilterSet Filters, int Requests,
                                   int DatesConfirmed, int DatesTotal, string Error = "")
@@ -50,6 +51,12 @@ public sealed record RequestEstimate(int Min, int Max, bool FromCache);
 /// </summary>
 public sealed class ScrapeSearch(IProcessRunner runner, Log log, Func<DateTime>? clock = null)
 {
+    /// <summary>
+    /// Which dates are asked for first when there are more than the cap: the newest (Scraping) or the OLDEST (subscriptions: a check stops at
+    /// the first video its history knows, so what is left over must be the newest, which the next check reaches before any known video).
+    /// </summary>
+    public bool ConfirmOldestFirst { get; init; }
+
     /// <summary>Candidate videos found before the search asks whether to go on.</summary>
     public int AskAt { get; init; } = 50;
 
@@ -79,6 +86,9 @@ public sealed class ScrapeSearch(IProcessRunner runner, Log log, Func<DateTime>?
         public DateTime At { get; set; }
         public TabResult? Result { get; set; }
     }
+
+    /// <summary>The exact date of this video was asked for in this search (it may still have come back without one).</summary>
+    public bool WasAttempted(string id) => _attempted.Contains(id);
 
     /// <summary>Forgets everything read (the person pressed Reiniciar).</summary>
     public void Clear()
@@ -207,6 +217,8 @@ public sealed class ScrapeSearch(IProcessRunner runner, Log log, Func<DateTime>?
                 var r = await lister.ListTargetAsync(target, req.Tools, req.Cookies, start, order, e =>
                 {
                     tab.Entries.Add(e);
+                    // Subscriptions (RONDA 3): the listing goes from the newest back and stops at the first video the history already has.
+                    if (req.StopAtKnown?.Invoke(e) == true) { reason = "known"; return true; }
                     var v = Filters.Classify(e, f, req.Today, include, exclude);
                     if (v != Filters.Verdict.Drop) candidates++;
                     if (e.Date is { } d && f.From is { } from && d.AddDays(Filters.ApproxMarginDays(d, req.Today) * (e.DateIsApprox ? 1 : 0)) < from) olderRun++;
@@ -262,7 +274,8 @@ public sealed class ScrapeSearch(IProcessRunner runner, Log log, Func<DateTime>?
             {
                 var all = AllEntries(targets);
                 var eval = Filters.Evaluate(all, f, req.IsDownloaded, req.Today);
-                var need = Filters.NeedsExact(eval.Shown.Concat(eval.Unconfirmed), f).Where(e => !_attempted.Contains(e.Id)).OrderBy(e => e.Order).ToList();
+                var need = Filters.NeedsExact(eval.Shown.Concat(eval.Unconfirmed), f).Where(e => !_attempted.Contains(e.Id)).ToList();
+                need = (ConfirmOldestFirst ? need.OrderByDescending(e => e.Order) : need.OrderBy(e => e.Order)).ToList();
                 if (need.Count == 0) break;
                 if (rounds > 0 && !await prompts.AskConfirmMore(need.Count).ConfigureAwait(false)) { truncated = true; break; }
                 var take = need.Take(ExactRequestCap).ToList();

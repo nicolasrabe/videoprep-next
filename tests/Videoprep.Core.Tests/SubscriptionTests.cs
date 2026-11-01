@@ -234,4 +234,101 @@ public sealed class CheckRunnerTests : IDisposable
         Assert.Equal(CheckResult.ExitSomeFailed, r.ExitCode);
         Assert.NotNull(Stored("a").LastError);
     }
+
+    // ---- RONDA 3: first check "desde cuándo", the same strict dates and caps as Scraping, a check that stops at what it already knows
+
+    private void ExactDates(params string[] lines) => File.WriteAllLines(Path.Combine(_listing, "exact.txt"), lines);
+
+    [Fact]
+    public async Task A_new_subscription_since_a_date_takes_only_what_is_newer_and_marks_the_older_ones_as_seen()
+    {
+        // 14 days ago (approximate 12 Oct) is in; the two of 26 Sep are before the date: seen, not downloaded.
+        ExactDates("Q1fMMYyt0I4|20261012|855|not_live|public");
+        SaveSubs(25, Sub("a", Subscription.FirstRunSinceDate) with { FirstRunSince = "2026-10-01" });
+        var r = await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, r.NewTotal);
+        Assert.Equal(1, Downloads());
+        Assert.Contains("https://www.youtube.com/watch?v=Q1fMMYyt0I4", _rig.Calls().Last());
+        var archive = File.ReadAllLines(Path.Combine(_paths.ArchivesDir, "a.txt")).Order().ToArray();
+        Assert.Equal(["youtube 39h7ZJbRcsw", "youtube 685eur9lMGc", "youtube Q1fMMYyt0I4"], archive);   // the history is not downloaded, only remembered
+
+        var again = await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+        Assert.Equal(0, again.NewTotal);
+        Assert.Equal(1, Downloads());
+    }
+
+    [Fact]
+    public async Task From_today_reads_one_page_only_and_the_next_check_stops_at_the_first_known_video()
+    {
+        SaveSubs(25, Sub("a", Subscription.FirstRunMarkSeen));
+        await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+        var firstListing = _rig.Calls()[0];
+        Assert.Equal("1:30", firstListing[Array.IndexOf(firstListing, "-I") + 1]);          // one page, not the whole history
+
+        // A new video: the check reads it and the first video it already has, and stops (the rest of the channel is not asked for).
+        var first = File.ReadLines(Path.Combine(_listing, "videos.jsonl")).First();
+        File.WriteAllLines(Path.Combine(_listing, "videos.jsonl"),
+            [first.Replace("Q1fMMYyt0I4", "NEWvideo001"), .. File.ReadAllLines(Path.Combine(_listing, "videos.jsonl"))]);
+        var r = await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+        Assert.Equal(1, r.NewTotal);
+        Assert.Contains("stopped early", _rig.LogText);
+    }
+
+    [Fact]
+    public async Task A_date_that_cannot_be_confirmed_is_counted_apart_never_downloaded_and_not_asked_again()
+    {
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "listing", "youtube-shorts.jsonl"), Path.Combine(_listing, "shorts.jsonl"));
+        ExactDates("Qqmj29bOcLA|20261022|43|not_live|public", "WPSSn367NIA|20261016|48|not_live|public", "t3_O2dahOqw|NA|40|not_live|public");
+        var filters = new SubscriptionFilters { From = "2026-10-20", To = "2026-10-27" };
+        SaveSubs(25, Sub("a", Subscription.FirstRunBackfill, filters) with { Tabs = ["shorts"] });
+        var r = await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+
+        var sub = Assert.Single(r.Subs);
+        Assert.Equal((1, 1), (sub.Ok, sub.Unconfirmed));
+        Assert.Equal(1, Downloads());                                                 // only the one with a confirmed date inside the range
+        Assert.Contains("1 without a confirmed date", _rig.LogText);
+        Assert.Contains("youtube t3_O2dahOqw", File.ReadAllLines(Path.Combine(_paths.ArchivesDir, "a.txt")));   // asked once, not every check
+    }
+
+    [Fact]
+    public async Task The_cap_of_date_requests_does_not_ask_and_what_is_left_waits_for_the_next_check()
+    {
+        File.Copy(Path.Combine(AppContext.BaseDirectory, "Fixtures", "listing", "youtube-shorts.jsonl"), Path.Combine(_listing, "shorts.jsonl"));
+        ExactDates("Qqmj29bOcLA|20261022|43|not_live|public", "WPSSn367NIA|20261022|48|not_live|public", "t3_O2dahOqw|20261022|40|not_live|public");
+        var filters = new SubscriptionFilters { From = "2026-10-20", To = "2026-10-27" };
+        SaveSubs(25, Sub("a", Subscription.FirstRunBackfill, filters) with { Tabs = ["shorts"] });
+        var runner = new CheckRunner(new ProcessRunner(), _rig.Log, _paths)
+        {
+            Delay = (t, _) => Task.CompletedTask, ExactRequestCap = 2, Now = () => new DateTimeOffset(2026, 10, 26, 9, 14, 0, TimeSpan.FromHours(-3)),
+        };
+        var first = await runner.RunAsync(null, Options, TestContext.Current.CancellationToken);
+        Assert.Equal((2, 1), (first.Subs[0].Ok, first.Subs[0].Unconfirmed));          // 2 dates asked (the cap), 1 left over
+        // The OLDEST dates are asked first, so the one left over is the newest: the next check reaches it before any video it already knows.
+        Assert.DoesNotContain("Qqmj29bOcLA", string.Join("\n", File.ReadAllLines(Path.Combine(_paths.ArchivesDir, "a.txt"))));
+
+        var second = await runner.RunAsync(null, Options, TestContext.Current.CancellationToken);
+        Assert.Equal(1, second.Subs[0].Ok);                                           // the next check gets to it
+    }
+
+    [Fact]
+    public async Task Subscriptions_are_checked_one_after_the_other_with_pauses_between()
+    {
+        SaveSubs(25, Sub("a", Subscription.FirstRunMarkSeen), Sub("b", Subscription.FirstRunMarkSeen), Sub("c", Subscription.FirstRunMarkSeen));
+        var r = await Runner().RunAsync(null, Options, TestContext.Current.CancellationToken);
+        Assert.Equal(3, r.Subs.Count);
+        Assert.Equal(2, _pauses.Count);                                               // a pause between each pair, never all at once
+        Assert.All(_pauses, p => Assert.InRange(p.TotalSeconds, 5, 15));
+    }
+
+    [Fact]
+    public void The_first_check_choice_is_saved_and_older_files_still_load()
+    {
+        var sub = Sub("a", Subscription.FirstRunSinceDate) with { FirstRunSince = "2026-10-19" };
+        SaveSubs(25, sub);
+        var back = Stored("a");
+        Assert.Equal((Subscription.FirstRunSinceDate, "2026-10-19"), (back.FirstRun, back.FirstRunSince));
+        Assert.DoesNotContain("firstRunSince", System.Text.Json.JsonSerializer.Serialize(Sub("b")));   // not written when not used
+    }
 }
+

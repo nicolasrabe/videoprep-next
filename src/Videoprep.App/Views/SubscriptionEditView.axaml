@@ -79,8 +79,13 @@
 
     <StackPanel Spacing="4" IsVisible="{Binding IsNew}">
       <TextBlock Classes="muted" Text="{s:T sc_firstrun}" />
-      <RadioButton GroupName="firstrun" Content="{s:T sc_firstrun_new}" IsChecked="{Binding OnlyNew}" />
-      <RadioButton GroupName="firstrun" Content="{s:T sc_firstrun_backfill}" IsChecked="{Binding Backfill}" />
+      <RadioButton x:Name="FirstToday" GroupName="firstrun" Content="{s:T sc_firstrun_today}" IsChecked="{Binding FirstToday}" />
+      <RadioButton x:Name="FirstWeek" GroupName="firstrun" Content="{s:T sc_firstrun_week}" IsChecked="{Binding FirstWeek}" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <RadioButton x:Name="FirstDate" GroupName="firstrun" Content="{s:T sc_firstrun_date}" IsChecked="{Binding FirstDate}" />
+        <TextBox x:Name="SinceBox" Text="{Binding SinceText}" Width="120" PlaceholderText="{s:T sc_date_ph}" IsEnabled="{Binding FirstDate}" />
+      </StackPanel>
+      <TextBlock Classes="muted" Text="{s:T sc_firstrun_hint}" TextWrapping="Wrap" />
     </StackPanel>
     <CheckBox Content="{s:T sc_col_on}" IsChecked="{Binding Enabled}" />
   </StackPanel>

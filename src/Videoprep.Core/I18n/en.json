@@ -197,8 +197,6 @@
   "sc_task_config": "Set up...",
   "sc_task_remove": "Remove task",
   "sc_firstrun": "The first time:",
-  "sc_firstrun_new": "Only download what is new from now on",
-  "sc_firstrun_backfill": "Also download older videos that pass the filters",
   "sc_subs_note": "Each subscription keeps its own history: nothing is downloaded twice. New videos are downloaded to the subscription folder automatically, with pauses between requests so YouTube is not overloaded.",
   "sc_never": "never",
   "sc_nofilters": "no filters",
@@ -540,5 +538,10 @@
   "lbl_preview": "Preview",
   "lbl_clips_hint": "(empty = whole video)",
   "tip_hint_i": "What this format does",
-  "tip_frag_name": "If you leave it empty, the file is called \"Original title - part N\"."
+  "tip_frag_name": "If you leave it empty, the file is called \"Original title - part N\".",
+  "sc_firstrun_today": "From today (nothing that already exists is downloaded)",
+  "sc_firstrun_week": "From 7 days ago",
+  "sc_firstrun_date": "From this date:",
+  "sc_firstrun_hint": "The first check never downloads the whole history of the channel.",
+  "sc_unconfirmed_sub": "{0}: {1} videos without a confirmed date (not downloaded)."
 }

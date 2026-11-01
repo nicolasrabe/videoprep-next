@@ -22,7 +22,11 @@ public sealed record CheckOptions
 
 /// <summary>What happened with one subscription.</summary>
 public sealed record SubCheckResult(string Id, string Name, int New, int Ok, int Failed, int MarkedSeen, int Deferred,
-                                    string? Error, bool Blocked);
+                                    string? Error, bool Blocked)
+{
+    /// <summary>Videos that passed the filters but whose date could not be confirmed (RONDA 3): never downloaded, counted apart.</summary>
+    public int Unconfirmed { get; init; }
+}
 
 public sealed record CheckResult(IReadOnlyList<SubCheckResult> Subs, bool Blocked, bool Cancelled)
 {
@@ -42,8 +46,14 @@ public sealed record CheckResult(IReadOnlyList<SubCheckResult> Subs, bool Blocke
 /// </summary>
 public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
 {
-    /// <summary>Newest entries listed per tab on a check (the channel lists newest first; older ones were seen before).</summary>
-    public int ListCap { get; init; } = 100;
+    /// <summary>Entries listed to mark a new subscription's existing videos as seen ("Desde hoy"): one page is enough, later checks stop at them.</summary>
+    public int ListCap { get; init; } = 30;
+
+    /// <summary>
+    /// Exact-date requests per subscription and check (RONDA 3, same cap as Scraping). A check runs by itself, so past the cap it does not
+    /// ask: what is left waits for the next check.
+    /// </summary>
+    public int ExactRequestCap { get; init; } = 150;
 
     /// <summary>Pause between subscriptions; tests replace it.</summary>
     public Func<TimeSpan, CancellationToken, Task> Delay { get; init; } = Task.Delay;
@@ -108,7 +118,8 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
     private static string Summary(SubCheckResult r) =>
         r.Error is not null ? "ERROR " + r.Error
         : r.MarkedSeen > 0 ? $"first check, {r.MarkedSeen} existing video(s) marked as seen (not downloaded)"
-        : $"{r.New} new, {r.Ok} downloaded, {r.Failed} failed" + (r.Deferred > 0 ? $", {r.Deferred} wait for the next check" : "");
+        : $"{r.New} new, {r.Ok} downloaded, {r.Failed} failed" + (r.Deferred > 0 ? $", {r.Deferred} wait for the next check" : "")
+          + (r.Unconfirmed > 0 ? $", {r.Unconfirmed} without a confirmed date" : "");
 
     private async Task PauseAsync(SubscriptionSettings s, CancellationToken ct)
     {
@@ -118,48 +129,81 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
         catch (OperationCanceledException) { }
     }
 
+    /// <summary>The questions of a search, answered by nobody: a check runs by itself (at start, every N hours, with the program closed).</summary>
+    private sealed class NobodyToAsk : ISearchPrompts
+    {
+        public Task<ManyKnownChoice> AskManyKnown(int total, int requests) => Task.FromResult(ManyKnownChoice.LimitTo50);
+        public Task<Reached50Choice> AskReached50(int found) => Task.FromResult(Reached50Choice.StopHere);
+        public Task<bool> AskConfirmMore(int missing) => Task.FromResult(false);
+    }
+
     private async Task<SubCheckResult> CheckOneAsync(Subscription sub, CheckOptions o, int budget, CancellationToken ct)
     {
         SubCheckResult Fail(string error, bool isBlocked = false) => new(sub.Id, sub.Name, 0, 0, 0, 0, 0, error, isBlocked);
 
         var targets = SourceUrl.Targets(sub.Url, sub.SourceTabs());
         if (targets.Count == 0) return Fail("the link is not valid");
-        var lister = new SourceLister(runner, log) { MaxPerTab = ListCap };
-        var entries = new List<ListingEntry>();
-        var listed = await lister.ListAsync(targets, o.Tools, o.ListingCookies, e => { lock (entries) entries.Add(e); }, ct).ConfigureAwait(false);
-        if (listed.Any(r => r.Outcome == ListOutcome.Blocked)) return Fail("the site asked for verification", isBlocked: true);
-        if (listed.Any(r => r.Outcome == ListOutcome.Cancelled)) return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, 0, 0, null, false);
-        if (listed.All(r => r.Outcome is ListOutcome.Failed or ListOutcome.NoSuchTab) && listed.Any(r => r.Outcome == ListOutcome.Failed))
-            return Fail(listed.First(r => r.Outcome == ListOutcome.Failed).Error);
-        var videos = entries.Where(e => !e.IsPlaylist).ToList();
-
         var archivePath = SubscriptionStore.ArchiveFor(paths, sub);
+        var firstRun = !File.Exists(archivePath);
         var archive = ArchiveStore.Load(archivePath);
-        if (!File.Exists(archivePath) && sub.FirstRun == Subscription.FirstRunMarkSeen)
+        var today = DateOnly.FromDateTime(Now().DateTime);
+
+        if (firstRun && sub.FirstRun == Subscription.FirstRunMarkSeen)
         {
-            // "Only new from now": everything listed today counts as seen; nothing is downloaded.
+            // "Desde hoy": what exists now counts as seen; one page of the newest videos is enough, because later checks stop at the first one they know.
+            var lister = new SourceLister(runner, log) { MaxPerTab = ListCap };
+            var seen = new List<ListingEntry>();
+            var listed = await lister.ListAsync(targets, o.Tools, o.ListingCookies, e => { lock (seen) seen.Add(e); }, ct).ConfigureAwait(false);
+            if (listed.Any(r => r.Outcome == ListOutcome.Blocked)) return Fail("the site asked for verification", isBlocked: true);
+            if (listed.Any(r => r.Outcome == ListOutcome.Cancelled)) return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, 0, 0, null, false);
+            if (listed.All(r => r.Outcome is ListOutcome.Failed or ListOutcome.NoSuchTab) && listed.Any(r => r.Outcome == ListOutcome.Failed))
+                return Fail(listed.First(r => r.Outcome == ListOutcome.Failed).Error);
+            var videos = seen.Where(e => !e.IsPlaylist).ToList();
             ArchiveStore.Append(archivePath, videos.Select(v => v.ArchiveKey));
             return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, videos.Count, 0, null, false);
         }
 
+        // The same search as Scraping (RONDA 1): one listing per tab from the newest back, cut early, strict dates, at most ExactRequestCap
+        // date requests. Plus: it stops at the first video this subscription's history already has, so a check costs almost nothing.
         var filters = sub.Filters.ToFilterSet();
-        var eval = Filters.Evaluate(videos, filters, archive.Contains);
-        var passed = eval.Shown;
-        var need = Filters.NeedsExact(eval.Shown.Concat(eval.Unconfirmed), filters);
-        var exactBlocked = false;
-        if (need.Count > 0)
-        {
-            var (infos, b) = await lister.ExactAsync(need, o.Tools, o.ListingCookies, null, ct).ConfigureAwait(false);
-            exactBlocked = b;
-            var byId = infos.ToDictionary(x => x.Id);
-            videos = videos.Select(v => byId.TryGetValue(v.Id, out var x) ? x.ApplyTo(v) : v).ToList();
-            passed = Filters.Apply(videos, filters, archive.Contains);
-        }
-        if (exactBlocked) return Fail("the site asked for verification", isBlocked: true);
+        if (firstRun && sub.FirstRun == Subscription.FirstRunSinceDate && Filters.TryParseDate(sub.FirstRunSince, out var since) && since is { } sinceDate)
+            filters = filters with { From = filters.From is { } f0 && f0 > sinceDate ? f0 : sinceDate };
+        var search = new ScrapeSearch(runner, log) { ExactRequestCap = ExactRequestCap, ConfirmOldestFirst = true };
+        var req = new SearchRequest(sub.Url, sub.SourceTabs(), filters, archive.Contains, today, o.Tools, o.ListingCookies, null, archive.Contains);
+        var res = await search.RunAsync(req, new NobodyToAsk(), null, ct).ConfigureAwait(false);
+        if (res.Status == SearchStatus.Blocked) return Fail("the site asked for verification", isBlocked: true);
+        if (res.Status == SearchStatus.Cancelled) return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, 0, 0, null, false);
+        if (res.Status == SearchStatus.Failed) return Fail(res.Error.Length > 0 ? res.Error : "the link could not be listed");
 
-        var take = passed.Take(budget).ToList();
+        var passed = res.Eval.Shown.Where(e => !e.IsPlaylist).ToList();
+        var unconfirmed = res.Eval.Unconfirmed;
+        var all = search.AllEntries(targets);
+        if (firstRun && sub.FirstRun == Subscription.FirstRunSinceDate)
+        {
+            // The older videos that were looked at count as seen, so the next check stops at them and never walks back through the history.
+            var passedIds = passed.Select(p => p.Id).ToHashSet();
+            ArchiveStore.Append(archivePath, all.Where(e => !e.IsPlaylist && !passedIds.Contains(e.Id)).Select(e => e.ArchiveKey));
+        }
+        else
+        {
+            // A date that was asked for and still did not come: it will never be a confirmed date, so it is not asked again every check.
+            var passedIds2 = passed.Select(p => p.Id).ToHashSet();
+            var unconfirmedIds = unconfirmed.Select(u => u.Id).ToHashSet();
+            var settled = unconfirmed.Where(e => search.WasAttempted(e.Id))
+                // ... and a video whose exact date came back OUTSIDE the range (or that the exact data filtered out): it will not change either.
+                .Concat(all.Where(e => !e.IsPlaylist && search.WasAttempted(e.Id) && !passedIds2.Contains(e.Id) && !unconfirmedIds.Contains(e.Id)))
+                .Select(e => e.ArchiveKey).Distinct().ToList();
+            if (settled.Count > 0) ArchiveStore.Append(archivePath, settled);
+        }
+        if (unconfirmed.Count > 0) log.Write($"Subscription {sub.Name}: {unconfirmed.Count} video(s) without a confirmed date were not downloaded");
+
+        // More than the budget: the OLDEST ones go first. The next check lists from the newest back and stops at the first known video, so
+        // the ones left (the newest) are found again; taking the newest first would hide the rest behind them.
+        var take = passed.Count > budget
+            ? passed.OrderBy(e => e.Date ?? DateOnly.MaxValue).ThenByDescending(e => e.Order).Take(budget).ToList()
+            : passed;
         var deferred = passed.Count - take.Count;
-        if (take.Count == 0) return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, 0, 0, null, false);
+        if (take.Count == 0) return new SubCheckResult(sub.Id, sub.Name, 0, 0, 0, 0, 0, null, false) { Unconfirmed = unconfirmed.Count };
 
         var folder = sub.TargetFolder();
         Directory.CreateDirectory(folder);
@@ -195,7 +239,7 @@ public sealed class CheckRunner(IProcessRunner runner, Log log, AppPaths paths)
         };
         var r = await engine.RunAsync(jobs, ctx, ct).ConfigureAwait(false);
         return new SubCheckResult(sub.Id, sub.Name, take.Count, r.Ok + r.Warn, r.Fail, 0, deferred,
-                                  r.Blocked ? "the site asked for verification" : null, r.Blocked);
+                                  r.Blocked ? "the site asked for verification" : null, r.Blocked) { Unconfirmed = unconfirmed.Count };
     }
 
     /// <summary>Writes lastCheck/lastNew/lastError of one subscription, re-reading the file so edits made meanwhile are kept.</summary>

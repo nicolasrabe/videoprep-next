@@ -61,6 +61,8 @@ public sealed record Subscription
 {
     public const string FirstRunMarkSeen = "markExistingAsSeen";
     public const string FirstRunBackfill = "backfillWithFilters";
+    /// <summary>RONDA 3: the first check takes only the videos published since <see cref="FirstRunSince"/> (never the whole history).</summary>
+    public const string FirstRunSinceDate = "sinceDate";
 
     [JsonPropertyName("id")] public string Id { get; init; } = "";
     [JsonPropertyName("name")] public string Name { get; init; } = "";
@@ -73,6 +75,8 @@ public sealed record Subscription
     [JsonPropertyName("folder")] public string Folder { get; init; } = "";
     [JsonPropertyName("subfolderPerSub")] public bool SubfolderPerSub { get; init; }
     [JsonPropertyName("firstRun")] public string FirstRun { get; init; } = FirstRunMarkSeen;
+    /// <summary>yyyy-MM-dd, with <see cref="FirstRunSinceDate"/>.</summary>
+    [JsonPropertyName("firstRunSince")] [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public string? FirstRunSince { get; init; }
     [JsonPropertyName("lastCheck")] public string? LastCheck { get; init; }
     [JsonPropertyName("lastNew")] public int? LastNew { get; init; }
     [JsonPropertyName("lastError")] public string? LastError { get; init; }

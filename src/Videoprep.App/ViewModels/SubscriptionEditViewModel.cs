@@ -36,7 +36,6 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         Prefix = s.Profile.Prefix;
         Folder = s.Folder;
         SubfolderPerSub = s.SubfolderPerSub;
-        Backfill = s.FirstRun == Subscription.FirstRunBackfill;
         Enabled = s.Enabled;
         // F6: the profile it follows (if it still exists); a change of format or names by hand means "own values".
         SelectedProfile = s.Profile.ProfileId is { } id ? Profiles.FirstOrDefault(c => c.Profile?.Id == id) ?? Profiles[0] : Profiles[0];
@@ -91,8 +90,20 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
     [ObservableProperty] private string _prefix = "";
     [ObservableProperty] private string _folder = "";
     [ObservableProperty] private bool _subfolderPerSub;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(OnlyNew))] private bool _backfill;
-    public bool OnlyNew { get => !Backfill; set => Backfill = !value; }
+    /// <summary>Today, injectable for tests ("Desde hace 7 días").</summary>
+    public Func<DateOnly> Today { get; init; } = () => DateOnly.FromDateTime(DateTime.Today);
+
+    /// <summary>The first check of a NEW subscription never takes the whole history: 0 = from today (the default), 1 = the last 7 days, 2 = from a date.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FirstToday), nameof(FirstWeek), nameof(FirstDate))]
+    private int _firstRunChoice;
+
+    public bool FirstToday { get => FirstRunChoice == 0; set { if (value) FirstRunChoice = 0; } }
+    public bool FirstWeek { get => FirstRunChoice == 1; set { if (value) FirstRunChoice = 1; } }
+    public bool FirstDate { get => FirstRunChoice == 2; set { if (value) FirstRunChoice = 2; } }
+
+    /// <summary>yyyy-MM-dd, with "Desde esta fecha".</summary>
+    [ObservableProperty] private string _sinceText = "";
     [ObservableProperty] private bool _enabled = true;
 
     [RelayCommand]
@@ -132,6 +143,24 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
         if (SourceUrl.Targets(url, tabs).Count == 0) { problem = L["sc_bad_url"]; return null; }
         if (Filter.Read(out problem) is not { } filters) return null;
         if (Folder.Trim().Length == 0) { problem = L["sc_need_folder"]; return null; }
+        string firstRun = _original?.FirstRun ?? Subscription.FirstRunMarkSeen;
+        string? since = _original?.FirstRunSince;
+        if (IsNew)
+        {
+            switch (FirstRunChoice)
+            {
+                case 1:
+                    (firstRun, since) = (Subscription.FirstRunSinceDate, Today().AddDays(-7).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+                    break;
+                case 2:
+                    if (!Filters.TryParseDate(SinceText, out var picked) || picked is null) { problem = L.Format("sc_bad_date", SinceText.Trim()); return null; }
+                    (firstRun, since) = (Subscription.FirstRunSinceDate, picked.Value.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+                    break;
+                default:
+                    (firstRun, since) = (Subscription.FirstRunMarkSeen, null);
+                    break;
+            }
+        }
         var name = Name.Trim().Length > 0 ? Name.Trim() : NameFromUrl(url);
         var baseSub = _original ?? new Subscription { Id = Subscription.NewId() };
         return baseSub with
@@ -147,7 +176,7 @@ public sealed partial class SubscriptionEditViewModel : ObservableObject
                 ProfileId = FollowedProfileId(),
             },
             Folder = Folder.Trim().Trim('"'), SubfolderPerSub = SubfolderPerSub,
-            FirstRun = IsNew ? (Backfill ? Subscription.FirstRunBackfill : Subscription.FirstRunMarkSeen) : baseSub.FirstRun,
+            FirstRun = firstRun, FirstRunSince = since,
         };
     }
 }

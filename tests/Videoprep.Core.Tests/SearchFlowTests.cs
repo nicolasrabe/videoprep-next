@@ -298,4 +298,17 @@ public class SearchFlowTests
     [InlineData("", false)]
     public void The_offer_of_cookies_is_only_for_logins_not_for_rate_limits_or_missing_pages(string error, bool offer) =>
         Assert.Equal(offer, CookieStrategy.AsksForLogin(error));
+
+    [Fact]
+    public async Task A_search_for_a_subscription_stops_at_the_first_video_the_history_already_has()
+    {
+        var runner = Daily(100);
+        var known = new HashSet<string> { "v6", "v7", "v8" };
+        var req = Req(None) with { StopAtKnown = e => known.Contains(e.Id) };
+        var r = await Run(new ScrapeSearch(runner, new Log()), req, new FakePrompts());
+        Assert.Equal(7, r.Eval.Reviewed);                              // v0 .. v6: the 7th is the first known one
+        Assert.Equal(6, r.Eval.Shown.Count(e => !known.Contains(e.Id)));
+        Assert.Single(runner.Calls);                                   // one listing, the rest of the channel is never asked for
+    }
 }
+

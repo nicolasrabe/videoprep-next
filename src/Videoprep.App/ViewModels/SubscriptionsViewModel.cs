@@ -330,6 +330,7 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
         {
             if (s.Error is not null) parts.Add(L.Format("sc_sub_failed", s.Name));
             else if (s.MarkedSeen > 0) parts.Add(L.Format("sc_marked_seen", s.Name, s.MarkedSeen));
+            if (s.Error is null && s.Unconfirmed > 0) parts.Add(L.Format("sc_unconfirmed_sub", s.Name, s.Unconfirmed));
             else if (s.Ok > 0) parts.Add(L.Format("sc_found_new", s.Ok, s.Name));
         }
         return parts.Count == 0 ? L["sc_no_new"] : L.Format("sc_check_done", string.Join(" ", parts));

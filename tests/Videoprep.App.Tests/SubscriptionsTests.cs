@@ -60,7 +60,11 @@ public sealed class SubscriptionsTests : IDisposable
         ex.Filter.MinText = "1:30";                                 // drops the 82 s teaser
         ex.Format.SelectedFormat = ex.Format.FormatChoices.First(f => f.Key == "movh");
         await ex.SearchCommand.ExecuteAsync(null);
-        _rig.Ui.FillSubscription = d => { d.Folder = Out; d.Backfill = true; };
+        // The exact step now also runs (a first check "since a date" has a date filter): it must say what the listing said, with a date inside the range.
+        File.WriteAllLines(Path.Combine(_listing, "exact.txt"), new[] { "videos", "streams" }.SelectMany(t => File.ReadLines(Path.Combine(_listing, t + ".jsonl")))
+            .Where(l => l.StartsWith('{')).Select(l => System.Text.Json.JsonDocument.Parse(l).RootElement)
+            .Select(e => $"{e.GetProperty("id").GetString()}|20261015|{(e.TryGetProperty("duration", out var d) ? (int)d.GetDouble() : 600)}|not_live|public"));
+        _rig.Ui.FillSubscription = d => { d.Folder = Out; d.FirstDate = true; d.SinceText = "2026-01-01"; };   // since a date: the fake exact date is 2026-01-01
         await vm.Scraping.SubscribeFromExploreCommand.ExecuteAsync(null);
 
         Assert.True(vm.Scraping.ShowSubscriptions);
@@ -72,7 +76,7 @@ public sealed class SubscriptionsTests : IDisposable
         var saved = Assert.Single(SubscriptionStore.Load(_rig.Paths.SubscriptionsFile, out _).Subscriptions);
         Assert.Equal(90, saved.Filters.MinSec);
         Assert.Equal(["videos", "streams"], saved.Tabs);
-        Assert.Equal(Subscription.FirstRunBackfill, saved.FirstRun);
+        Assert.Equal((Subscription.FirstRunSinceDate, "2026-01-01"), (saved.FirstRun, saved.FirstRunSince));
 
         var r1 = await Subs(vm).CheckAsync(null, interactive: true);
         Assert.NotNull(r1);
@@ -100,6 +104,64 @@ public sealed class SubscriptionsTests : IDisposable
         await Subs(vm).CheckAllCommand.ExecuteAsync(null);
         Assert.Equal(0, Downloads());
         Assert.Contains("3 videos marcados como vistos", Subs(vm).StatusLine);
+    }
+
+    [AvaloniaFact]
+    public async Task The_first_check_choices_are_from_today_the_last_7_days_or_a_date_and_never_the_whole_history()
+    {
+        var vm = _rig.Create();
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@fake"; d.Folder = Out; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);                                  // the default: from today
+        var today = Assert.Single(Subs(vm).Rows).Sub;
+        Assert.Equal((Subscription.FirstRunMarkSeen, null), (today.FirstRun, today.FirstRunSince));
+
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@other"; d.Folder = Out; d.FirstWeek = true; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);
+        var week = Subs(vm).Rows[1].Sub;
+        Assert.Equal(Subscription.FirstRunSinceDate, week.FirstRun);
+        Assert.Equal(DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd"), week.FirstRunSince);
+
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@third"; d.Folder = Out; d.FirstDate = true; d.SinceText = "2026-10-05"; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);
+        Assert.Equal(("2026-10-05", Subscription.FirstRunSinceDate), (Subs(vm).Rows[2].Sub.FirstRunSince, Subs(vm).Rows[2].Sub.FirstRun));
+
+        // A date that is not a date says so and saves nothing.
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@fourth"; d.Folder = Out; d.FirstDate = true; d.SinceText = "ayer"; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);
+        Assert.Contains(_rig.Ui.Messages, m => m.Contains("ayer"));
+        Assert.Equal(3, Subs(vm).Rows.Count);
+    }
+
+    [AvaloniaFact]
+    public async Task Editing_a_subscription_keeps_its_first_check_and_offers_no_choice_again()
+    {
+        var vm = _rig.Create();
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@fake"; d.Folder = Out; d.FirstWeek = true; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);
+        var before = Assert.Single(Subs(vm).Rows).Sub;
+        _rig.Ui.FillSubscription = d => { Assert.False(d.IsNew); d.Name = "Cambiado"; d.FirstToday = true; };   // the choice is ignored: it was made once
+        Subs(vm).Selected = Subs(vm).Rows[0];
+        await Subs(vm).EditCommand.ExecuteAsync(null);
+        var after = Assert.Single(Subs(vm).Rows).Sub;
+        Assert.Equal("Cambiado", after.Name);
+        Assert.Equal((before.FirstRun, before.FirstRunSince), (after.FirstRun, after.FirstRunSince));
+    }
+
+    [AvaloniaFact]
+    public async Task Removing_a_subscription_asks_first_and_there_is_no_reset_button()
+    {
+        var vm = _rig.Create();
+        _rig.Ui.FillSubscription = d => { d.Url = "https://www.youtube.com/@fake"; d.Folder = Out; };
+        await Subs(vm).AddCommand.ExecuteAsync(null);
+        Subs(vm).Selected = Subs(vm).Rows[0];
+        _rig.Ui.Answers.Enqueue(false);
+        await Subs(vm).RemoveCommand.ExecuteAsync(null);
+        Assert.Single(Subs(vm).Rows);                                                  // "No": it stays
+        _rig.Ui.Answers.Enqueue(true);
+        await Subs(vm).RemoveCommand.ExecuteAsync(null);
+        Assert.Empty(Subs(vm).Rows);
+        Assert.Contains(_rig.Ui.Questions, q => q.Contains("@fake"));
+        Assert.DoesNotContain("sc_reset", Loc.Instance["sc_remove"]);                  // the equivalent of Reiniciar here is "Quitar"
     }
 
     [AvaloniaFact]
