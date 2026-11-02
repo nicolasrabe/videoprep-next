@@ -119,7 +119,7 @@ public sealed partial class MainViewModel
     {
         QueueRows.Clear();
         var n = 0;
-        foreach (var it in Items)
+        foreach (var it in Items.ToList())   // a copy: the data of an item can arrive (and replace it) while the table is rebuilt
         {
             var count = Math.Max(1, it.Clips.Count);
             var locked = IsItemLocked(it);

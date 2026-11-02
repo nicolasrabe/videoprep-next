@@ -132,9 +132,9 @@ public sealed partial class MainViewModel
     /// <summary>Marks the rows that are waiting for data or that failed (the row shows the link plus "Cargando los datos..." or the reason).</summary>
     private void UpdateDataFlags()
     {
-        foreach (var r in QueueRows)
+        foreach (var r in QueueRows.ToList())
         {
-            var item = Items.FirstOrDefault(i => i.Id == r.ItemId);
+            var item = Items.ToList().FirstOrDefault(i => i.Id == r.ItemId);
             r.DataLoading = item is not null && item.Title.Length == 0 && !_dataErrors.ContainsKey(r.VideoKey) && (_enriching || _refreshing.Contains(r.VideoKey));
             r.DataError = _dataErrors.GetValueOrDefault(r.VideoKey, "");
         }
