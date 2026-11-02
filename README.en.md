@@ -5,7 +5,7 @@
 Free tool for video editors: paste a link (YouTube and any site yt-dlp supports), pick format, clips and names, and
 download files ready to edit in Premiere Pro, DaVinci Resolve or whatever you use.
 
-Current version: **0.3.0** (test release, Windows). It is a single `videoprep.exe`; nothing to install.
+Current version: **0.3.1** (test release, Windows). It is a single `videoprep.exe`; nothing to install.
 
 ## What it does
 - **Download**: MP4 (H.264 + AAC), MOV (H.264 or ProRes 422 HQ), WebM, MKV, or audio only (M4A, MP3, WAV, FLAC, Opus),
@@ -33,7 +33,7 @@ Current version: **0.3.0** (test release, Windows). It is a single `videoprep.ex
 - Spanish and English, six color themes, every table column can be widened.
 
 ## Download and open
-1. From [Releases](https://github.com/nicolasrabe/videoprep-next/releases) download `videoprep-v0.3.0-win-x64.zip` and
+1. From [Releases](https://github.com/nicolasrabe/videoprep-next/releases) download `videoprep-v0.3.1-win-x64.zip` and
    unzip it into a folder of yours (for example `Documents\videoprep`).
 2. Open `videoprep.exe`. The program is not signed, so Windows may say "Windows protected your PC": click
    **More info**, then **Run anyway**.
@@ -45,7 +45,7 @@ Current version: **0.3.0** (test release, Windows). It is a single `videoprep.ex
 > `videoprep.exe` with the new one. From 0.3.0 on, videoprep tells you when a new version exists.
 
 To check the zip was not modified, compare its SHA-256 with the one in `SHA256SUMS.txt` on the same page:
-in PowerShell, `Get-FileHash videoprep-v0.3.0-win-x64.zip`.
+in PowerShell, `Get-FileHash videoprep-v0.3.1-win-x64.zip`.
 
 ## Updates
 - When it opens (at most once a day) videoprep reads GitHub's public list of versions; in **Settings** you can turn that off and press

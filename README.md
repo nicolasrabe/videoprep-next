@@ -5,7 +5,7 @@
 Herramienta gratuita para editores de video: pegás un enlace (YouTube y cualquier sitio que soporte yt-dlp), elegís
 formato, fragmentos y nombres, y bajás archivos listos para editar en Premiere Pro, DaVinci Resolve o el programa que uses.
 
-Versión actual: **0.3.0** (versión de prueba, para Windows). Es un solo `videoprep.exe`, no hace falta instalar nada.
+Versión actual: **0.3.1** (versión de prueba, para Windows). Es un solo `videoprep.exe`, no hace falta instalar nada.
 
 ## Qué hace
 - **Descargar**: MP4 (H.264 + AAC), MOV (H.264 o ProRes 422 HQ), WebM, MKV, o solo audio (M4A, MP3, WAV, FLAC, Opus),
@@ -33,7 +33,7 @@ Versión actual: **0.3.0** (versión de prueba, para Windows). Es un solo `video
 - Español e inglés, seis temas de color, todas las columnas de las tablas se pueden agrandar.
 
 ## Descargar y abrir
-1. En [Releases](https://github.com/nicolasrabe/videoprep-next/releases) bajá `videoprep-v0.3.0-win-x64.zip` y
+1. En [Releases](https://github.com/nicolasrabe/videoprep-next/releases) bajá `videoprep-v0.3.1-win-x64.zip` y
    descomprimilo en una carpeta tuya (por ejemplo `Documentos\videoprep`).
 2. Abrí `videoprep.exe`. Como el programa no está firmado, Windows puede mostrar "Windows protegió su PC":
    hacé clic en **Más información** y después en **Ejecutar de todas formas**.
@@ -45,7 +45,7 @@ Versión actual: **0.3.0** (versión de prueba, para Windows). Es un solo `video
 > `videoprep.exe` viejo por el nuevo. Desde la 0.3.0 en adelante, videoprep te avisa cuando hay una versión nueva.
 
 Si querés comprobar que el zip no fue modificado, compará su SHA-256 con el de `SHA256SUMS.txt` en la misma página:
-en PowerShell, `Get-FileHash videoprep-v0.3.0-win-x64.zip`.
+en PowerShell, `Get-FileHash videoprep-v0.3.1-win-x64.zip`.
 
 ## Actualizaciones
 - Al abrirse (como máximo una vez por día) videoprep mira la lista pública de versiones de GitHub; en **Ajustes** podés apagarlo y

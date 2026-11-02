@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## Sin publicar (0.3.1)
+## 0.3.1 - 2026-11-02
 - **Arreglos de menús y Cola**: "Descargar miniatura..." ahora funciona con cualquier fila (también Listo, Descargando o con error) y pide la imagen al hacer clic; los menús de clic derecho de la Cola y de los resultados de Scraping solo aparecen sobre una fila; los elementos de la Cola sin título (guardados por sesiones anteriores) se completan solos en segundo plano, de a uno y con pausa, y los datos quedan guardados en el archivo de cola; nuevo "Actualizar datos" en el menú de la Cola.
 - **Ronda 4, ajustes de uso**:
   - **Modo mini y monitor**: la ficha, la barra y la ventana completa aparecen siempre en el monitor donde está la ventana actual, pegadas a su esquina superior derecha. Al volver a la ventana completa con la ficha en otro monitor, la ventana completa aparece en ese monitor con su tamaño de antes y la esquina superior derecha donde estaba la ficha.
