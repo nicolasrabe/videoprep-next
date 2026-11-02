@@ -12,7 +12,7 @@
 4. Tag on `main`, only when the owner says "publicá": `git tag vX.Y.Z` and `git push origin vX.Y.Z`. `release.yml` runs the tests,
    builds `videoprep-vX.Y.Z-win-x64.zip` (it must hold `videoprep.exe` and nothing else: the updater takes only that file), writes
    `SHA256SUMS.txt` with the zips only, checks it with `sha256sum -c` and creates the GitHub release, marked **pre-release** only when the version has a suffix (-rc, -beta); 0.x versions are a normal "Latest" release
-   or `-suffix` version. The updater of the installed programs reads this release: the names `videoprep-<tag>-win-x64.zip` and
+   The updater of the installed programs reads this release: the names `videoprep-<tag>-win-x64.zip` and
    `SHA256SUMS.txt` must not change.
 5. Download the zip from the release page, compare `Get-FileHash` with `SHA256SUMS.txt`, unzip, open it once.
 6. **The updater against a real release** cannot be tried until a release newer than the installed one exists: after the next
