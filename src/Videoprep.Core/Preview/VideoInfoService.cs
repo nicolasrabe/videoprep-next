@@ -36,8 +36,12 @@ public sealed record InfoRequest(ToolPaths Tools, IReadOnlyList<CookieSource> Co
 /// through ten rows asks for one, not ten); a short pause before each run; results kept for the session; the same
 /// cookie chain as the downloads, then one last try without cookies (AUDIT M11); a time limit on every run.
 /// </summary>
-public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log log)
+public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log log, ThumbnailService? thumbs = null, string? cacheDir = null)
 {
+    /// <summary>How long the card data kept on disk stays good (RONDA 4).</summary>
+    public TimeSpan MetaTtl { get; init; } = TimeSpan.FromHours(24);
+    private bool _lastFailed;
+
     private readonly ConcurrentDictionary<string, VideoInfo> _cache = new();
     private readonly object _gate = new();
     private readonly CancellationTokenSource _life = new();
@@ -68,8 +72,69 @@ public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log
     {
         var key = UrlParser.LinkKey(url);
         var info = _cache.GetOrAdd(key, k => new VideoInfo { Key = k, Url = url });
-        if (info.State == InfoState.Loading) Enqueue(key, req);
+        if (info.State != InfoState.Loading) return info;
+        if (info.Thumbnail is null && thumbs?.TryGet(key) is { } pic) info = _cache[key] = info with { Thumbnail = pic };   // already seen: shown at once
+        if (TryReadDisk(key, url) is { } fromDisk)
+        {
+            // Seen in the last 24 h: no yt-dlp run.
+            _cache[key] = fromDisk with { Thumbnail = info.Thumbnail };
+            if (fromDisk.Thumbnail is null && info.Thumbnail is null) _ = Task.Run(() => FetchThumbnailAsync(key, fromDisk, _diskJson.GetValueOrDefault(key), _life.Token));
+            return _cache[key];
+        }
+        // The picture of a YouTube video does not need yt-dlp: it comes in parallel with the data.
+        if (info.Thumbnail is null && thumbs is not null && UrlParser.IsYoutubeKey(key))
+            _ = Task.Run(async () =>
+            {
+                var bytes = await thumbs.GetYoutubeAsync(key, _life.Token).ConfigureAwait(false);
+                if (bytes is not null) Update(key, x => x.Thumbnail is null ? x with { Thumbnail = bytes } : x);
+            });
+        Enqueue(key, req);
         return info;
+    }
+
+    private readonly ConcurrentDictionary<string, string> _diskJson = new();
+
+    private string? MetaFile(string key) => cacheDir is null ? null : Path.Combine(cacheDir, "meta", ThumbnailService.CacheName(key) + ".json");
+
+    private VideoInfo? TryReadDisk(string key, string url)
+    {
+        try
+        {
+            if (MetaFile(key) is not { } f || !File.Exists(f)) return null;
+            if (DateTime.UtcNow - File.GetLastWriteTimeUtc(f) > MetaTtl) return null;
+            var json = File.ReadAllText(f);
+            _diskJson[key] = json;
+            return Parse(key, url, json);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { return null; }
+    }
+
+    private void WriteDisk(string key, string json)
+    {
+        try
+        {
+            if (MetaFile(key) is not { } f) return;
+            Directory.CreateDirectory(Path.GetDirectoryName(f)!);
+            File.WriteAllText(f, json);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { /* no cache is fine */ }
+    }
+
+    /// <summary>
+    /// The row after the open one, ahead of time (RONDA 4): only when nothing else is running or waiting, one at a time, and never after
+    /// a failure (a site that complains gets left alone). Returns false when it did not ask for anything.
+    /// </summary>
+    public bool Prefetch(string url, InfoRequest req)
+    {
+        var key = UrlParser.LinkKey(url);
+        lock (_gate)
+        {
+            if (_working || _pendingKey is not null || _runningKey is not null || _lastFailed) return false;
+        }
+        if (_cache.TryGetValue(key, out var known) && known.State != InfoState.Loading) return false;
+        if (TryReadDisk(key, url) is not null) { Request(url, req); return false; }
+        Request(url, req);
+        return true;
     }
 
     /// <summary>"Reintentar" after a failure.</summary>
@@ -155,8 +220,10 @@ public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log
             if (json is not null)
             {
                 var parsed = Parse(key, info.Url, json);
-                Update(key, _ => parsed);
-                await FetchThumbnailAsync(key, parsed, json, ct).ConfigureAwait(false);
+                Update(key, old => parsed with { Thumbnail = old.Thumbnail });
+                _lastFailed = false;
+                WriteDisk(key, json);
+                if (_cache[key].Thumbnail is null) await FetchThumbnailAsync(key, parsed, json, ct).ConfigureAwait(false);
                 return;
             }
             if (ct.IsCancellationRequested) return;
@@ -174,6 +241,7 @@ public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log
             }
             break;
         }
+        _lastFailed = true;
         Update(key, x => x with { State = InfoState.Failed, FailReason = lastError });
     }
 
@@ -236,37 +304,24 @@ public sealed class VideoInfoService(IProcessRunner runner, HttpClient http, Log
         };
     }
 
-    private async Task FetchThumbnailAsync(string key, VideoInfo info, string json, CancellationToken ct)
+    private async Task FetchThumbnailAsync(string key, VideoInfo info, string? json, CancellationToken ct)
     {
-        string? url = null;
-        if (UrlParser.IsYoutubeKey(key)) url = $"https://i.ytimg.com/vi/{key}/hqdefault.jpg";
+        // YouTube: the sharpest of maxres / sd / hq. Other sites: the largest picture the metadata lists.
+        IEnumerable<string> candidates = UrlParser.IsYoutubeKey(key)
+            ? ThumbnailService.YoutubeCandidates(key)
+            : ThumbnailService.BestFromMetadata(json ?? "{}") is { } best ? [best] : [];
+        byte[]? bytes;
+        if (thumbs is not null) bytes = await thumbs.GetAsync(key, candidates, ct).ConfigureAwait(false);
         else
         {
-            using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("thumbnail", out var t) && t.ValueKind == JsonValueKind.String) url = t.GetString();
-        }
-        // Only web links: never file:// or other schemes coming from a site's data.
-        if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out var u) || (u.Scheme != Uri.UriSchemeHttps && u.Scheme != Uri.UriSchemeHttp)) return;
-        try
-        {
-            using var resp = await http.GetAsync(u, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode || resp.Content.Headers.ContentLength > MaxThumbnailBytes) return;
-            await using var s = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
-            using var ms = new MemoryStream();
-            var buffer = new byte[81920];
-            int n;
-            while ((n = await s.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
+            bytes = null;
+            foreach (var c in candidates)
             {
-                ms.Write(buffer, 0, n);
-                if (ms.Length > MaxThumbnailBytes) return;
+                try { bytes = await http.GetByteArrayAsync(c, ct).ConfigureAwait(false); break; }
+                catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or UriFormatException) { }
             }
-            var bytes = ms.ToArray();
-            Update(key, x => x with { Thumbnail = bytes });
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
-        {
-            // No picture is fine.
-        }
+        if (bytes is not null && bytes.Length <= MaxThumbnailBytes) Update(key, x => x with { Thumbnail = bytes });
     }
 
     private void Update(string key, Func<VideoInfo, VideoInfo> change)

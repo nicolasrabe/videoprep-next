@@ -96,7 +96,7 @@ Referencias: `prep-compacto.html`, `pestanas.html`, `modo-mini-niveles.html`.
 - Texto de Micro en reposo: **"Copiá un enlace para descargar"** / "Copy a link to download". Mientras descarga: título + porcentaje y velocidad + Detener.
 - Transiciones: **doble clic** en Micro → Mini; doble clic en Mini → Maxi; botón ▁ en Mini → Micro; ⤢ sube un nivel. El doble clic solo vale sobre zonas vacías o textos, **no** sobre botones, campos ni desplegables.
 - Se arrastra desde cualquier zona vacía. Siempre encima de otras ventanas (como hoy).
-- **Posición (cambia lo actual):** al pasar de Maxi a Mini o Micro, la ventana nueva aparece **en el mismo monitor que la ventana completa y pegada a su esquina superior derecha** (dentro del área de trabajo del monitor, sin pisar la barra de tareas; considerar escala/DPI de cada monitor). Los cambios entre Micro/Mini mantienen esa esquina superior derecha. Al volver a Maxi, la ventana completa recupera su tamaño y posición originales. Ya **no** se recuerda la última posición de la mini entre usos. Si el monitor guardado ya no existe, usar el de la ventana completa. Si la ventana completa estaba maximizada: esquina superior derecha de su monitor.
+- **Posición (cambia lo actual):** al pasar de Maxi a Mini o Micro, la ventana nueva aparece **en el mismo monitor que la ventana completa y pegada a su esquina superior derecha** (dentro del área de trabajo del monitor, sin pisar la barra de tareas; considerar escala/DPI de cada monitor). Los cambios entre Micro/Mini mantienen esa esquina superior derecha. **(Reemplazado en la ronda 4, ver sección A de RONDA 4):** Maxi, Mini y Micro aparecen y se cierran siempre en el monitor donde está la ventana actual, pegadas a su esquina superior derecha. Ya **no** se recuerda la última posición de la mini entre usos. Si el monitor guardado ya no existe, usar el de la ventana completa. Si la ventana completa estaba maximizada: esquina superior derecha de su monitor.
 - Mantener lo ya existente: Esc, el menú, y la persistencia de "siempre encima".
 
 ### 2.4 Pruebas de la ronda 2
@@ -138,3 +138,23 @@ Referencia: `pagina-web.html` (es la página completa, con la demostración clic
 5. `.github/workflows/pages.yml`: despliega `site/` con las acciones oficiales de GitHub Pages cuando cambie `site/**` en `main` (y a mano). **No habilitar Pages ni cambiar configuración del repositorio**: eso lo hace Nico (en el informe, decirle exactamente dónde: Settings → Pages → Source: GitHub Actions; y que el repositorio debe ser público).
 6. Accesibilidad básica y celular (revisar a 380 px de ancho), título y descripción para buscadores, y `site/README.md` de 10 líneas que explique en simple cómo editar la página y cómo se publica.
 7. Probar la página localmente con el navegador instalado de Playwright (pestañas, cola, modo mini, cambio de idioma, 380 px y 1100 px) y adjuntar capturas en el informe.
+
+## RONDA 4 — Ajustes de uso (rama `feat/v0.3.1-ajustes`)
+
+Reglas nuevas 11 a 14 en CLAUDE.md. Referencia visual: `mockup-cambios-ronda4.html` (pantalla 1; el archivo no estaba en el repositorio al hacer la ronda).
+
+**Componentes compartidos** (creados una vez, reutilizados): `CollapsibleSection` (encabezado clicable con chevron + título + resumen visible solo plegado, cuerpo plegable, opción "crece" para ocupar el alto libre); `LoadingText` (spinner + "Cargando <qué>...", es/en, en el mismo lugar que el contenido que reemplaza); `ThumbnailService` (ver C).
+
+**A) Monitor del modo mini (reemplaza la regla de 2.3).** Maxi, Mini y Micro aparecen y se cierran siempre en el monitor donde está la ventana actual, pegadas a su esquina superior derecha (dentro del área de trabajo, DPI por monitor). Mini→Maxi con la mini en otro monitor: Maxi aparece en ESE monitor, con su tamaño previo (en unidades independientes de la escala), con la esquina superior derecha donde estaba la mini. Pruebas con monitores falsos.
+
+**B) Scraping.** Sin el texto largo de ayuda del enlace; la caja dice "Pegá acá enlaces de canales, listas de reproducción, etc.". Los pasos 1, 2 y 3 son `CollapsibleSection`: enlace plegado deja solo avatar + nombre + @; filtros plegado muestra una línea resumen; resultados crece y usa todo el alto libre (tabla con scroll propio y encabezado fijo). "Buscar videos" pliega Filtros; cambiar un filtro no relanza pedidos si alcanza el refiltrado local. Mismo principio en Ajustes (grupos plegables) y Registro (barra compacta arriba, la lista ocupa el resto). Sin cambiar funciones.
+
+**C) Miniaturas y fichas (rendimiento).** `ThumbnailService`: YouTube `i.ytimg.com/vi/{id}/maxresdefault.jpg` con caída a sddefault/hqdefault ante 404; otros sitios, la miniatura de mayor resolución de los metadatos. Caché en memoria y en disco (`%LOCALAPPDATA%\videoprep\cache`, tope 200 MB, se purga lo más viejo). Datos de la ficha: lo mínimo a yt-dlp, caché en disco de 24 h, miniatura en paralelo con los datos, prefetch de la fila siguiente solo si no hay otro pedido (máx. 1, nunca tras un fallo). `LoadingText` en la vista previa de Prep, la ficha (miniatura y descripción por separado), la carga del canal, los resultados y las demás esperas.
+
+**D) Descargar miniatura.** "Descargar miniatura..." en el menú contextual de filas de Cola, de Scraping y de la vista previa de Prep. Abre al instante "Guardar como" (JPG y PNG, nombre sugerido = título saneado). Si el formato pedido es el original, se guardan los mismos bytes; si no, se convierte con el ffmpeg de la app (JPG `-q:v 2`, PNG sin pérdida).
+
+**E) Cola.** Barra superior: Iniciar cola, Pausar (termina el video actual y se detiene antes del siguiente), Detener y contador ("1 descargando · 3 en cola · 1 lista"); mismas acciones y mismo estado que Descargar/Detener de Prep. Reordenar arrastrando el agarre de la columna "#": solo elementos "En cola"; los que descargan o están listos no se mueven ni se pisan; línea de destino; multiselección; el orden se guarda en el archivo de cola.
+
+**F) Suscripciones.** Menú contextual. Sobre una suscripción: Revisar ahora, Pausar/Reanudar, Editar..., Abrir canal en el navegador, Copiar enlace del canal, Abrir carpeta de descargas, Quitar suscripción... (con confirmación). Sobre espacio vacío: Agregar suscripción..., Revisar todas ahora, Pausar todas.
+
+**Cierre.** Pruebas nuevas (sin pantallas donde se pudo), una captura por pantalla cambiada (oscuro/español, en `docs/capturas/0.3.1/ronda-4/`), .exe en `dist\win-x64-0.3.1-prueba2`, CHANGELOG y `docs/ARQUITECTURA.md` al día.

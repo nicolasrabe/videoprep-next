@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+             xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.Views.VideoCard"
              x:DataType="vm:QueueRowCard">
   <!-- The opened-row card (thumbnail, title, channel, date, views, description, link, "Se descargará"): shared by the Queue and Scraping results. -->
@@ -10,6 +11,7 @@
     <Panel Width="240" Height="135" VerticalAlignment="Top">
       <Border Background="{DynamicResource Bd}" CornerRadius="2" />
       <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+      <v:LoadingText What="{s:T load_thumb}" IsVisible="{Binding ThumbLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" />
       <Border Background="#CC000000" CornerRadius="2" Padding="5,1" Margin="5"
               HorizontalAlignment="Right" VerticalAlignment="Bottom" IsVisible="{Binding HasDuration}">
         <TextBlock Text="{Binding Duration}" Foreground="White" FontSize="12" />
@@ -19,12 +21,7 @@
       <TextBlock Classes="title" Text="{Binding Title}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
       <TextBlock Classes="muted" Text="{Binding Meta}" />
       <!-- Loading: gray bars instead of the text -->
-      <StackPanel Spacing="6" IsVisible="{Binding IsLoading}" Margin="0,4">
-        <TextBlock Classes="muted" Text="{s:T det_loading}" />
-        <Border Classes="sk" Width="320" />
-        <Border Classes="sk" Width="420" />
-        <Border Classes="sk" Width="260" />
-      </StackPanel>
+      <v:LoadingText What="{s:T load_desc}" IsVisible="{Binding IsLoading}" Margin="0,4" />
       <StackPanel Spacing="4" IsVisible="{Binding IsFailed}">
         <TextBlock Text="{Binding FailText}" Foreground="{DynamicResource Rt}" TextWrapping="Wrap" />
         <StackPanel Orientation="Horizontal" Spacing="8">

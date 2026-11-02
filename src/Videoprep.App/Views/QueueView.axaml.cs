@@ -49,6 +49,8 @@ public partial class QueueView : UserControl
         Grid.AddHandler(KeyDownEvent, OnGridKeyDown, RoutingStrategies.Tunnel);
         Grid.AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         Grid.AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
+        Grid.AddHandler(PointerMovedEvent, OnPointerMovedForDrag, RoutingStrategies.Tunnel, handledEventsToo: true);
+        Grid.AddHandler(KeyDownEvent, (_, e) => { if (e.Key == Key.Escape && _dragIds is not null) { EndDrag(false); e.Handled = true; } }, RoutingStrategies.Tunnel);
         MenuRename.Click += (_, _) => { if (Grid.SelectedItem is QueueRow r) BeginRename(r); };
         AddHandler(DragDrop.DragOverEvent, (_, e) => e.DragEffects = DragDropEffects.Copy);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -123,6 +125,7 @@ public partial class QueueView : UserControl
     private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         _pressedRow = null;
+        if (TryStartDrag(e)) return;
         var row = RowAt(e.Source, out var inDetails);
         if (row is null || inDetails) return;
         var point = e.GetCurrentPoint(Grid).Properties;
@@ -144,6 +147,7 @@ public partial class QueueView : UserControl
 
     private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (_dragIds is not null) { EndDrag(true); return; }
         // A click on the row that was already the only one selected opens or closes it (selecting it opened it already).
         if (e.InitialPressMouseButton != MouseButton.Left || _pressedRow is null) return;
         var row = RowAt(e.Source, out _);
@@ -175,6 +179,82 @@ public partial class QueueView : UserControl
         catch (Exception ex)
         {
             Program.Log.Crash(ex, "drag and drop on the queue");
+        }
+    }
+
+    // ---------------- reorder by dragging the grip (RONDA 4, spec E) ----------------
+    // Done with the pointer itself (not the system drag and drop, which the window already uses to receive files).
+
+    private List<int>? _dragIds;
+    private int _dropIndex;
+
+    /// <summary>The press landed on the grip of a row that can move: the drag starts (the selection is left alone).</summary>
+    private bool TryStartDrag(PointerPressedEventArgs e)
+    {
+        if (_vm is null || !e.GetCurrentPoint(Grid).Properties.IsLeftButtonPressed) return false;
+        if (e.Source is not Visual v || v.FindAncestorOfType<Control>(includeSelf: true) is null) return false;
+        if (!v.GetSelfAndVisualAncestors().OfType<Control>().Any(c => c.Classes.Contains("grip"))) return false;
+        var row = RowAt(e.Source, out var inDetails);
+        if (row is null || inDetails || !_vm.CanDrag(row)) return false;
+        // The row is part of the selection: the whole selection travels; if not, only this row.
+        var rows = Grid.SelectedItems.Contains(row) ? Grid.SelectedItems.OfType<QueueRow>().Where(_vm.CanDrag).ToList() : [row];
+        _dragIds = rows.Select(r => r.ItemId).Distinct().ToList();
+        _dropIndex = _vm.QueueRows.IndexOf(row);
+        e.Pointer.Capture(Grid);
+        e.Handled = true;
+        return true;
+    }
+
+    private void OnPointerMovedForDrag(object? sender, PointerEventArgs e)
+    {
+        if (_dragIds is null || _vm is null) return;
+        var y = e.GetPosition(Grid).Y;
+        var (index, lineY) = DropTarget(y);
+        _dropIndex = index;
+        DropLine.IsVisible = true;
+        DropLine.Margin = new Thickness(0, Math.Max(0, lineY - 1), 0, 0);
+        // Near the top or bottom edge: bring the next row into view.
+        var rows = _vm.QueueRows;
+        if (y < 28 && index > 0) Grid.ScrollIntoView(rows[index - 1], null);
+        else if (y > Grid.Bounds.Height - 20 && index < rows.Count) Grid.ScrollIntoView(rows[Math.Min(index, rows.Count - 1)], null);
+    }
+
+    /// <summary>Where a drop at height <paramref name="y"/> would land: the row index (count = at the end) and the height of the line to draw. Never above a locked row.</summary>
+    internal (int Index, double LineY) DropTarget(double y)
+    {
+        var rows = _vm!.QueueRows;
+        var visuals = Grid.GetVisualDescendants().OfType<DataGridRow>().Where(r => r.DataContext is QueueRow)
+            .Select(r => (Row: r, Index: rows.IndexOf((QueueRow)r.DataContext!), Top: r.TranslatePoint(new Point(0, 0), Grid)?.Y ?? 0))
+            .Where(t => t.Index >= 0).OrderBy(t => t.Index).ToList();
+        var index = rows.Count;
+        var lineY = visuals.Count > 0 ? visuals[^1].Top + visuals[^1].Row.Bounds.Height : 0;
+        foreach (var t in visuals)
+        {
+            var mid = t.Top + Math.Min(t.Row.Bounds.Height, 30) / 2;
+            if (y < mid) { index = t.Index; lineY = t.Top; break; }
+        }
+        var lastLocked = -1;
+        for (var i = 0; i < rows.Count; i++) if (rows[i].IsLocked) lastLocked = i;
+        if (index <= lastLocked)
+        {
+            index = lastLocked + 1;
+            var after = visuals.FirstOrDefault(t => t.Index == lastLocked);
+            if (after.Row is not null) lineY = after.Top + after.Row.Bounds.Height;
+        }
+        return (index, lineY);
+    }
+
+    private void EndDrag(bool drop)
+    {
+        var ids = _dragIds;
+        _dragIds = null;
+        DropLine.IsVisible = false;
+        if (!drop || ids is null || _vm is null) return;
+        if (_vm.MoveItemsBefore(ids, _dropIndex))
+        {
+            var moved = _vm.QueueRows.Where(r => ids.Contains(r.ItemId)).ToList();
+            Grid.SelectedItems.Clear();
+            foreach (var r in moved) Grid.SelectedItems.Add(r);
         }
     }
 

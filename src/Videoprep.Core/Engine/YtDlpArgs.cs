@@ -146,7 +146,7 @@ public static class YtDlpArgs
     /// fields; no format is chosen or checked (VERIFIED 2026-10-28 with yt-dlp 2026.10.21, docs/VERIFY.md).
     /// </summary>
     public const string InfoTemplate =
-        "INFO|%(.{title,channel,uploader,upload_date,view_count,duration,duration_string,description,thumbnail,webpage_url})j";
+        "INFO|%(.{title,channel,uploader,upload_date,view_count,duration,duration_string,description,thumbnail,thumbnails,webpage_url})j";
 
     /// <summary>Card data of one link (F3). Nothing is downloaded.</summary>
     public static IReadOnlyList<string> Info(string url, ToolPaths tools, CookieSource cookies)
@@ -155,6 +155,8 @@ public static class YtDlpArgs
         {
             "--ignore-config", "--no-playlist", "--no-warnings", "--skip-download", "--ignore-no-formats-error",
             "--print", InfoTemplate,
+            // RONDA 4: the card shows no format list, so YouTube is asked to skip the HLS / DASH manifests (checked on 3 real videos: same fields, a little faster).
+            "--extractor-args", "youtube:skip=hls,dash,translated_subs",
         };
         AddTools(a, tools, ffmpeg: false);
         a.AddRange(cookies.Args());

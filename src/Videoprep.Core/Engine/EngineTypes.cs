@@ -53,4 +53,6 @@ public sealed record EngineContext
     public string? SessionCookieFile { get; init; }
     /// <summary>Stop the whole batch at the first bot check / HTTP 429 (subscriptions). The UI keeps going.</summary>
     public bool StopWhenBlocked { get; init; }
+    /// <summary>"Pausar" (RONDA 4): asked between videos; when it answers true the batch ends before starting the next video (never in the middle of one). The rest stays queued.</summary>
+    public Func<bool>? PauseRequested { get; init; }
 }

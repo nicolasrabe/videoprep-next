@@ -90,6 +90,8 @@ public sealed partial class MainViewModel
 
     // ---- preview
     [ObservableProperty] private string _previewTitle = "";
+    /// <summary>The preview is still being looked for ("Cargando la vista previa...").</summary>
+    [ObservableProperty] private bool _previewLoading;
     [ObservableProperty] private string _previewMeta = "";
     /// <summary>The video length over the corner of the thumbnail ("" while unknown).</summary>
     [ObservableProperty] private string _previewDuration = "";
@@ -442,6 +444,7 @@ public sealed partial class MainViewModel
 
     private void ClearPreviewPanel()
     {
+        PreviewLoading = false;
         PreviewImage = null;
         PreviewTitle = L["prev_hint"];
         PreviewMeta = "";
@@ -493,10 +496,12 @@ public sealed partial class MainViewModel
 
         if (p.Meta == MetaState.Loading || (!p.IsYoutube && p.Details == DetailState.Loading && p.Title.Length == 0))
         {
-            PreviewTitle = L["prev_loading"];
+            PreviewLoading = true;
+            PreviewTitle = "";
             PreviewMeta = "";
             return;
         }
+        PreviewLoading = false;
         if (p.Meta == MetaState.NotFound || p.Title.Length == 0)
         {
             PreviewTitle = L["prev_none"];

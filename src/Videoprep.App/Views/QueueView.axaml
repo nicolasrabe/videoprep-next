@@ -6,8 +6,18 @@
              x:Class="Videoprep.App.Views.QueueView"
              x:DataType="vm:MainViewModel"
              DragDrop.AllowDrop="True">
-  <Grid RowDefinitions="*,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="4,10,4,4">
+  <Grid RowDefinitions="Auto,*,Auto,Auto,Auto,Auto" RowSpacing="8" Margin="4,10,4,4">
+    <!-- RONDA 4 (spec E): the same actions and state as Descargar / Detener in Prep -->
+    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button x:Name="QueueStartButton" Classes="g" Content="{s:T qbar_start}" Command="{Binding DownloadCommand}" IsEnabled="{Binding IsIdle}" FontWeight="Bold" />
+        <Button x:Name="QueuePauseButton" Content="{s:T qbar_pause}" Command="{Binding PauseQueueCommand}" IsEnabled="{Binding CanPause}" ToolTip.Tip="{s:T qbar_pause_tip}" />
+        <Button x:Name="QueueStopButton" Classes="r" Content="{s:T btn_stop}" Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}" />
+      </StackPanel>
+      <TextBlock x:Name="QueueCounterText" Grid.Column="1" Classes="muted" Text="{Binding QueueCounter}" VerticalAlignment="Center" />
+    </Grid>
     <!-- One row open at a time (F3): the view shows the details of the row the view model marks as expanded. -->
+    <Panel Grid.Row="1">
     <DataGrid x:Name="Grid" ItemsSource="{Binding QueueRows}" IsReadOnly="False" SelectionMode="Extended"
               CanUserReorderColumns="False" CanUserSortColumns="False" HeadersVisibility="Column"
               RowDetailsVisibilityMode="Collapsed">
@@ -22,13 +32,26 @@
           <MenuItem Header="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanChangeSelection}" />
           <MenuItem Header="{s:T mnu_requeue}" Command="{Binding RequeueCommand}" IsEnabled="{Binding CanRequeue}" />
           <MenuItem Header="{s:T mnu_showfolder}" Command="{Binding ShowInFolderCommand}" IsEnabled="{Binding CanShowInFolder}" />
+          <MenuItem x:Name="MenuThumbnail" Header="{s:T mnu_thumb}" Command="{Binding SaveQueueThumbnailCommand}" IsEnabled="{Binding CanEditOne}" />
           <MenuItem Header="{s:T mnu_exportsources}" Command="{Binding ExportSourcesCommand}" />
           <Separator />
           <MenuItem Header="{s:T mnu_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding CanChangeSelection}" />
         </ContextMenu>
       </DataGrid.ContextMenu>
       <DataGrid.Columns>
-        <DataGridTextColumn Header="{s:T col_num}" Binding="{Binding Num}" Width="56" IsReadOnly="True" />
+        <DataGridTemplateColumn Header="{s:T col_num}" Width="66" IsReadOnly="True">
+          <DataTemplate x:DataType="vm:QueueRow">
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="8,0" VerticalAlignment="Center">
+              <!-- Grip: drag from here to reorder (only rows that are still waiting). Drawn, not a font character. -->
+              <Border Classes="grip" Width="14" Height="22" Background="Transparent" Cursor="SizeAll" ToolTip.Tip="{s:T qbar_grip_tip}" IsVisible="{Binding !IsLocked}">
+                <Path Stroke="{DynamicResource Mu}" StrokeThickness="2.4" StrokeLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Data="M2,2 L2.01,2 M8,2 L8.01,2 M2,8 L2.01,8 M8,8 L8.01,8 M2,14 L2.01,14 M8,14 L8.01,14" />
+              </Border>
+              <Border Width="14" Height="22" IsVisible="{Binding IsLocked}" />
+              <TextBlock Text="{Binding Num}" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+        </DataGridTemplateColumn>
         <DataGridTemplateColumn Header="{s:T col_name}" Width="2*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:QueueRow">
@@ -64,7 +87,10 @@
         </DataTemplate>
       </DataGrid.RowDetailsTemplate>
     </DataGrid>
-    <WrapPanel Grid.Row="1" ItemSpacing="8" LineSpacing="8">
+    <!-- Where the dragged rows will land -->
+    <Border x:Name="DropLine" Height="2" VerticalAlignment="Top" Background="{DynamicResource Ot}" IsVisible="False" IsHitTestVisible="False" />
+    </Panel>
+    <WrapPanel Grid.Row="2" ItemSpacing="8" LineSpacing="8">
       <Button Content="{s:T btn_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding IsIdle}" />
       <Button Content="{s:T btn_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding IsIdle}" />
       <Button Content="{s:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsIdle}" />
@@ -72,11 +98,11 @@
       <Button Content="{s:T btn_retry}" Command="{Binding RetryFailedCommand}" IsEnabled="{Binding CanRetry}" />
       <Button Content="{s:T btn_undo}" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="Ctrl+Z" />
     </WrapPanel>
-    <WrapPanel Grid.Row="2" ItemSpacing="8" LineSpacing="8">
+    <WrapPanel Grid.Row="3" ItemSpacing="8" LineSpacing="8">
       <Button Content="{s:T btn_loadtxt}" Command="{Binding LoadTxtCommand}" IsEnabled="{Binding IsIdle}" />
       <Button Content="{s:T btn_clearq}" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding IsIdle}" />
     </WrapPanel>
-    <TextBlock Grid.Row="3" Classes="muted" Text="{s:T lbl_qhelp}" TextWrapping="Wrap" />
-    <TextBlock Grid.Row="4" x:Name="QueueStatus" Text="{Binding StatusText}" />
+    <TextBlock Grid.Row="4" Classes="muted" Text="{s:T lbl_qhelp}" TextWrapping="Wrap" />
+    <TextBlock Grid.Row="5" x:Name="QueueStatus" Text="{Binding StatusText}" />
   </Grid>
 </UserControl>

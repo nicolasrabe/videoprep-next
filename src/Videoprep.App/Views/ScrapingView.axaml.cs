@@ -44,6 +44,15 @@ public partial class ScrapingView : UserControl
             if (ResultsGrid.SelectedItems.Count == 1 && ResultsGrid.SelectedItem is ExploreRow row && !row.IsPlaylist) _explore.OpenRow(row);
             else _explore.CloseRows();
         };
+        // Right-click on a subscription selects it and shows the subscription menu; on the empty space, the other one.
+        SubsGrid.AddHandler(PointerPressedEvent, (_, e) =>
+        {
+            if (!e.GetCurrentPoint(SubsGrid).Properties.IsRightButtonPressed || DataContext is not ScrapingViewModel vm) return;
+            var row = (e.Source as Visual)?.FindAncestorOfType<DataGridRow>(includeSelf: true)?.DataContext as SubscriptionRow;
+            vm.Subscriptions.MenuOnRow = row is not null;
+            if (row is not null) SubsGrid.SelectedItem = row;
+            else SubsGrid.SelectedItem = null;
+        }, RoutingStrategies.Tunnel, handledEventsToo: true);
         ResultsGrid.AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         ResultsGrid.AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         DataContextChanged += (_, _) =>
@@ -75,6 +84,9 @@ public partial class ScrapingView : UserControl
     {
         _pressedRow = null;
         var row = RowAt(e.Source, out var inDetails);
+        // Right-click on a row selects it, so the menu ("Descargar miniatura...") acts on what was clicked.
+        if (row is not null && !inDetails && e.GetCurrentPoint(ResultsGrid).Properties.IsRightButtonPressed && ResultsGrid.SelectedItem != row)
+            ResultsGrid.SelectedItem = row;
         if (row is null || inDetails || !e.GetCurrentPoint(ResultsGrid).Properties.IsLeftButtonPressed) return;
         _pressedRow = row;
         _pressedSoleSelection = e.KeyModifiers == KeyModifiers.None && ResultsGrid.SelectedItems.Count == 1 && ResultsGrid.SelectedItem == row;

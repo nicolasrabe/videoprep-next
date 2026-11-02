@@ -19,6 +19,8 @@ public sealed class AppServices
     public required PreviewService Preview { get; init; }
     /// <summary>Card data of the queue row the user opens (F3).</summary>
     public required VideoInfoService Info { get; init; }
+    /// <summary>The best picture of a video, cached in memory and on disk (RONDA 4).</summary>
+    public ThumbnailService? Thumbs { get; init; }
     /// <summary>Browsers with a profile folder on this PC (only the folder is checked; cookies are not read).</summary>
     public Func<IReadOnlyList<string>> InstalledBrowsers { get; init; } = () => CookieStrategy.InstalledBrowsers();
 
@@ -71,6 +73,7 @@ public sealed class AppServices
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd($"videoprep/{AppInfo.Version}");
         var runner = new ProcessRunner();
+        var thumbs = new ThumbnailService(http, paths.CacheDir, log);
         return new AppServices
         {
             Paths = paths,
@@ -78,8 +81,9 @@ public sealed class AppServices
             Runner = runner,
             Http = http,
             Tools = new ToolManager(paths.ToolsDir, http),
-            Preview = new PreviewService(runner, http, log),
-            Info = new VideoInfoService(runner, http, log),
+            Preview = new PreviewService(runner, http, log, thumbs),
+            Info = new VideoInfoService(runner, http, log, thumbs, paths.CacheDir),
+            Thumbs = thumbs,
             Updates = new UpdateClient(UpdateClient.CreateHandler(), $"videoprep/{AppInfo.Version}"),
         };
     }

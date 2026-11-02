@@ -82,6 +82,8 @@ internal sealed class FakeUi : IUiServices
     public string? SavePath { get; set; }
     public string? OpenPath { get; set; }
     public Task<string?> PickSaveFileAs(string suggestedName, string label, IReadOnlyList<string> patterns) => Task.FromResult(SavePath);
+    public List<string> ThumbnailNames { get; } = [];
+    public Task<string?> PickSaveThumbnail(string suggestedName) { ThumbnailNames.Add(suggestedName); return Task.FromResult(SavePath); }
     public Task<string?> PickOpenFileAs(string label, IReadOnlyList<string> patterns) => Task.FromResult(OpenPath);
     public bool MiniShown { get; private set; }
     public int MiniShows { get; private set; }
@@ -159,12 +161,13 @@ internal sealed class TestRig : IDisposable
         if (tools) InstallFakeTools(Paths.ToolsDir);
         var runner = new ProcessRunner();
         var http = new HttpClient(Web);
+        var thumbs = new ThumbnailService(http, Paths.CacheDir, Log);
         Services = new AppServices
         {
-            Paths = Paths, Log = Log, Runner = runner, Http = http,
+            Paths = Paths, Log = Log, Runner = runner, Http = http, Thumbs = thumbs,
             Tools = new ToolManager(Paths.ToolsDir, http, exeDir: Path.Combine(Dir, "noexe"), pathVariable: ""),
-            Preview = new PreviewService(runner, http, Log),
-            Info = new VideoInfoService(runner, http, Log) { Debounce = TimeSpan.Zero },
+            Preview = new PreviewService(runner, http, Log, thumbs),
+            Info = new VideoInfoService(runner, http, Log, thumbs, Paths.CacheDir) { Debounce = TimeSpan.Zero },
             InstalledBrowsers = () => Browsers.ToList(),
             ClipboardTimer = false,
             Delay = (t, _) => { lock (Pauses) Pauses.Add(t); return Task.CompletedTask; },

@@ -3,6 +3,13 @@
 Versions below 1.0.0 are early releases: things can change between them.
 
 ## Sin publicar (0.3.1)
+- **Ronda 4, ajustes de uso**:
+  - **Modo mini y monitor**: la ficha, la barra y la ventana completa aparecen siempre en el monitor donde está la ventana actual, pegadas a su esquina superior derecha. Al volver a la ventana completa con la ficha en otro monitor, la ventana completa aparece en ese monitor con su tamaño de antes y la esquina superior derecha donde estaba la ficha.
+  - **Pantallas más compactas**: Scraping (los tres pasos se pliegan; "Buscar videos" pliega los filtros y los resultados usan todo el alto libre), Ajustes (grupos plegables) y Registro (barra de herramientas arriba, la lista ocupa el resto). Sin el texto largo de ayuda del enlace; la caja dice "Pegá acá enlaces de canales, listas de reproducción, etc.".
+  - **Fichas y miniaturas más rápidas**: la miniatura grande de YouTube (con caída a la siguiente si no existe) se pide al mismo tiempo que los datos, se guarda en memoria y en disco (tope 200 MB), los datos de la ficha se guardan 24 horas, y la fila siguiente se pide por adelantado cuando no hay otro pedido. "Cargando ..." con un spinner en cada espera.
+  - **Descargar miniatura...** en el menú de clic derecho de la Cola, de Scraping y de la vista previa de Prep: abre "Guardar como" (JPG o PNG); si el formato coincide con el original se guardan los mismos bytes.
+  - **Cola**: barra con Iniciar cola, Pausar (termina el video actual), Detener y contador; reordenar arrastrando el agarre de la columna "#" (solo lo que está "En cola"; el orden se guarda).
+  - **Suscripciones**: menú de clic derecho sobre una suscripción (revisar, pausar o reanudar, editar, abrir el canal, copiar el enlace, abrir la carpeta, quitar) y sobre el espacio vacío (agregar, revisar todas, pausar todas).
 - **Scraping, bug de fechas**: con un filtro de fechas aparecían videos fuera del rango (los sin fecha y los de fecha aproximada pasaban el filtro). Ahora un video solo
   se muestra si su fecha está **confirmada** y dentro del rango, extremos incluidos; los que no se pueden confirmar se cuentan aparte ("N videos sin fecha confirmada", "Ver cuáles") y nunca se mezclan. Vale también para
   Últimas 24 h / 7 días / Este mes y para las suscripciones. Comprobado con un canal real (11 pedidos, 4 videos, 0 fuera del rango).

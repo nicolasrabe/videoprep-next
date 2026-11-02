@@ -49,6 +49,13 @@ public sealed partial class MainViewModel
         _svc.Info.Request(url, new InfoRequest(_tools, [cookies ?? ListingCookies()]));
     }
 
+    /// <summary>The next row's card ahead of time (RONDA 4): the service only does it when it is idle, one at a time.</summary>
+    internal void PrefetchVideoInfo(string url, CookieSource? cookies = null)
+    {
+        if (_tools.YtDlp is null) return;
+        _svc.Info.Prefetch(url, new InfoRequest(_tools, [cookies ?? ListingCookies()]));
+    }
+
     internal void RetryVideoInfo(string url, CookieSource? cookies = null) => _svc.Info.Retry(url, new InfoRequest(_tools, [cookies ?? ListingCookies()]));
 
     /// <summary>

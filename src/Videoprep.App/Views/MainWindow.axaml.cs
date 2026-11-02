@@ -182,6 +182,17 @@ public partial class MainWindow : Window, IUiServices
         return file?.TryGetLocalPath();
     }
 
+    public async Task<string?> PickSaveThumbnail(string suggestedName)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            SuggestedFileName = suggestedName,
+            FileTypeChoices = [new FilePickerFileType("JPG") { Patterns = ["*.jpg", "*.jpeg"] }, new FilePickerFileType("PNG") { Patterns = ["*.png"] }],
+            DefaultExtension = "jpg",
+        });
+        return file?.TryGetLocalPath();
+    }
+
     public async Task<string?> PickOpenFileAs(string label, IReadOnlyList<string> patterns)
     {
         var picked = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -244,7 +255,7 @@ public partial class MainWindow : Window, IUiServices
             if (bounds.Width > 0 && bounds.Height > 0)
             {
                 w.Position = new PixelPoint(bounds.X, bounds.Y);
-                var scale = w.RenderScaling;
+                var scale = w.Screens.ScreenFromPoint(new PixelPoint(bounds.X, bounds.Y))?.Scaling ?? w.RenderScaling;   // the monitor it is going to, not the one it was on
                 w.Width = bounds.Width / scale;
                 w.Height = bounds.Height / scale;
             }

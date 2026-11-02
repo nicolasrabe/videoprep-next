@@ -19,6 +19,8 @@ public interface IUiServices : IClipboardSource
     Task<string?> PickSaveFile(string suggestedName);
     /// <summary>Save dialog with its own file type (".csv", ".json"...).</summary>
     Task<string?> PickSaveFileAs(string suggestedName, string label, IReadOnlyList<string> patterns);
+    /// <summary>"Guardar como" for a thumbnail, with the types JPG and PNG (RONDA 4); null = cancelled.</summary>
+    Task<string?> PickSaveThumbnail(string suggestedName);
     Task<string?> PickOpenFileAs(string label, IReadOnlyList<string> patterns);
     /// <summary>A line of text asked from the user (null = Cancelar).</summary>
     Task<string?> AskText(string title, string prompt, string initial);

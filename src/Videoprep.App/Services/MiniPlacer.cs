@@ -37,7 +37,7 @@ public interface IMiniSurfaces
 /// <summary>
 /// RONDA 2 (spec 2.3): maxi, mini and micro. Going from maxi to a small level puts the new window on the same monitor as the full one,
 /// at its top right corner (inside the work area, counting that monitor's scale); between mini and micro the top right corner stays;
-/// going back to maxi gives the full window its size and place back. The last place of the mini window is NOT remembered.
+/// going back to maxi opens the full window on the monitor where the small one is now, with its old size and its top right corner where the small one's was (RONDA 4). The last place of the mini window is NOT remembered.
 /// </summary>
 public sealed class MiniPlacer(IScreenSource screens, IMiniSurfaces surfaces)
 {
@@ -76,7 +76,8 @@ public sealed class MiniPlacer(IScreenSource screens, IMiniSurfaces surfaces)
     {
         if (Level == MiniLevel.Maxi) return;
         Level = MiniLevel.Maxi;
+        var where = surfaces.MiniBounds is { } m ? MiniPlacement.FullFromMini(screens.All, _full, m) : _full;
         surfaces.CloseMini();
-        surfaces.RestoreFull(_full, _fullMaximized);
+        surfaces.RestoreFull(where, _fullMaximized);
     }
 }

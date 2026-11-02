@@ -41,7 +41,7 @@ public sealed record DetailRequest(string FormatKey, int Cap, ToolPaths Tools, I
 /// async service with no UI. AUDIT M11: explicit states, yt-dlp errors go to the log, a failed or slow run is retried
 /// once without cookies, and a time limit ends every run.
 /// </summary>
-public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log log)
+public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log log, ThumbnailService? thumbs = null)
 {
     private readonly ConcurrentDictionary<string, PreviewInfo> _cache = new();
     private readonly object _gate = new();
@@ -84,7 +84,7 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
         if (info.IsYoutube && info.Thumbnail is null && !info.ThumbTried)
         {
             Update(key, i => i with { ThumbTried = true });
-            _ = FetchThumbnailAsync(key, $"https://i.ytimg.com/vi/{key}/mqdefault.jpg");
+            _ = FetchYoutubeThumbnailAsync(key);
         }
         if (details is not null) EnsureDetails(key, details);
         return info;
@@ -195,7 +195,9 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
         }
         try
         {
-            thumb = await http.GetByteArrayAsync($"https://i.ytimg.com/vi/{key}/mqdefault.jpg").ConfigureAwait(false);
+            thumb = thumbs is not null
+                ? await thumbs.GetYoutubeAsync(key).ConfigureAwait(false)
+                : await http.GetByteArrayAsync($"https://i.ytimg.com/vi/{key}/mqdefault.jpg").ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
@@ -282,6 +284,13 @@ public sealed class PreviewService(IProcessRunner runner, HttpClient http, Log l
             log.Write($"Preview: yt-dlp failed ({src.Label}): {error}");
             return (error, CookieStrategy.RetryOutput().IsMatch(text));
         }
+    }
+
+    private async Task FetchYoutubeThumbnailAsync(string key)
+    {
+        if (thumbs is null) { await FetchThumbnailAsync(key, $"https://i.ytimg.com/vi/{key}/mqdefault.jpg").ConfigureAwait(false); return; }
+        var bytes = await thumbs.GetYoutubeAsync(key).ConfigureAwait(false);
+        if (bytes is not null) Update(key, x => x with { Thumbnail = bytes });
     }
 
     private async Task FetchThumbnailAsync(string key, string url)

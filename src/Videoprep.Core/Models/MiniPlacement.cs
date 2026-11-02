@@ -66,6 +66,23 @@ public static class MiniPlacement
         return Clamp(screen, current.Right - w, current.Y, w, h);
     }
 
+    /// <summary>
+    /// Coming back to the full window (RONDA 4, spec 2.3): it opens on the monitor where the small window is NOW, with the size it had
+    /// (same device independent size, so the new monitor's scale is counted), its top right corner where the small window's was,
+    /// all inside that monitor's work area.
+    /// </summary>
+    public static PixelBox FullFromMini(IReadOnlyList<ScreenArea> screens, PixelBox previousFull, PixelBox mini)
+    {
+        if (ScreenOf(screens, mini) is not { } target) return previousFull;
+        var fromScale = ScreenOf(screens, previousFull)?.Scale ?? target.Scale;
+        var (w, h) = PixelSize(target, previousFull.Width / fromScale, previousFull.Height / fromScale);
+        var a = target.WorkArea;
+        w = Math.Min(w, a.Width);
+        h = Math.Min(h, a.Height);
+        var (x, y) = Clamp(target, mini.Right - w, mini.Y, w, h);
+        return new PixelBox(x, y, w, h);
+    }
+
     private static (int X, int Y) Clamp(ScreenArea s, int x, int y, int w, int h)
     {
         var a = s.WorkArea;

@@ -92,9 +92,11 @@ public sealed partial class ExploreViewModel : ObservableObject
             UpdateSummary();
             UpdateResultsText();
         };
+        Rows.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ResultsLoading));
+        UnconfirmedRows.CollectionChanged += (_, _) => OnPropertyChanged(nameof(ResultsLoading));
         host.VideoInfoChanged += key =>
         {
-            foreach (var r in Rows.Concat(UnconfirmedRows).Where(r => r.Expanded && UrlParser.LinkKey(r.Entry.Url) == key)) RefreshCard(r);
+            foreach (var r in Rows.Concat(UnconfirmedRows).Where(r => r.Expanded && UrlParser.LinkKey(r.Entry.Url) == key)) { RefreshCard(r); PrefetchAfter(r); }
         };
     }
 
@@ -124,6 +126,13 @@ public sealed partial class ExploreViewModel : ObservableObject
     [ObservableProperty] private string _loadNote = "";
 
     public bool NoSource => !HasSource;
+
+    // ---- folding (RONDA 4, principle 14): the three steps are foldable cards; "Buscar videos" folds the filters
+    [ObservableProperty] private bool _linkExpanded = true;
+    [ObservableProperty] private bool _filtersExpanded = true;
+
+    /// <summary>The first results are still on their way (nothing in the table yet): "Cargando los resultados...".</summary>
+    public bool ResultsLoading => IsSearching && Rows.Count == 0 && UnconfirmedRows.Count == 0;
 
     partial void OnSourceTextChanged(string value)
     {
@@ -215,6 +224,7 @@ public sealed partial class ExploreViewModel : ObservableObject
             SourceHandle = probe.Handle;
             SourceLine = probe.Handle.Length > 0 ? probe.Handle : text;
             HasSource = true;
+            FiltersExpanded = true;
             LoadNote = L["sc_ready"];
             Avatar = null;
             if (probe.AvatarUrl is { } url && await _host.FetchBytes(url) is { } bytes)
@@ -332,7 +342,7 @@ public sealed partial class ExploreViewModel : ObservableObject
     // ---- ③ results
     public ObservableCollection<ExploreRow> Rows { get; } = [];
     public ObservableCollection<ExploreRow> UnconfirmedRows { get; } = [];
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsIdle))] private bool _isSearching;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsIdle), nameof(ResultsLoading))] private bool _isSearching;
     public bool IsIdle => !IsSearching;
     [ObservableProperty] private bool _hasSearched;
     [ObservableProperty] private string _statusLine = "";
@@ -397,6 +407,7 @@ public sealed partial class ExploreViewModel : ObservableObject
 
         IsSearching = true;
         HasSearched = true;
+        FiltersExpanded = false;
         _reviewed = _passing = _datesA = _datesB = 0;
         Rows.Clear();
         UnconfirmedRows.Clear();
@@ -583,11 +594,18 @@ public sealed partial class ExploreViewModel : ObservableObject
         LoadNote = "";
         StatusLine = "";
         SourceText = "";
+        LinkExpanded = true;
+        FiltersExpanded = true;
         UpdateResultsText();
         OnPropertyChanged(nameof(HasUnconfirmed));
         OnPropertyChanged(nameof(SelectedText));
         UpdateSummary();
     }
+
+    /// <summary>"Descargar miniatura..." from the right-click menu of a result row (RONDA 4).</summary>
+    [RelayCommand]
+    private Task SaveThumbnail(ExploreRow? row) =>
+        row is null ? Task.CompletedTask : _host.SaveThumbnailAsync(row.Entry.Url, row.Title);
 
     /// <summary>Lists the videos of a playlist row and adds them to the table (SCRAPING_SPEC: "expands into its videos").</summary>
     [RelayCommand]
@@ -657,6 +675,15 @@ public sealed partial class ExploreViewModel : ObservableObject
         ExpandedChanged?.Invoke();
         _host.RequestVideoInfo(row.Entry.Url, Cookies);
         RefreshCard(row);
+    }
+
+    /// <summary>The row after the one just read is asked for in advance, only when nothing else is running (one at a time, never right after a failure).</summary>
+    private void PrefetchAfter(ExploreRow opened)
+    {
+        var rows = Rows;
+        var i = rows.IndexOf(opened);
+        if (i < 0 || i + 1 >= rows.Count || rows[i + 1].IsPlaylist) return;
+        _host.PrefetchVideoInfo(rows[i + 1].Entry.Url, Cookies);
     }
 
     public void CloseRows()

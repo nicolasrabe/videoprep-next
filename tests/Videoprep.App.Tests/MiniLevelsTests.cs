@@ -77,7 +77,7 @@ public class MiniPlacerTests
     }
 
     [Fact]
-    public void Card_bar_card_keeps_the_top_right_corner_and_the_full_window_comes_back_where_it_was()
+    public void Card_bar_card_keeps_the_top_right_corner_and_the_full_window_comes_back_at_the_top_right_where_the_card_was()
     {
         var full = new PixelBox(150, 90, 1000, 700);
         var (placer, desk) = Make(full);
@@ -90,10 +90,32 @@ public class MiniPlacerTests
         Assert.Equal((MiniLevel.Mini, 1920 - 340, 0), desk.Mini);
 
         placer.Close();
-        Assert.Equal(full, desk.Restored);
+        Assert.Equal(new PixelBox(1920 - 1000, 0, 1000, 700), desk.Restored);   // same size, top right corner of the card (right edge 1920)
         Assert.False(desk.RestoredMaximized);
         Assert.Null(desk.Mini);
         Assert.Equal(MiniLevel.Maxi, placer.Level);
+    }
+
+    [Fact]
+    public void Card_moved_to_the_other_monitor_then_back_to_maxi_opens_there_with_its_old_size_and_the_cards_corner()
+    {
+        var (placer, desk) = Make(new PixelBox(150, 90, 1000, 700));     // first monitor, 100 %
+        placer.Show(MiniLevel.Mini);
+        desk.Drag(2500, 300);                                            // second monitor, 150 %: the card is 510 px wide, right edge 3010
+        placer.Close();
+        // 1000x700 at 100 % = 1500x1050 at 150 %; the card's right edge (3010) would put the left edge at 1510, left of the monitor: it is pushed to the work area's left edge (1920)
+        Assert.Equal(new PixelBox(1920, 300, 1500, 1050), desk.Restored);
+    }
+
+    [Fact]
+    public void Back_to_maxi_never_leaves_the_work_area_and_is_never_bigger_than_it()
+    {
+        var (placer, desk) = Make(new PixelBox(150, 90, 1900, 1030));
+        placer.Show(MiniLevel.Micro);
+        desk.Drag(3500, 1390);                                           // bottom right of the 150 % monitor
+        placer.Close();
+        var r = desk.Restored!.Value;
+        Assert.True(r.X >= 1920 && r.Right <= 1920 + 2560 && r.Y >= 0 && r.Bottom <= 1400, r.ToString());
     }
 
     [Fact]

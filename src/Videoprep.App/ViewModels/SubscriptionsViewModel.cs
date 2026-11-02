@@ -93,7 +93,15 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
     private static Loc L => Loc.Instance;
 
     public ObservableCollection<SubscriptionRow> Rows { get; } = [];
-    [ObservableProperty] private SubscriptionRow? _selected;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedPaused), nameof(SelectedActive))]
+    private SubscriptionRow? _selected;
+
+    /// <summary>The right-click landed on a subscription (true) or on the empty space (false): decides which menu items show.</summary>
+    [ObservableProperty] private bool _menuOnRow;
+
+    public bool SelectedActive => Selected is { Enabled: true };
+    public bool SelectedPaused => Selected is { Enabled: false };
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsIdle))] private bool _isChecking;
     public bool IsIdle => !IsChecking;
     [ObservableProperty] private string _statusLine = "";
@@ -128,6 +136,7 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
 
     private void OnRowEnabledChanged(SubscriptionRow row)
     {
+        if (row == Selected) { OnPropertyChanged(nameof(SelectedActive)); OnPropertyChanged(nameof(SelectedPaused)); }
         if (_loading || row.Sub.Enabled == row.Enabled) return;
         row.Sub = row.Sub with { Enabled = row.Enabled };
         Save();
@@ -262,6 +271,49 @@ public sealed partial class SubscriptionsViewModel : ObservableObject
 
     [RelayCommand]
     private Task CheckAll() => CheckAsync(null, interactive: true);
+
+    // ---- right-click menu (RONDA 4, spec F): on a subscription / on the empty space
+
+    /// <summary>Pausar / Reanudar: the same switch as the "Activa" box.</summary>
+    [RelayCommand]
+    private void TogglePause()
+    {
+        if (Selected is { } row) row.Enabled = !row.Enabled;
+    }
+
+    /// <summary>Pausar todas.</summary>
+    [RelayCommand]
+    private void PauseAll()
+    {
+        foreach (var r in Rows.ToList()) r.Enabled = false;
+    }
+
+    /// <summary>Only web addresses are opened, in the default browser.</summary>
+    [RelayCommand]
+    private async Task OpenChannel()
+    {
+        if (Selected is not { } row) return;
+        if (Uri.TryCreate(row.Sub.Url, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttps || u.Scheme == Uri.UriSchemeHttp))
+            _host.Ui.OpenUrl(u.AbsoluteUri);
+        else await _host.Ui.ShowMessage(L["sc_no_channel"]);
+    }
+
+    [RelayCommand]
+    private async Task CopyChannelLink()
+    {
+        if (Selected is not { } row) return;
+        if (row.Sub.Url.Length == 0) { await _host.Ui.ShowMessage(L["sc_no_channel"]); return; }
+        await _host.Ui.SetClipboardText(row.Sub.Url);
+        StatusLine = L["st_copied"];
+    }
+
+    [RelayCommand]
+    private async Task OpenDownloadsFolder()
+    {
+        if (Selected is not { } row) return;
+        if (row.Sub.Folder.Length > 0 && Directory.Exists(row.Sub.Folder)) _host.Ui.OpenFolder(row.Sub.Folder);
+        else await _host.Ui.ShowMessage(L["sc_no_folder"]);
+    }
 
     [RelayCommand]
     private void StopCheck() => _cts?.Cancel();

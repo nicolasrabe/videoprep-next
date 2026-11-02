@@ -1,5 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.App"
              RequestedThemeVariant="Light">
   <!-- Theme colors (legacy palette keys). ThemeService replaces them when the user picks a theme. -->
@@ -244,6 +245,46 @@
     <Style Selector="ToggleButton.miniicon:checked /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource Ob}" />
       <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />
+    </Style>
+
+    <!-- RONDA 4: foldable card (CollapsibleSection) and the spinner of LoadingText -->
+    <Style Selector="v|CollapsibleSection">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{DynamicResource Card}" BorderBrush="{DynamicResource Bd}" BorderThickness="1" CornerRadius="2">
+            <Grid RowDefinitions="Auto,*">
+              <Button x:Name="PART_Header" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Padding="10,6" CornerRadius="0" AutomationProperties.Name="{TemplateBinding Title}">
+                <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8">
+                  <Path Width="10" Height="10" Stretch="Uniform" StrokeThickness="1.6" Stroke="{DynamicResource Mu}" VerticalAlignment="Center"
+                        StrokeLineCap="Round" StrokeJoin="Round" Data="M1,3 L5,7 L9,3" Classes="chev" />
+                  <TextBlock Grid.Column="1" Classes="title" Text="{TemplateBinding Title}" VerticalAlignment="Center" />
+                  <ContentPresenter Grid.Column="2" Content="{TemplateBinding HeaderContent}" VerticalAlignment="Center" />
+                  <TextBlock x:Name="PART_Summary" Grid.Column="3" Classes="muted" Text="{TemplateBinding Summary}" IsVisible="False"
+                             TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                </Grid>
+              </Button>
+              <ContentPresenter x:Name="PART_ContentPresenter" Grid.Row="1" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Padding="10,0,10,10" />
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="v|CollapsibleSection:folded /template/ Path.chev">
+      <Setter Property="RenderTransform" Value="rotate(-90deg)" />
+    </Style>
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="9,3" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Arc.spin">
+      <Style.Animations>
+        <Animation Duration="0:0:1" IterationCount="INFINITE">
+          <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+          <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+        </Animation>
+      </Style.Animations>
     </Style>
 
     <!-- Right-click menu in the theme colors -->

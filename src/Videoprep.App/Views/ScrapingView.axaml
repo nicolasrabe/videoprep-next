@@ -20,44 +20,40 @@
       <ToggleButton x:Name="SubsButton" Content="{s:T sc_subs}" IsChecked="{Binding ShowSubscriptions, Mode=OneWay}" />
     </StackPanel>
 
-    <!-- Explorar in three steps (RONDA 1): link, filters, results. -->
-    <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
-      <!-- ① Enlace -->
-      <Border Classes="card">
+    <!-- Explorar in three steps (RONDA 1), each one a foldable card (RONDA 4): the results take all the free height. -->
+    <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
+      <!-- ① Enlace: folded, only the channel (avatar, name, @) stays in the header -->
+      <v:CollapsibleSection x:Name="LinkCard" Title="{s:T sc_step1}" IsExpanded="{Binding Explore.LinkExpanded}">
+        <v:CollapsibleSection.HeaderContent>
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Explore.HasSource}" Margin="6,0,0,0">
+            <Border Width="26" Height="26" CornerRadius="13" ClipToBounds="True" Background="{DynamicResource Bd}">
+              <Image Source="{Binding Explore.Avatar}" Stretch="UniformToFill" />
+            </Border>
+            <TextBlock x:Name="SourceNameText" Classes="title" Text="{Binding Explore.SourceName}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" Text="{Binding Explore.SourceHandle}" VerticalAlignment="Center" />
+          </StackPanel>
+        </v:CollapsibleSection.HeaderContent>
         <StackPanel Spacing="7">
-          <TextBlock Classes="title" Text="{s:T sc_step1}" />
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <TextBox x:Name="SourceBox" Text="{Binding Explore.SourceText}" PlaceholderText="{s:T sc_url_ph}" IsEnabled="{Binding Explore.IsIdle}" />
             <Button Grid.Column="1" Classes="o" Content="{s:T sc_load}" Command="{Binding Explore.LoadCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </Grid>
-          <TextBlock Classes="muted" Text="{s:T sc_hint_link}" TextWrapping="Wrap" IsVisible="{Binding !Explore.HasSource}" />
-          <TextBlock Classes="muted" Text="{Binding Explore.LoadNote}" TextWrapping="Wrap" IsVisible="{Binding !Explore.HasSource}" />
-          <!-- The link is identified: name, user, avatar, and the tabs to read -->
-          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" IsVisible="{Binding Explore.HasSource}">
-            <Border Width="44" Height="44" CornerRadius="22" ClipToBounds="True" Background="{DynamicResource Bd}">
-              <Image Source="{Binding Explore.Avatar}" Stretch="UniformToFill" />
-            </Border>
-            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock x:Name="SourceNameText" Classes="title" Text="{Binding Explore.SourceName}" />
-                <TextBlock Classes="muted" Text="{Binding Explore.SourceHandle}" VerticalAlignment="Center" />
-              </StackPanel>
-              <TextBlock Classes="muted" Text="{Binding Explore.LoadNote}" />
-            </StackPanel>
-            <WrapPanel Grid.Column="2" ItemSpacing="10" LineSpacing="4" VerticalAlignment="Center">
-              <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="{Binding Explore.TabVideos}" />
-              <CheckBox Content="{s:T sc_tabs_shorts}" IsChecked="{Binding Explore.TabShorts}" />
-              <CheckBox Content="{s:T sc_tabs_streams}" IsChecked="{Binding Explore.TabStreams}" />
-              <CheckBox Content="{s:T sc_tabs_playlists}" IsChecked="{Binding Explore.TabPlaylists}" />
-            </WrapPanel>
-          </Grid>
+          <v:LoadingText What="{s:T load_channel}" IsVisible="{Binding Explore.IsLoadingSource}" />
+          <TextBlock Classes="muted" Text="{Binding Explore.LoadNote}" TextWrapping="Wrap" IsVisible="{Binding !Explore.IsLoadingSource}" />
+          <!-- The link is identified: the tabs to read -->
+          <WrapPanel ItemSpacing="10" LineSpacing="4" IsVisible="{Binding Explore.HasSource}">
+            <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="{Binding Explore.TabVideos}" />
+            <CheckBox Content="{s:T sc_tabs_shorts}" IsChecked="{Binding Explore.TabShorts}" />
+            <CheckBox Content="{s:T sc_tabs_streams}" IsChecked="{Binding Explore.TabStreams}" />
+            <CheckBox Content="{s:T sc_tabs_playlists}" IsChecked="{Binding Explore.TabPlaylists}" />
+          </WrapPanel>
         </StackPanel>
-      </Border>
+      </v:CollapsibleSection>
 
-      <!-- ② Filtros -->
-      <Border x:Name="FiltersCard" Grid.Row="1" Classes="card" IsVisible="{Binding Explore.HasSource}">
+      <!-- ② Filtros: folded, one line says what is applied. "Buscar videos" folds it. -->
+      <v:CollapsibleSection x:Name="FiltersCard" Grid.Row="1" Title="{s:T sc_step2}" Summary="{Binding Explore.SummaryText}"
+                            IsExpanded="{Binding Explore.FiltersExpanded}" IsVisible="{Binding Explore.HasSource}">
         <StackPanel Spacing="7">
-          <TextBlock Classes="title" Text="{s:T sc_step2}" />
           <WrapPanel ItemSpacing="8" LineSpacing="6">
             <TextBlock Classes="muted" Text="{s:T sc_published}" VerticalAlignment="Center" />
             <ToggleButton Content="{s:T sc_p24}" IsChecked="{Binding Explore.Preset24h, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="24h" />
@@ -108,32 +104,36 @@
             </Panel>
           </Grid>
         </StackPanel>
-      </Border>
+      </v:CollapsibleSection>
 
-      <!-- ③ Resultados -->
-      <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="12" IsVisible="{Binding Explore.HasSearched}">
-        <StackPanel>
-          <TextBlock Classes="title" Text="{s:T sc_step3}" />
-          <TextBlock x:Name="ResultsHeaderText" Text="{Binding Explore.ResultsHeader}" FontWeight="SemiBold" />
-        </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-          <TextBlock Classes="muted" Text="{Binding Explore.DatesText}" VerticalAlignment="Center"
-                     IsVisible="{Binding Explore.DatesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-          <ProgressBar IsIndeterminate="True" Width="140" IsVisible="{Binding Explore.IsSearching}" />
-          <Button Classes="r" Content="{s:T btn_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" />
-        </StackPanel>
-      </Grid>
-      <StackPanel Grid.Row="3" Spacing="4" IsVisible="{Binding Explore.HasSearched}">
-        <TextBlock Classes="muted" Text="{Binding Explore.StatusLine}" TextWrapping="Wrap"
-                   IsVisible="{Binding Explore.StatusLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding Explore.HasUnconfirmed}">
-          <TextBlock x:Name="UnconfirmedText" Text="{Binding Explore.UnconfirmedText}" VerticalAlignment="Center" />
-          <Button Classes="link" Content="{Binding Explore.UnconfirmedToggleText}" Command="{Binding Explore.ToggleUnconfirmedCommand}" />
-        </StackPanel>
-      </StackPanel>
-      <Grid Grid.Row="4" RowDefinitions="*,Auto" RowSpacing="8" IsVisible="{Binding Explore.HasSearched}">
+      <!-- ③ Resultados: grows; the table scrolls by itself with its header fixed -->
+      <v:CollapsibleSection x:Name="ResultsCard" Grid.Row="2" Title="{s:T sc_step3}" Grows="True" IsVisible="{Binding Explore.HasSearched}">
+        <v:CollapsibleSection.HeaderContent>
+          <StackPanel Orientation="Horizontal" Spacing="10" Margin="6,0,0,0">
+            <TextBlock x:Name="ResultsHeaderText" Text="{Binding Explore.ResultsHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" Text="{Binding Explore.DatesText}" VerticalAlignment="Center"
+                       IsVisible="{Binding Explore.DatesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <ProgressBar IsIndeterminate="True" Width="120" IsVisible="{Binding Explore.IsSearching}" />
+            <Button Classes="r" Content="{s:T btn_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" Padding="10,2" />
+          </StackPanel>
+        </v:CollapsibleSection.HeaderContent>
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="6">
+          <TextBlock Classes="muted" Text="{Binding Explore.StatusLine}" TextWrapping="Wrap"
+                     IsVisible="{Binding Explore.StatusLine, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10" IsVisible="{Binding Explore.HasUnconfirmed}">
+            <TextBlock x:Name="UnconfirmedText" Text="{Binding Explore.UnconfirmedText}" VerticalAlignment="Center" />
+            <Button Classes="link" Content="{Binding Explore.UnconfirmedToggleText}" Command="{Binding Explore.ToggleUnconfirmedCommand}" />
+          </StackPanel>
+          <v:LoadingText Grid.Row="2" x:Name="ResultsLoadingText" What="{s:T load_results}" IsVisible="{Binding Explore.ResultsLoading}"
+                         HorizontalAlignment="Center" VerticalAlignment="Center" />
         <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding Explore.Rows}" HeadersVisibility="Column" CanUserSortColumns="False"
-                  CanUserReorderColumns="False" SelectionMode="Single" RowDetailsVisibilityMode="Collapsed">
+                  CanUserReorderColumns="False" SelectionMode="Single" RowDetailsVisibilityMode="Collapsed" Grid.Row="2" IsVisible="{Binding !Explore.ResultsLoading}">
+          <DataGrid.ContextMenu>
+            <ContextMenu>
+              <MenuItem x:Name="ResultsThumbMenu" Header="{s:T mnu_thumb}" Command="{Binding Explore.SaveThumbnailCommand}"
+                        CommandParameter="{Binding #ResultsGrid.SelectedItem}" />
+            </ContextMenu>
+          </DataGrid.ContextMenu>
           <DataGrid.Columns>
             <DataGridTemplateColumn Width="40">
               <DataTemplate x:DataType="vm:ExploreRow">
@@ -178,7 +178,7 @@
           </DataGrid.RowDetailsTemplate>
         </DataGrid>
         <!-- Without a confirmed date: apart, unchecked -->
-        <Border Grid.Row="1" Classes="card" IsVisible="{Binding Explore.ShowUnconfirmed}" MaxHeight="190">
+        <Border Grid.Row="3" Classes="card" IsVisible="{Binding Explore.ShowUnconfirmed}" MaxHeight="190">
           <StackPanel Spacing="4">
             <TextBlock Classes="muted" Text="{s:T sc_unconf_title}" TextWrapping="Wrap" />
             <DataGrid x:Name="UnconfirmedGrid" ItemsSource="{Binding Explore.UnconfirmedRows}" HeadersVisibility="Column" CanUserSortColumns="False"
@@ -196,8 +196,9 @@
             </DataGrid>
           </StackPanel>
         </Border>
-      </Grid>
-      <Border Grid.Row="5" Classes="card" IsVisible="{Binding Explore.HasSearched}">
+        </Grid>
+      </v:CollapsibleSection>
+      <Border Grid.Row="3" Classes="card" IsVisible="{Binding Explore.HasSearched}">
         <WrapPanel ItemSpacing="24" LineSpacing="8">
           <StackPanel Orientation="Horizontal" Spacing="12">
             <!-- Selección: one group with its title; Reiniciar apart, in red -->
@@ -229,8 +230,27 @@
 
     <!-- Suscripciones (SCRAPING_SPEC 2) -->
     <Grid Grid.Row="1" RowDefinitions="*,Auto,Auto,Auto" RowSpacing="8" IsVisible="{Binding ShowSubscriptions}">
-      <DataGrid ItemsSource="{Binding Subscriptions.Rows}" SelectedItem="{Binding Subscriptions.Selected}" SelectionMode="Single"
+      <DataGrid x:Name="SubsGrid" ItemsSource="{Binding Subscriptions.Rows}" SelectedItem="{Binding Subscriptions.Selected}" SelectionMode="Single"
                 HeadersVisibility="Column" CanUserSortColumns="False" CanUserReorderColumns="False" IsEnabled="{Binding Subscriptions.IsIdle}">
+        <DataGrid.ContextMenu>
+          <ContextMenu x:Name="SubsMenu">
+            <!-- On a subscription -->
+            <MenuItem Header="{s:T mnu_sub_check}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_pause}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedActive}" />
+            <MenuItem Header="{s:T mnu_sub_resume}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedPaused}" />
+            <MenuItem Header="{s:T mnu_sub_edit}" Command="{Binding Subscriptions.EditCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <Separator IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_channel}" Command="{Binding Subscriptions.OpenChannelCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_copy}" Command="{Binding Subscriptions.CopyChannelLinkCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_folder}" Command="{Binding Subscriptions.OpenDownloadsFolderCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <Separator IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <!-- On the empty space -->
+            <MenuItem Header="{s:T mnu_sub_add}" Command="{Binding Subscriptions.AddCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_checkall}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{s:T mnu_sub_pauseall}" Command="{Binding Subscriptions.PauseAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+          </ContextMenu>
+        </DataGrid.ContextMenu>
         <DataGrid.Columns>
           <DataGridTemplateColumn Header="{s:T sc_col_on}" Width="80">
             <DataTemplate x:DataType="vm:SubscriptionRow">

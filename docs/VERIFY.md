@@ -219,3 +219,12 @@ Comprobado ejecutando (Windows 10, yt-dlp 2026.10.21, ffmpeg del repo):
 Pruebas de pantalla marcadas `Inestable` (2 pruebas, 24 casos), corridas a mano al cierre: 3 corridas, 71 de 72 casos pasaron; el que falló fue `[Test Case Cleanup Failure ... a different thread owns it]` de `Avalonia.Headless`
 (código de la librería, al preparar la prueba siguiente; no es de la app). Detalle en `docs/informes/ronda-3.md`.
 
+## 0.3.1 RONDA 4 - fichas, miniaturas, cola y modo mini
+
+Comprobado ejecutando (Windows 10, yt-dlp 2026.10.21, 3 videos reales de YouTube):
+- `--extractor-args youtube:skip=hls,dash,translated_subs` en el pedido de la ficha: los mismos campos (título, duración, descripción, miniaturas) y algo más rápido (3,9 s contra 4,1 s de promedio). Está en `YtDlpArgs.Info`.
+- La miniatura `maxresdefault.jpg` existe en dos de los tres videos; el tercero cae a `hqdefault.jpg` (404 en las más grandes), como describe el spec.
+- Tiempo de abrir una ficha la primera vez: 4,6 s antes (datos y después la miniatura) y 4,2 s ahora (los dos al mismo tiempo); con la ficha ya vista, sale del disco sin pedido.
+- Conversión de miniatura con el ffmpeg real (JPG a PNG y PNG a JPG): `ThumbnailExporterTests` (categoría Integration).
+**No verificado**: el arrastre de filas de la Cola con el mouse real (las pruebas ejercitan el cálculo del destino y el guardado del orden, no el arrastre de verdad); los menús de clic derecho abiertos en un escritorio real; la ventana completa volviendo a otro monitor real.
+

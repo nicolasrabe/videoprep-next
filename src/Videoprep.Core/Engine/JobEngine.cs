@@ -111,6 +111,11 @@ public sealed class JobEngine(IProcessRunner runner, Log log)
                     _log.Write("Stopped: the site asked for verification (bot check) or for fewer requests. The rest stays queued.");
                     break;
                 }
+                if (_idx > 0 && jobs[_idx].GroupId != jobs[_idx - 1].GroupId && ctx.PauseRequested?.Invoke() == true)
+                {
+                    _log.Write("Paused: the rest stays queued.");
+                    break;
+                }
                 await RunJobAsync(jobs[_idx]).ConfigureAwait(false);
                 if (_cancelled) break;
             }

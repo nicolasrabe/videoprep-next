@@ -28,6 +28,8 @@ public sealed partial class MainViewModel
     {
         NotifySelection();
         OnPropertyChanged(nameof(CanUndo));
+        OnPropertyChanged(nameof(CanPause));
+        OnPropertyChanged(nameof(QueueCounter));
         RefreshMini();
     }
 
@@ -159,6 +161,7 @@ public sealed partial class MainViewModel
         }
         SaveSettings();
         ResetMiniRun();
+        PauseRequested = false;
         IsRunning = true;
         _runFolder = folder;
         RebuildQueueRows();
@@ -174,6 +177,7 @@ public sealed partial class MainViewModel
             Cookies = CookieChain(),
             ArchiveFile = _svc.Paths.ArchiveFile,
             SessionCookieFile = _svc.Paths.SessionCookieFile,
+            PauseRequested = () => PauseRequested,
         };
         BatchResult result;
         try
@@ -205,9 +209,13 @@ public sealed partial class MainViewModel
         ProgressIndeterminate = false;
         Progress = 0;
         RebuildQueueRows();
+        var paused = PauseRequested && !result.Cancelled && result.Statuses.Values.Any(s => s == JobStatus.Queued);
+        PauseRequested = false;
         StatusText = result.Cancelled
             ? L["st_stopped"]
-            : string.Format(L.Culture, L["st_done"], result.Ok, result.Warn, result.Fail);
+            : paused
+                ? L.Format("st_paused", result.Statuses.Values.Count(s => s == JobStatus.Queued))
+                : string.Format(L.Culture, L["st_done"], result.Ok, result.Warn, result.Fail);
         MiniRunFinished(result);
         RememberSources(jobs, result, folder);
         if (!result.Cancelled)
@@ -237,6 +245,7 @@ public sealed partial class MainViewModel
                     var locked = IsLockedStatus(s.Status);
                     foreach (var r in QueueRows.Where(r => r.ItemId == row.ItemId)) r.IsLocked |= locked;
                 }
+                OnPropertyChanged(nameof(QueueCounter));
                 break;
             case StepEvent { Step: EngineStep.Downloading } st:
                 MiniJobStarted(st.Job, st.Number, st.Total);

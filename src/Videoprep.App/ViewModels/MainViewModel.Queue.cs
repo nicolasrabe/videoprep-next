@@ -42,14 +42,19 @@ public enum CardState { Loading, Ready, Failed }
 public sealed partial class QueueRowCard : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsLoading), nameof(IsReady), nameof(IsFailed))]
+    [NotifyPropertyChangedFor(nameof(IsLoading), nameof(IsReady), nameof(IsFailed), nameof(ThumbLoading))]
     private CardState _state;
 
     public bool IsLoading => State == CardState.Loading;
     public bool IsReady => State == CardState.Ready;
     public bool IsFailed => State == CardState.Failed;
 
-    [ObservableProperty] private Bitmap? _thumbnail;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ThumbLoading))]
+    private Bitmap? _thumbnail;
+
+    /// <summary>The picture is still on its way ("Cargando la miniatura...").</summary>
+    public bool ThumbLoading => Thumbnail is null && State != CardState.Failed;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDuration))]
     private string _duration = "";
@@ -126,6 +131,7 @@ public sealed partial class MainViewModel
             }
         }
         UpdateRowNames();
+        OnPropertyChanged(nameof(QueueCounter));
         OnPropertyChanged(nameof(CanRetry));
         OnPropertyChanged(nameof(CanUndo));
     }
@@ -277,10 +283,23 @@ public sealed partial class MainViewModel
         var changedName = false;
         foreach (var row in QueueRows.Where(r => r.VideoKey == key))
         {
-            if (row.IsExpanded) RefreshCard(row);
+            if (row.IsExpanded)
+            {
+                RefreshCard(row);
+                if (_svc.Info.Get(key) is { State: InfoState.Ready }) PrefetchNextQueueRow(row);
+            }
             changedName |= row.PlannedName is null;
         }
         if (changedName) UpdateRowNames();
+    }
+
+    /// <summary>The row after the open one, asked for in advance when nothing else is running (RONDA 4).</summary>
+    private void PrefetchNextQueueRow(QueueRow opened)
+    {
+        var i = QueueRows.IndexOf(opened);
+        var next = QueueRows.Skip(i + 1).FirstOrDefault(r => r.VideoKey != opened.VideoKey);
+        if (next is null || _tools.YtDlp is null) return;
+        _svc.Info.Prefetch(next.Url, new InfoRequest(_tools, CookieChain()));
     }
 
     /// <summary>
@@ -306,7 +325,7 @@ public sealed partial class MainViewModel
         card.Duration = info?.Duration is { Length: > 0 } dur ? dur : Core.Scraping.Filters.FormatDuration(listed?.DurationSec);
         card.Description = info?.Description ?? "";
         card.FailText = info?.State == InfoState.Failed ? L.Format("det_fail", ReasonText(info.FailReason)) : "";
-        var bytes = info?.Thumbnail ?? preview?.Thumbnail;
+        var bytes = info?.Thumbnail ?? preview?.Thumbnail ?? _svc.Thumbs?.TryGet(videoKey);
         var thumbKey = bytes is null ? "" : videoKey + bytes.Length;
         if (thumbKey != card.ThumbKey)
         {
