@@ -2,7 +2,7 @@
 
 Versions below 1.0.0 are early releases: things can change between them.
 
-## Sin publicar (0.3.2)
+## 0.3.2 - 2026-11-02
 - **Aviso de versión nueva al abrir**: el chequeo automático se vuelve a hacer si pasaron 6 horas desde el último que salió bien (antes 24), y siempre mientras se sepa que hay una versión más nueva, así el aviso no desaparece al reabrir. El aviso dice cuál es la nueva y cuál tenés, y el botón **Actualizar** es verde. Los errores de red del chequeo solo se anotan en el Registro. Esto solo funciona desde la 0.3.2: la 0.3.0 y la 0.3.1 instaladas siguen con su regla de 24 horas.
 
 ## 0.3.1 - 2026-11-02
