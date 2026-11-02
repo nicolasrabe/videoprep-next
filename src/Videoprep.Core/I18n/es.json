@@ -438,7 +438,7 @@
   "upd_checking": "Buscando…",
   "upd_uptodate": "Ya tenés la última versión ({0}).",
   "upd_check_failed": "No se pudo buscar actualizaciones (sin internet, o GitHub no responde). Probá de nuevo más tarde.",
-  "upd_banner": "Hay una versión nueva: {0}",
+  "upd_banner": "Hay una versión nueva de videoprep: {0} (tenés la {1})",
   "upd_notes": "Ver novedades",
   "upd_install": "Actualizar",
   "upd_later": "Ahora no",

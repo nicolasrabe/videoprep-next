@@ -5,7 +5,7 @@ using Videoprep.Core.Update;
 namespace Videoprep.App.ViewModels;
 
 /// <summary>
-/// F9: new versions of videoprep. A check when it opens (once a day at most, can be turned off) and a button in Ajustes;
+/// F9: new versions of videoprep. A check when it opens (every 6 hours at most after a good check, can be turned off) and a button in Ajustes;
 /// installing always needs the person's click, and never happens while something downloads.
 /// </summary>
 public sealed partial class MainViewModel
@@ -18,7 +18,7 @@ public sealed partial class MainViewModel
     [ObservableProperty, NotifyPropertyChangedFor(nameof(UpdateBannerVisible))] private bool _updateBannerDismissed;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsIdle))] private bool _updating;
 
-    public string UpdateBannerText => UpdateAvailable is { } r ? L.Format("upd_banner", r.Version) : "";
+    public string UpdateBannerText => UpdateAvailable is { } r ? L.Format("upd_banner", r.Version, _svc.CurrentVersion) : "";
     public bool UpdateBannerVisible => UpdateAvailable is not null && !UpdateBannerDismissed;
     public string InstalledVersionText => L.Format("upd_installed", _svc.CurrentVersion);
 
@@ -46,7 +46,7 @@ public sealed partial class MainViewModel
     {
         if (UpdateResult.Take(_svc.Paths.UpdatesDir) is { } last) await ReportLastUpdateAsync(last).ConfigureAwait(true);
         _stager?.CleanOld();
-        if (_svc.Updates is null || !Settings.UpdateCheck || !UpdateChecker.IsDue(Settings.UpdateLast, DateTimeOffset.Now)) return;
+        if (_svc.Updates is null || !Settings.UpdateCheck || !UpdateChecker.IsDue(Settings.UpdateLast, DateTimeOffset.Now, Settings.UpdateFound)) return;
         await CheckForUpdateAsync(manual: false).ConfigureAwait(true);
     }
 
@@ -80,6 +80,7 @@ public sealed partial class MainViewModel
         {
             var found = await new UpdateChecker(client).CheckAsync(_svc.CurrentVersion, _svc.Rid, CancellationToken.None).ConfigureAwait(true);
             Settings.UpdateLast = DateTimeOffset.Now.ToString("o");
+            Settings.UpdateFound = found?.Version.ToString() ?? "";
             SaveSettings();
             UpdateAvailable = found;
             UpdateBannerDismissed = false;
@@ -91,13 +92,19 @@ public sealed partial class MainViewModel
             else
             {
                 _svc.Log.Write($"Update check: videoprep {found.Version} is available.");
-                UpdateStatus = L.Format("upd_banner", found.Version);
+                UpdateStatus = L.Format("upd_banner", found.Version, _svc.CurrentVersion);
             }
         }
         catch (UpdateException ex)
         {
             _svc.Log.Write($"WARN  Update check failed ({ex.Failure}): {ex.Message}");
             if (_statusWanted) UpdateStatus = L["upd_check_failed"];   // the automatic look is silent; the button is not
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException or System.Text.Json.JsonException or InvalidOperationException)
+        {
+            // Whatever goes wrong on the network is only written down; the window is left alone (the button says it when asked).
+            _svc.Log.Write($"WARN  Update check failed ({ex.GetType().Name}): {ex.Message}");
+            if (_statusWanted) UpdateStatus = L["upd_check_failed"];
         }
         finally
         {

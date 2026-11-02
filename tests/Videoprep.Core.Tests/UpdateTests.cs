@@ -159,14 +159,16 @@ public sealed class ReleaseFeedTests
     }
 
     [Fact]
-    public void The_check_is_due_once_a_day()
+    public void The_check_is_due_every_6_hours_after_a_good_check_and_always_while_a_newer_version_is_known()
     {
         var now = DateTimeOffset.Parse("2026-10-29T12:00:00-03:00");
         Assert.True(UpdateChecker.IsDue("", now));
         Assert.True(UpdateChecker.IsDue("garbage", now));
         Assert.False(UpdateChecker.IsDue(now.AddHours(-3).ToString("o"), now));
-        Assert.False(UpdateChecker.IsDue(now.AddHours(-23).ToString("o"), now));
+        Assert.False(UpdateChecker.IsDue(now.AddHours(-5.9).ToString("o"), now));
+        Assert.True(UpdateChecker.IsDue(now.AddHours(-6).ToString("o"), now));
         Assert.True(UpdateChecker.IsDue(now.AddHours(-25).ToString("o"), now));
+        Assert.True(UpdateChecker.IsDue(now.AddMinutes(-5).ToString("o"), now, foundBefore: "0.3.1"));   // a newer version was found: the notice must come back
         Assert.True(UpdateChecker.IsDue(now.AddHours(5).ToString("o"), now));   // a date in the future (clock changed): look again
     }
 }

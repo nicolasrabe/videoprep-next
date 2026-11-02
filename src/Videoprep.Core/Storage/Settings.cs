@@ -61,6 +61,8 @@ public sealed class Settings
     [JsonPropertyName("updateCheck")] public bool UpdateCheck { get; set; } = true;
     /// <summary>F9: when the list of releases was last read (ISO 8601); empty = never.</summary>
     [JsonPropertyName("updateLast")] public string UpdateLast { get; set; } = "";
+    /// <summary>Version the last successful check found newer than this one ("" = none): the next start looks again whatever the time.</summary>
+    [JsonPropertyName("updateFound")] public string UpdateFound { get; set; } = "";
     /// <summary>F7: write a list of sources when a batch ends (off by default).</summary>
     [JsonPropertyName("sourceList")] public bool SourceList { get; set; }
     /// <summary>"csv" or "txt".</summary>

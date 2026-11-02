@@ -39,13 +39,40 @@ public sealed class UpdateAppTests : IDisposable
         Assert.False(vm.UpdateBannerVisible);
         await vm.OnShownAsync();
         Assert.True(vm.UpdateBannerVisible);
-        Assert.Equal("Hay una versión nueva: 0.3.0", vm.UpdateBannerText);
+        Assert.Equal("Hay una versión nueva de videoprep: 0.3.0 (tenés la 0.2.0)", vm.UpdateBannerText);
+        Assert.Equal("0.3.0", vm.Settings.UpdateFound);
         Assert.Equal(1, ApiCalls);
         Assert.NotEqual("", vm.Settings.UpdateLast);
         Assert.NotEqual("", SettingsStore.Load(_rig!.Paths.SettingsFile, out _).UpdateLast);
 
-        await _rig.Create().OnShownAsync();                       // opened again within a day: no new look
+        await _rig.Create().OnShownAsync();                       // opened again soon, but a newer version is known: it looks again so the notice comes back
+        Assert.Equal(2, ApiCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task A_good_check_that_found_nothing_is_trusted_for_6_hours_and_not_longer()
+    {
+        var vm = Open(installed: "0.3.0");
+        await vm.OnShownAsync();
         Assert.Equal(1, ApiCalls);
+        Assert.Equal("", vm.Settings.UpdateFound);
+        await _rig!.Create().OnShownAsync();                      // 0 hours later: not asked again
+        Assert.Equal(1, ApiCalls);
+        var s = SettingsStore.Load(_rig.Paths.SettingsFile, out _);
+        s.UpdateLast = DateTimeOffset.Now.AddHours(-7).ToString("o");
+        SettingsStore.Save(_rig.Paths.SettingsFile, s);
+        await _rig.Create().OnShownAsync();                       // 7 hours later: asked again
+        Assert.Equal(2, ApiCalls);
+    }
+
+    [AvaloniaFact]
+    public async Task A_network_error_when_opening_is_only_written_in_the_log_and_the_window_is_left_alone()
+    {
+        var vm = Open(publish: false);
+        await vm.OnShownAsync();
+        Assert.Empty(_rig!.Ui.Messages);
+        Assert.False(vm.UpdateBannerVisible);
+        Assert.Contains(_rig.Log.Recent(), l => l.Contains("Update check failed"));
     }
 
     [AvaloniaFact]

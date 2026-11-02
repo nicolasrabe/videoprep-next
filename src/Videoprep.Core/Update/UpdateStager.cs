@@ -3,10 +3,17 @@ namespace Videoprep.Core.Update;
 /// <summary>Looks for a newer release and, when asked, downloads it, checks its SHA-256 and unpacks it. Never installs anything.</summary>
 public sealed class UpdateChecker(UpdateClient client)
 {
-    /// <summary>At most once a day (a failed check does not count, the next start tries again).</summary>
-    public static bool IsDue(string lastCheck, DateTimeOffset now) =>
-        !DateTimeOffset.TryParse(lastCheck, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var last)
-        || last > now || (now - last).TotalHours >= 24;
+    /// <summary>The longest a successful check is trusted: videoprep looks again when it opens after this many hours.</summary>
+    public const double CacheHours = 6;
+
+    /// <summary>
+    /// At most every <see cref="CacheHours"/> hours, and only when the last check succeeded (a failed check is never saved, so the next start
+    /// tries again). When the last check found a newer version (<paramref name="foundBefore"/>) it looks again every time, so the notice does not vanish.
+    /// </summary>
+    public static bool IsDue(string lastCheck, DateTimeOffset now, string foundBefore = "") =>
+        foundBefore.Length > 0
+        || !DateTimeOffset.TryParse(lastCheck, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var last)
+        || last > now || (now - last).TotalHours >= CacheHours;
 
     public async Task<ReleaseInfo?> CheckAsync(SemVer current, string rid, CancellationToken ct)
     {

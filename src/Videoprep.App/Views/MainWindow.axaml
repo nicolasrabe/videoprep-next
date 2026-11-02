@@ -24,7 +24,7 @@
     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
       <TextBlock x:Name="UpdateBannerText" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" />
       <Button Grid.Column="1" Content="{s:T upd_notes}" Command="{Binding OpenReleaseNotesCommand}" />
-      <Button Grid.Column="2" x:Name="UpdateInstallButton" Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Grid.Column="2" x:Name="UpdateInstallButton" Classes="g" FontWeight="Bold" Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" />
       <Button Grid.Column="3" Content="{s:T upd_later}" Command="{Binding DismissUpdateCommand}" />
     </Grid>
   </Border>
