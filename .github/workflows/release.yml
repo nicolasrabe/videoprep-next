@@ -1,7 +1,7 @@
 name: Release
 
-# Push a tag like v0.3.0 to build the release zip and create a GitHub release (a 0.x version, or one with a suffix like -rc.1,
-# is always marked as a pre-release). videoprep's own updater reads this release: the zip must be named
+# Push a tag like v0.3.0 to build the release zip and create a GitHub release (a version with a suffix like -rc.1 or -beta
+# is marked as a pre-release; any other version, 0.x included, is a normal release marked "Latest"). videoprep's own updater reads this release: the zip must be named
 # videoprep-<tag>-<rid>.zip and SHA256SUMS.txt must list it (the updater installs nothing it cannot check against that file).
 on:
   push:
@@ -45,8 +45,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           VER="${TAG#v}"
-          PRE=""
-          if [[ "$VER" == 0.* || "$VER" == *-* ]]; then PRE="--prerelease"; fi
+          # Only a tag with a suffix (-rc.1, -beta...) is a pre-release; any other version, 0.x included, is a normal release marked "Latest".
+          if [[ "$VER" == *-* ]]; then PRE="--prerelease"; else PRE="--latest"; fi
           NOTES="docs/RELEASE_NOTES_${VER}.md"
           if [[ ! -f "$NOTES" ]]; then NOTES="CHANGELOG.md"; fi
           gh release create "$TAG" dist/videoprep-*.zip dist/SHA256SUMS.txt $PRE --title "videoprep ${VER}" --notes-file "$NOTES"
