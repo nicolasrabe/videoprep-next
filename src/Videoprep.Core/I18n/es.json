@@ -583,5 +583,6 @@
   "set_grp_cookies": "Inicio de sesión (cookies)",
   "set_grp_done": "Al terminar una tanda",
   "set_grp_mini": "Modo mini y portapapeles",
-  "set_grp_look": "Apariencia"
+  "set_grp_look": "Apariencia",
+  "mnu_refresh_data": "Actualizar datos"
 }

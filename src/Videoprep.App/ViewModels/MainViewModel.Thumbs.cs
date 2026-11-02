@@ -26,7 +26,7 @@ public sealed partial class MainViewModel
         var title = !string.IsNullOrWhiteSpace(knownTitle) ? knownTitle! : TitleOf(new Core.Models.QueueItem { Url = url }) ?? key;
         var path = await _ui.PickSaveThumbnail(SafeName.Make(title));
         if (string.IsNullOrEmpty(path)) return;
-        StatusText = L["thumb_saving"];
+        StatusText = L.Format("loading_fmt", L["load_thumb"]);   // asked at the click when it was not loaded
         var bytes = await BestThumbnailBytesAsync(url, key);
         if (bytes is null)
         {
@@ -60,7 +60,8 @@ public sealed partial class MainViewModel
             var info = _svc.Info.Get(key);
             if (info is { Thumbnail: { } b }) done.TrySetResult(b);
             else if (info is { State: InfoState.Failed }) done.TrySetResult(null);
-            else if (info is { State: InfoState.Ready } && _svc.Thumbs is null) done.TrySetResult(null);
+            else if (info is { State: InfoState.Ready })
+                _ = Task.Delay(_svc.Thumbs is null ? 0 : 8000).ContinueWith(_ => done.TrySetResult(_svc.Info.Get(key)?.Thumbnail), TaskScheduler.Default);   // the picture comes a moment after the data
         }
         _svc.Info.Changed += OnChanged;
         try

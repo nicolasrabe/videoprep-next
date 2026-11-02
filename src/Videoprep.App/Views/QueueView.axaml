@@ -32,7 +32,8 @@
           <MenuItem Header="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanChangeSelection}" />
           <MenuItem Header="{s:T mnu_requeue}" Command="{Binding RequeueCommand}" IsEnabled="{Binding CanRequeue}" />
           <MenuItem Header="{s:T mnu_showfolder}" Command="{Binding ShowInFolderCommand}" IsEnabled="{Binding CanShowInFolder}" />
-          <MenuItem x:Name="MenuThumbnail" Header="{s:T mnu_thumb}" Command="{Binding SaveQueueThumbnailCommand}" IsEnabled="{Binding CanEditOne}" />
+          <MenuItem x:Name="MenuThumbnail" Header="{s:T mnu_thumb}" Command="{Binding SaveQueueThumbnailCommand}" IsEnabled="{Binding CanThumbnail}" />
+          <MenuItem x:Name="MenuRefreshData" Header="{s:T mnu_refresh_data}" Command="{Binding RefreshQueueDataCommand}" IsEnabled="{Binding CanThumbnail}" />
           <MenuItem Header="{s:T mnu_exportsources}" Command="{Binding ExportSourcesCommand}" />
           <Separator />
           <MenuItem Header="{s:T mnu_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding CanChangeSelection}" />
@@ -59,6 +60,8 @@
                 <TextBlock Text="▸" Classes="muted" IsVisible="{Binding !IsExpanded}" />
                 <TextBlock Text="▾" Classes="muted" IsVisible="{Binding IsExpanded}" />
                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                <v:LoadingText What="{s:T load_data}" IsVisible="{Binding DataLoading}" Margin="10,0,0,0" />
+                <TextBlock Text="{Binding DataError}" Foreground="{DynamicResource Rt}" Margin="10,0,0,0" IsVisible="{Binding DataError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

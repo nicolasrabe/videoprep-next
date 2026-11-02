@@ -1,0 +1,9 @@
+# Arreglos de menús y Cola (rama fix/v0.3.1-menus-cola)
+
+- **Miniatura**: el menú se habilita con cualquier fila seleccionada (`CanThumbnail`), sin mirar el estado. Si la imagen no está, se pide al hacer clic; el estado dice "Cargando la miniatura...".
+- **Menús**: Cola y resultados de Scraping cancelan `ContextMenu.Opening` si el clic derecho no cayó sobre una fila (espacio vacío, encabezados, detalle abierto). La selección múltiple se mantiene si se hace clic derecho sobre una fila ya seleccionada. Suscripciones no se tocó.
+- **Datos de la Cola**: `QueueItem` guarda título, canal, fecha, vistas, duración y descripción (las colas viejas cargan igual). Al abrir la app y al entrar a la pestaña Cola, `StartEnrich` completa de a uno (abierta/seleccionada primero, después desde arriba), pausa de 1,5 s, se detiene si el sitio responde 429/verificación, no corre durante una descarga. La fila muestra el enlace + "Cargando los datos..." o el motivo (también en el Registro). Usa las cachés de miniatura (disco) y datos (24 h).
+- **Actualizar datos** (menú de la Cola, selección múltiple): borra lo guardado y la miniatura en caché y vuelve a pedir.
+- **Clic en una fila**: comprobado, nunca descarga (solo abre la ficha; la descarga solo la inicia Iniciar cola/Descargar). Prueba: `Clicking_a_row_opens_its_card_and_never_starts_a_download`.
+- **Pruebas** (8 nuevas, `QueueDataTests`): miniatura en cualquier estado, guardado desde una fila lista, completado en segundo plano y persistencia, enlace + carga mientras espera, motivo de fallo, Actualizar datos, clic sin descarga, menú solo sobre filas (clic derecho simulado en fila, vacío y encabezado).
+- **No comprobado**: el menú de Scraping con clic derecho simulado (mismo mecanismo que la Cola, sin prueba propia); el fallo real por 429 (se probó la anotación del motivo, no un 429 de verdad); el .exe abierto.

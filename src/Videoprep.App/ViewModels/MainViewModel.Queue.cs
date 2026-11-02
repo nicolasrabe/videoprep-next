@@ -29,6 +29,10 @@ public sealed partial class QueueRow : ObservableObject
     [ObservableProperty] private bool _isLocked;
     [ObservableProperty] private bool _isExpanded;
     [ObservableProperty] private QueueRowCard? _card;
+    /// <summary>Title, picture and description are being asked for in the background ("Cargando los datos...").</summary>
+    [ObservableProperty] private bool _dataLoading;
+    /// <summary>Why the data could not be read (shown in the row); empty when fine.</summary>
+    [ObservableProperty] private string _dataError = "";
     /// <summary>The text being typed while renaming in the row.</summary>
     [ObservableProperty] private string _editName = "";
     /// <summary>The planned file name without extension (null = the video title, not known yet).</summary>
@@ -131,6 +135,7 @@ public sealed partial class MainViewModel
             }
         }
         UpdateRowNames();
+        UpdateDataFlags();
         OnPropertyChanged(nameof(QueueCounter));
         OnPropertyChanged(nameof(CanRetry));
         OnPropertyChanged(nameof(CanUndo));
@@ -155,7 +160,7 @@ public sealed partial class MainViewModel
     {
         if (_svc.Preview.Get(it.VideoKey) is { Title.Length: > 0 } p) return p.Title;
         if (_svc.Info.Get(it.VideoKey) is { Title.Length: > 0 } i) return i.Title;
-        return null;
+        return it.Title.Length > 0 ? it.Title : null;
     }
 
     private string ClipText(ClipRange c) =>
@@ -280,6 +285,7 @@ public sealed partial class MainViewModel
     private void OnInfoChanged(string key)
     {
         VideoInfoChanged?.Invoke(key);
+        OnInfoForQueueData(key);
         var changedName = false;
         foreach (var row in QueueRows.Where(r => r.VideoKey == key))
         {
@@ -325,6 +331,9 @@ public sealed partial class MainViewModel
         card.Duration = info?.Duration is { Length: > 0 } dur ? dur : Core.Scraping.Filters.FormatDuration(listed?.DurationSec);
         card.Description = info?.Description ?? "";
         card.FailText = info?.State == InfoState.Failed ? L.Format("det_fail", ReasonText(info.FailReason)) : "";
+        var saved = Items.FirstOrDefault(i => i.VideoKey == videoKey);
+        if (card.Title.Length == 0 && saved is { Title.Length: > 0 }) card.Title = saved.Title;
+        if (card.Description.Length == 0 && saved is { Description.Length: > 0 }) card.Description = saved.Description;
         var bytes = info?.Thumbnail ?? preview?.Thumbnail ?? _svc.Thumbs?.TryGet(videoKey);
         var thumbKey = bytes is null ? "" : videoKey + bytes.Length;
         if (thumbKey != card.ThumbKey)
@@ -380,7 +389,7 @@ public sealed partial class MainViewModel
 
     private void NotifySelection()
     {
-        foreach (var p in new[] { nameof(HasSelection), nameof(CanEditOne), nameof(CanEditSelection), nameof(CanChangeSelection), nameof(CanRequeue), nameof(CanShowInFolder) })
+        foreach (var p in new[] { nameof(HasSelection), nameof(CanThumbnail), nameof(CanEditOne), nameof(CanEditSelection), nameof(CanChangeSelection), nameof(CanRequeue), nameof(CanShowInFolder) })
             OnPropertyChanged(p);
     }
 

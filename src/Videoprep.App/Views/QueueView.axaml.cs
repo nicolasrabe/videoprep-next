@@ -16,6 +16,7 @@ public partial class QueueView : UserControl
     /// <summary>The table only starts editing a name when we ask (F2, double-click, menu), never on a plain click.</summary>
     private bool _allowEdit;
     private QueueRow? _pressedRow;
+    private bool _menuOnRow;
     private bool _pressedSoleSelection;
 
     /// <summary>The Name column (columns get no generated field).</summary>
@@ -51,6 +52,8 @@ public partial class QueueView : UserControl
         Grid.AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         Grid.AddHandler(PointerMovedEvent, OnPointerMovedForDrag, RoutingStrategies.Tunnel, handledEventsToo: true);
         Grid.AddHandler(KeyDownEvent, (_, e) => { if (e.Key == Key.Escape && _dragIds is not null) { EndDrag(false); e.Handled = true; } }, RoutingStrategies.Tunnel);
+        // The menu belongs to the rows: on empty space, on the headers or outside the rows nothing opens.
+        Grid.ContextMenu!.Opening += (_, e) => e.Cancel = !_menuOnRow;
         MenuRename.Click += (_, _) => { if (Grid.SelectedItem is QueueRow r) BeginRename(r); };
         AddHandler(DragDrop.DragOverEvent, (_, e) => e.DragEffects = DragDropEffects.Copy);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -127,6 +130,7 @@ public partial class QueueView : UserControl
         _pressedRow = null;
         if (TryStartDrag(e)) return;
         var row = RowAt(e.Source, out var inDetails);
+        _menuOnRow = row is not null && !inDetails;   // the right-click menu opens only on a row
         if (row is null || inDetails) return;
         var point = e.GetCurrentPoint(Grid).Properties;
         if (point.IsRightButtonPressed)

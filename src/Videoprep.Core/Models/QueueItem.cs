@@ -41,4 +41,13 @@ public sealed record QueueItem
     public string SubFolder { get; init; } = "";
     /// <summary>F8: make the video constant-rate (only a video that really is variable is touched). Default off.</summary>
     public bool ConstantRate { get; init; }
+
+    // What the card shows, kept in the queue file so an item saved in an earlier session does not ask again ("" = not known yet).
+    public string Title { get; init; } = "";
+    public string Channel { get; init; } = "";
+    /// <summary>yyyymmdd as yt-dlp gives it.</summary>
+    public string UploadDate { get; init; } = "";
+    public long? Views { get; init; }
+    public string Duration { get; init; } = "";
+    public string Description { get; init; } = "";
 }

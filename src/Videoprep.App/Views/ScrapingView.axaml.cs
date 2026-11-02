@@ -12,6 +12,7 @@ public partial class ScrapingView : UserControl
 {
     private ExploreViewModel? _explore;
     private ExploreRow? _pressedRow;
+    private bool _menuOnRow;
     private bool _pressedSoleSelection;
 
     public ScrapingView()
@@ -53,6 +54,7 @@ public partial class ScrapingView : UserControl
             if (row is not null) SubsGrid.SelectedItem = row;
             else SubsGrid.SelectedItem = null;
         }, RoutingStrategies.Tunnel, handledEventsToo: true);
+        ResultsGrid.ContextMenu!.Opening += (_, e) => e.Cancel = !_menuOnRow;   // only on a row
         ResultsGrid.AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel, handledEventsToo: true);
         ResultsGrid.AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel, handledEventsToo: true);
         DataContextChanged += (_, _) =>
@@ -84,6 +86,7 @@ public partial class ScrapingView : UserControl
     {
         _pressedRow = null;
         var row = RowAt(e.Source, out var inDetails);
+        _menuOnRow = row is not null && !inDetails;
         // Right-click on a row selects it, so the menu ("Descargar miniatura...") acts on what was clicked.
         if (row is not null && !inDetails && e.GetCurrentPoint(ResultsGrid).Properties.IsRightButtonPressed && ResultsGrid.SelectedItem != row)
             ResultsGrid.SelectedItem = row;

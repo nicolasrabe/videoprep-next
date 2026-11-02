@@ -583,5 +583,6 @@
   "set_grp_cookies": "Login (cookies)",
   "set_grp_done": "When a batch finishes",
   "set_grp_mini": "Mini mode and clipboard",
-  "set_grp_look": "Appearance"
+  "set_grp_look": "Appearance",
+  "mnu_refresh_data": "Refresh data"
 }

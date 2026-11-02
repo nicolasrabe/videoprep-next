@@ -66,6 +66,7 @@ public sealed partial class MainViewModel : ObservableObject
         RebuildProfileChoices();   // the Scraping boxes get the profiles too
         RebuildQueueRows();
         Loc.Instance.PropertyChanged += (_, e) => { if (e.PropertyName == "Item[]") OnLanguageChanged(); };
+        _post(StartEnrich);   // items saved by an earlier session without data get it in the background
     }
 
     /// <summary>Called once the window is visible (port of the form's Shown handler).</summary>

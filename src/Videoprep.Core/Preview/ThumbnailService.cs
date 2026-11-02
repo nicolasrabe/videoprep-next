@@ -53,6 +53,14 @@ public sealed class ThumbnailService(HttpClient http, string cacheDir, Log? log 
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return null; }
     }
 
+    /// <summary>Drops the picture from memory and disk, so the next request downloads it again ("Actualizar datos").</summary>
+    public void Forget(string key)
+    {
+        _memory.TryRemove(key, out _);
+        try { File.Delete(FileOf(key)); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
     /// <summary>The picture of a YouTube video: cached, or the best of the three addresses.</summary>
     public Task<byte[]?> GetYoutubeAsync(string id, CancellationToken ct = default) => GetAsync(id, YoutubeCandidates(id), ct);
 
