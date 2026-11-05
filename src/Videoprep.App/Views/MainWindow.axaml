@@ -3,6 +3,7 @@
         xmlns:vm="using:Videoprep.App.ViewModels"
         xmlns:v="using:Videoprep.App.Views"
         xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
         x:Class="Videoprep.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="avares://videoprep/Assets/videoprep.ico"
@@ -24,19 +25,19 @@
   <Border x:Name="UpdateBanner" Classes="card" IsVisible="{Binding UpdateBannerVisible}" Margin="8,6,8,0">
     <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
       <TextBlock x:Name="UpdateBannerText" Text="{Binding UpdateBannerText}" VerticalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" />
-      <Button Grid.Column="1" Content="{s:T upd_notes}" Command="{Binding OpenReleaseNotesCommand}" />
-      <Button Grid.Column="2" x:Name="UpdateInstallButton" Classes="g" FontWeight="Bold" Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Grid.Column="3" Content="{s:T upd_later}" Command="{Binding DismissUpdateCommand}" />
+      <Button Grid.Column="1" Content="{c:T upd_notes}" Command="{Binding OpenReleaseNotesCommand}" />
+      <Button Grid.Column="2" x:Name="UpdateInstallButton" Classes="g" FontWeight="Bold" Content="{c:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Grid.Column="3" Content="{c:T upd_later}" Command="{Binding DismissUpdateCommand}" />
     </Grid>
   </Border>
   <Panel Grid.Row="1">
     <TabControl x:Name="Tabs" SelectedIndex="{Binding SelectedTab}" Padding="0" Margin="8,4,8,8">
-      <TabItem x:Name="TabDownload" ToolTip.Tip="{s:T tip_prep}">
+      <TabItem x:Name="TabDownload" ToolTip.Tip="{c:T tip_prep}">
         <TabItem.Header>
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Data="{StaticResource IconPrep}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
                   Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
-            <TextBlock Text="{s:T tab_dl}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T tab_dl}" VerticalAlignment="Center" />
           </StackPanel>
         </TabItem.Header>
         <v:DownloadView />
@@ -46,7 +47,7 @@
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Data="{StaticResource IconQueue}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
                   Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
-            <TextBlock Text="{s:T tab_q}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T tab_q}" VerticalAlignment="Center" />
           </StackPanel>
         </TabItem.Header>
         <v:QueueView />
@@ -56,7 +57,7 @@
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Data="{StaticResource IconScrap}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
                   Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
-            <TextBlock Text="{s:T tab_scraping}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T tab_scraping}" VerticalAlignment="Center" />
           </StackPanel>
         </TabItem.Header>
         <v:ScrapingView DataContext="{Binding Scraping}" />
@@ -66,7 +67,7 @@
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Data="{StaticResource IconSettings}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
                   Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
-            <TextBlock Text="{s:T tab_st}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T tab_st}" VerticalAlignment="Center" />
           </StackPanel>
         </TabItem.Header>
         <v:SettingsView />
@@ -76,7 +77,7 @@
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Path Data="{StaticResource IconLog}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
                   Stroke="{Binding $parent[TabItem].Foreground}" VerticalAlignment="Center" />
-            <TextBlock Text="{s:T tab_log}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T tab_log}" VerticalAlignment="Center" />
           </StackPanel>
         </TabItem.Header>
         <v:LogView />
@@ -84,11 +85,11 @@
     </TabControl>
     <!-- Mini mode: top right of the tab bar -->
     <Button x:Name="MiniButton" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,14,0" Padding="10,4"
-            Command="{Binding ToggleMiniCommand}" ToolTip.Tip="{s:T tip_minimode}" AutomationProperties.Name="{s:T btn_minimode}">
+            Command="{Binding ToggleMiniCommand}" ToolTip.Tip="{c:T tip_minimode}" AutomationProperties.Name="{c:T btn_minimode}">
       <StackPanel Orientation="Horizontal" Spacing="6">
         <Path Data="{StaticResource IconMini}" Width="15" Height="15" Stretch="Uniform" StrokeThickness="1.7" StrokeLineCap="Round" StrokeJoin="Round"
               Stroke="{Binding $parent[Button].Foreground}" VerticalAlignment="Center" />
-        <TextBlock Text="{s:T btn_minimode}" VerticalAlignment="Center" />
+        <TextBlock Text="{c:T btn_minimode}" VerticalAlignment="Center" />
       </StackPanel>
     </Button>
   </Panel>

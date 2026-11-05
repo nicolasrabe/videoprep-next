@@ -18,7 +18,7 @@ public partial class App : Application
         {
             var window = new MainWindow();
             var vm = new MainViewModel(AppServices.CreateDefault(Program.Log), window);
-            ThemeService.WatchWindows();
+            WindowTitleBar.Watch();
             ThemeService.Apply(this, MainViewModel.PaletteFor(vm.Settings));
             vm.PaletteChanged += p => ThemeService.Apply(this, p);
             window.DataContext = vm;

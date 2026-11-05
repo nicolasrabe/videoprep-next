@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.Views.ScrapingView"
              x:DataType="vm:ScrapingViewModel">
@@ -16,14 +17,14 @@
   </UserControl.Styles>
   <Grid RowDefinitions="Auto,*" RowSpacing="8" Margin="4,10,4,4">
     <StackPanel Orientation="Horizontal" Spacing="6">
-      <ToggleButton x:Name="ExploreButton" Content="{s:T sc_explore}" IsChecked="{Binding ShowExplore, Mode=OneWay}" />
-      <ToggleButton x:Name="SubsButton" Content="{s:T sc_subs}" IsChecked="{Binding ShowSubscriptions, Mode=OneWay}" />
+      <ToggleButton x:Name="ExploreButton" Content="{c:T sc_explore}" IsChecked="{Binding ShowExplore, Mode=OneWay}" />
+      <ToggleButton x:Name="SubsButton" Content="{c:T sc_subs}" IsChecked="{Binding ShowSubscriptions, Mode=OneWay}" />
     </StackPanel>
 
     <!-- Explorar in three steps (RONDA 1), each one a foldable card (RONDA 4): the results take all the free height. -->
     <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8" IsVisible="{Binding ShowExplore}">
       <!-- ① Enlace: folded, only the channel (avatar, name, @) stays in the header -->
-      <v:CollapsibleSection x:Name="LinkCard" Title="{s:T sc_step1}" IsExpanded="{Binding Explore.LinkExpanded}">
+      <v:CollapsibleSection x:Name="LinkCard" Title="{c:T sc_step1}" IsExpanded="{Binding Explore.LinkExpanded}">
         <v:CollapsibleSection.HeaderContent>
           <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding Explore.HasSource}" Margin="6,0,0,0">
             <Border Width="26" Height="26" CornerRadius="13" ClipToBounds="True" Background="{DynamicResource Bd}">
@@ -35,86 +36,86 @@
         </v:CollapsibleSection.HeaderContent>
         <StackPanel Spacing="7">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <TextBox x:Name="SourceBox" Text="{Binding Explore.SourceText}" PlaceholderText="{s:T sc_url_ph}" IsEnabled="{Binding Explore.IsIdle}" />
-            <Button Grid.Column="1" Classes="o" Content="{s:T sc_load}" Command="{Binding Explore.LoadCommand}" IsEnabled="{Binding Explore.IsIdle}" />
+            <TextBox x:Name="SourceBox" Text="{Binding Explore.SourceText}" PlaceholderText="{c:T sc_url_ph}" IsEnabled="{Binding Explore.IsIdle}" />
+            <Button Grid.Column="1" Classes="o" Content="{c:T sc_load}" Command="{Binding Explore.LoadCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </Grid>
-          <v:LoadingText What="{s:T load_channel}" IsVisible="{Binding Explore.IsLoadingSource}" />
+          <c:LoadingText What="{c:T load_channel}" IsVisible="{Binding Explore.IsLoadingSource}" />
           <TextBlock Classes="muted" Text="{Binding Explore.LoadNote}" TextWrapping="Wrap" IsVisible="{Binding !Explore.IsLoadingSource}" />
           <!-- The link is identified: the tabs to read -->
           <WrapPanel ItemSpacing="10" LineSpacing="4" IsVisible="{Binding Explore.HasSource}">
-            <CheckBox Content="{s:T sc_tabs_videos}" IsChecked="{Binding Explore.TabVideos}" />
-            <CheckBox Content="{s:T sc_tabs_shorts}" IsChecked="{Binding Explore.TabShorts}" />
-            <CheckBox Content="{s:T sc_tabs_streams}" IsChecked="{Binding Explore.TabStreams}" />
-            <CheckBox Content="{s:T sc_tabs_playlists}" IsChecked="{Binding Explore.TabPlaylists}" />
+            <CheckBox Content="{c:T sc_tabs_videos}" IsChecked="{Binding Explore.TabVideos}" />
+            <CheckBox Content="{c:T sc_tabs_shorts}" IsChecked="{Binding Explore.TabShorts}" />
+            <CheckBox Content="{c:T sc_tabs_streams}" IsChecked="{Binding Explore.TabStreams}" />
+            <CheckBox Content="{c:T sc_tabs_playlists}" IsChecked="{Binding Explore.TabPlaylists}" />
           </WrapPanel>
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- ② Filtros: folded, one line says what is applied. "Buscar videos" folds it. -->
-      <v:CollapsibleSection x:Name="FiltersCard" Grid.Row="1" Title="{s:T sc_step2}" Summary="{Binding Explore.SummaryText}"
+      <v:CollapsibleSection x:Name="FiltersCard" Grid.Row="1" Title="{c:T sc_step2}" Summary="{Binding Explore.SummaryText}"
                             IsExpanded="{Binding Explore.FiltersExpanded}" IsVisible="{Binding Explore.HasSource}">
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="8" LineSpacing="6">
-            <TextBlock Classes="muted" Text="{s:T sc_published}" VerticalAlignment="Center" />
-            <ToggleButton Content="{s:T sc_p24}" IsChecked="{Binding Explore.Preset24h, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="24h" />
-            <ToggleButton Content="{s:T sc_p7}" IsChecked="{Binding Explore.Preset7d, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="7d" />
-            <ToggleButton Content="{s:T sc_pmonth}" IsChecked="{Binding Explore.PresetMonth, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="month" />
-            <ToggleButton Content="{s:T sc_pbetween}" IsChecked="{Binding Explore.PresetBetween, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="between" />
-            <TextBox Text="{Binding Explore.Filter.FromText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.FromBad}" />
-            <TextBlock Classes="muted" Text="{s:T sc_and}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.Filter.ToText}" Width="110" PlaceholderText="{s:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.ToBad}" />
+            <TextBlock Classes="muted" Text="{c:T sc_published}" VerticalAlignment="Center" />
+            <ToggleButton Content="{c:T sc_p24}" IsChecked="{Binding Explore.Preset24h, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="24h" />
+            <ToggleButton Content="{c:T sc_p7}" IsChecked="{Binding Explore.Preset7d, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="7d" />
+            <ToggleButton Content="{c:T sc_pmonth}" IsChecked="{Binding Explore.PresetMonth, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="month" />
+            <ToggleButton Content="{c:T sc_pbetween}" IsChecked="{Binding Explore.PresetBetween, Mode=OneWay}" Command="{Binding Explore.QuickDatesCommand}" CommandParameter="between" />
+            <TextBox Text="{Binding Explore.Filter.FromText}" Width="110" PlaceholderText="{c:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.FromBad}" />
+            <TextBlock Classes="muted" Text="{c:T sc_and}" VerticalAlignment="Center" />
+            <TextBox Text="{Binding Explore.Filter.ToText}" Width="110" PlaceholderText="{c:T sc_date_ph}" Classes.bad="{Binding Explore.Filter.ToBad}" />
           </WrapPanel>
           <WrapPanel ItemSpacing="8" LineSpacing="6">
-            <TextBlock Classes="muted" Text="{s:T sc_show_up}" VerticalAlignment="Center" />
-            <TextBox Text="{Binding Explore.Filter.MaxCountText}" Width="70" PlaceholderText="{s:T sc_all_ph}" Classes.bad="{Binding Explore.Filter.MaxCountBad}" />
-            <TextBlock Classes="muted" Text="{s:T sc_videos_word}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" Text="{c:T sc_show_up}" VerticalAlignment="Center" />
+            <TextBox Text="{Binding Explore.Filter.MaxCountText}" Width="70" PlaceholderText="{c:T sc_all_ph}" Classes.bad="{Binding Explore.Filter.MaxCountBad}" />
+            <TextBlock Classes="muted" Text="{c:T sc_videos_word}" VerticalAlignment="Center" />
             <ComboBox SelectedIndex="{Binding Explore.Filter.OrderIndex}" MinWidth="170">
-              <ComboBoxItem Content="{s:T sc_order_new}" />
-              <ComboBoxItem Content="{s:T sc_order_old}" />
+              <ComboBoxItem Content="{c:T sc_order_new}" />
+              <ComboBoxItem Content="{c:T sc_order_old}" />
             </ComboBox>
-            <CheckBox Content="{s:T sc_skip_live_members}" IsChecked="{Binding Explore.Filter.SkipLiveMembers}" />
-            <CheckBox Content="{s:T sc_skip_done}" IsChecked="{Binding Explore.Filter.SkipDone}" />
+            <CheckBox Content="{c:T sc_skip_live_members}" IsChecked="{Binding Explore.Filter.SkipLiveMembers}" />
+            <CheckBox Content="{c:T sc_skip_done}" IsChecked="{Binding Explore.Filter.SkipDone}" />
           </WrapPanel>
-          <Expander Header="{s:T sc_more_filters}">
+          <Expander Header="{c:T sc_more_filters}">
             <WrapPanel ItemSpacing="8" LineSpacing="6" Margin="0,6,0,0">
-              <TextBlock Classes="muted" Text="{s:T sc_dur_min}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="{c:T sc_dur_min}" VerticalAlignment="Center" />
               <TextBox Text="{Binding Explore.Filter.MinText}" Width="80" PlaceholderText="M:SS" Classes.bad="{Binding Explore.Filter.MinBad}" />
-              <TextBlock Classes="muted" Text="{s:T sc_dur_max}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="{c:T sc_dur_max}" VerticalAlignment="Center" />
               <TextBox Text="{Binding Explore.Filter.MaxText}" Width="80" PlaceholderText="H:MM:SS" Classes.bad="{Binding Explore.Filter.MaxBad}" />
-              <TextBlock Classes="muted" Text="{s:T sc_incl}" VerticalAlignment="Center" Margin="10,0,0,0" />
+              <TextBlock Classes="muted" Text="{c:T sc_incl}" VerticalAlignment="Center" Margin="10,0,0,0" />
               <TextBox Text="{Binding Explore.Filter.IncludeText}" Width="170" />
-              <TextBlock Classes="muted" Text="{s:T sc_excl}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="{c:T sc_excl}" VerticalAlignment="Center" />
               <TextBox Text="{Binding Explore.Filter.ExcludeText}" Width="170" />
             </WrapPanel>
           </Expander>
           <Border Classes="card" Padding="10,8">
             <StackPanel Spacing="3">
               <TextBlock TextWrapping="Wrap">
-                <Run Text="{s:T sc_will_search}" FontWeight="SemiBold" />
+                <Run Text="{c:T sc_will_search}" FontWeight="SemiBold" />
                 <Run Text="{Binding Explore.SummaryText}" />
               </TextBlock>
               <TextBlock Classes="muted" Text="{Binding Explore.EstimateText}" TextWrapping="Wrap" />
             </StackPanel>
           </Border>
           <Grid ColumnDefinitions="*,Auto">
-            <TextBlock Classes="muted" Text="{s:T sc_enter_hint}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" Text="{c:T sc_enter_hint}" VerticalAlignment="Center" />
             <Panel Grid.Column="1">
-              <Button Classes="o" Content="{s:T sc_search}" Command="{Binding Explore.SearchCommand}" IsVisible="{Binding Explore.IsIdle}" />
-              <Button Classes="r" Content="{s:T sc_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" />
+              <Button Classes="o" Content="{c:T sc_search}" Command="{Binding Explore.SearchCommand}" IsVisible="{Binding Explore.IsIdle}" />
+              <Button Classes="r" Content="{c:T sc_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" />
             </Panel>
           </Grid>
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- ③ Resultados: grows; the table scrolls by itself with its header fixed -->
-      <v:CollapsibleSection x:Name="ResultsCard" Grid.Row="2" Title="{s:T sc_step3}" Grows="True" IsVisible="{Binding Explore.HasSearched}">
+      <v:CollapsibleSection x:Name="ResultsCard" Grid.Row="2" Title="{c:T sc_step3}" Grows="True" IsVisible="{Binding Explore.HasSearched}">
         <v:CollapsibleSection.HeaderContent>
           <StackPanel Orientation="Horizontal" Spacing="10" Margin="6,0,0,0">
             <TextBlock x:Name="ResultsHeaderText" Text="{Binding Explore.ResultsHeader}" FontWeight="SemiBold" VerticalAlignment="Center" />
             <TextBlock Classes="muted" Text="{Binding Explore.DatesText}" VerticalAlignment="Center"
                        IsVisible="{Binding Explore.DatesText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             <ProgressBar IsIndeterminate="True" Width="120" IsVisible="{Binding Explore.IsSearching}" />
-            <Button Classes="r" Content="{s:T btn_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" Padding="10,2" />
+            <Button Classes="r" Content="{c:T btn_cancel}" Command="{Binding Explore.CancelCommand}" IsVisible="{Binding Explore.IsSearching}" Padding="10,2" />
           </StackPanel>
         </v:CollapsibleSection.HeaderContent>
         <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="6">
@@ -124,13 +125,13 @@
             <TextBlock x:Name="UnconfirmedText" Text="{Binding Explore.UnconfirmedText}" VerticalAlignment="Center" />
             <Button Classes="link" Content="{Binding Explore.UnconfirmedToggleText}" Command="{Binding Explore.ToggleUnconfirmedCommand}" />
           </StackPanel>
-          <v:LoadingText Grid.Row="2" x:Name="ResultsLoadingText" What="{s:T load_results}" IsVisible="{Binding Explore.ResultsLoading}"
+          <c:LoadingText Grid.Row="2" x:Name="ResultsLoadingText" What="{c:T load_results}" IsVisible="{Binding Explore.ResultsLoading}"
                          HorizontalAlignment="Center" VerticalAlignment="Center" />
         <DataGrid x:Name="ResultsGrid" ItemsSource="{Binding Explore.Rows}" HeadersVisibility="Column" CanUserSortColumns="False"
                   CanUserReorderColumns="False" SelectionMode="Single" RowDetailsVisibilityMode="Collapsed" Grid.Row="2" IsVisible="{Binding !Explore.ResultsLoading}">
           <DataGrid.ContextMenu>
             <ContextMenu>
-              <MenuItem x:Name="ResultsThumbMenu" Header="{s:T mnu_thumb}" Command="{Binding Explore.SaveThumbnailCommand}"
+              <MenuItem x:Name="ResultsThumbMenu" Header="{c:T mnu_thumb}" Command="{Binding Explore.SaveThumbnailCommand}"
                         CommandParameter="{Binding #ResultsGrid.SelectedItem}" />
             </ContextMenu>
           </DataGrid.ContextMenu>
@@ -140,7 +141,7 @@
                 <CheckBox IsChecked="{Binding Selected}" IsVisible="{Binding CanSelect}" HorizontalAlignment="Center" />
               </DataTemplate>
             </DataGridTemplateColumn>
-            <DataGridTemplateColumn Header="{s:T sc_col_title}" Width="*">
+            <DataGridTemplateColumn Header="{c:T sc_col_title}" Width="*">
               <DataTemplate x:DataType="vm:ExploreRow">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="8,0" IsHitTestVisible="False">
                   <TextBlock Text="▸" Classes="muted" IsVisible="{Binding !Expanded}" />
@@ -149,14 +150,14 @@
                 </StackPanel>
               </DataTemplate>
             </DataGridTemplateColumn>
-            <DataGridTextColumn Header="{s:T sc_col_date}" Binding="{Binding DateText}" Width="115" IsReadOnly="True" />
-            <DataGridTextColumn Header="{s:T sc_col_dur}" Binding="{Binding DurationText}" Width="105" IsReadOnly="True" />
-            <DataGridTextColumn Header="{s:T sc_col_views}" Binding="{Binding ViewsText}" Width="90" IsReadOnly="True" />
-            <DataGridTemplateColumn Header="{s:T sc_col_status}" Width="140">
+            <DataGridTextColumn Header="{c:T sc_col_date}" Binding="{Binding DateText}" Width="115" IsReadOnly="True" />
+            <DataGridTextColumn Header="{c:T sc_col_dur}" Binding="{Binding DurationText}" Width="105" IsReadOnly="True" />
+            <DataGridTextColumn Header="{c:T sc_col_views}" Binding="{Binding ViewsText}" Width="90" IsReadOnly="True" />
+            <DataGridTemplateColumn Header="{c:T sc_col_status}" Width="140">
               <DataTemplate x:DataType="vm:ExploreRow">
                 <Panel Margin="10,0">
                   <TextBlock Text="{Binding Status}" VerticalAlignment="Center" IsVisible="{Binding !CanExpand}" />
-                  <Button Content="{s:T sc_expand}" Padding="8,2" IsVisible="{Binding CanExpand}"
+                  <Button Content="{c:T sc_expand}" Padding="8,2" IsVisible="{Binding CanExpand}"
                           Command="{Binding $parent[UserControl].((vm:ScrapingViewModel)DataContext).Explore.ExpandCommand}"
                           CommandParameter="{Binding}" />
                 </Panel>
@@ -180,7 +181,7 @@
         <!-- Without a confirmed date: apart, unchecked -->
         <Border Grid.Row="3" Classes="card" IsVisible="{Binding Explore.ShowUnconfirmed}" MaxHeight="190">
           <StackPanel Spacing="4">
-            <TextBlock Classes="muted" Text="{s:T sc_unconf_title}" TextWrapping="Wrap" />
+            <TextBlock Classes="muted" Text="{c:T sc_unconf_title}" TextWrapping="Wrap" />
             <DataGrid x:Name="UnconfirmedGrid" ItemsSource="{Binding Explore.UnconfirmedRows}" HeadersVisibility="Column" CanUserSortColumns="False"
                       CanUserReorderColumns="False" SelectionMode="Single" MaxHeight="140">
               <DataGrid.Columns>
@@ -189,9 +190,9 @@
                     <CheckBox IsChecked="{Binding Selected}" IsVisible="{Binding CanSelect}" HorizontalAlignment="Center" />
                   </DataTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="{s:T sc_col_title}" Binding="{Binding Title}" Width="*" IsReadOnly="True" />
-                <DataGridTextColumn Header="{s:T sc_col_date}" Binding="{Binding DateText}" Width="115" IsReadOnly="True" />
-                <DataGridTextColumn Header="{s:T sc_col_dur}" Binding="{Binding DurationText}" Width="105" IsReadOnly="True" />
+                <DataGridTextColumn Header="{c:T sc_col_title}" Binding="{Binding Title}" Width="*" IsReadOnly="True" />
+                <DataGridTextColumn Header="{c:T sc_col_date}" Binding="{Binding DateText}" Width="115" IsReadOnly="True" />
+                <DataGridTextColumn Header="{c:T sc_col_dur}" Binding="{Binding DurationText}" Width="105" IsReadOnly="True" />
               </DataGrid.Columns>
             </DataGrid>
           </StackPanel>
@@ -204,25 +205,25 @@
             <!-- Selección: one group with its title; Reiniciar apart, in red -->
             <Border x:Name="SelectionGroup" BorderBrush="{DynamicResource Bd}" BorderThickness="1" CornerRadius="4" Padding="8,2,8,6">
               <StackPanel Spacing="2">
-                <TextBlock Classes="muted" Text="{s:T sc_selection}" FontSize="11" />
+                <TextBlock Classes="muted" Text="{c:T sc_selection}" FontSize="11" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <Button Content="{s:T sc_all}" Command="{Binding Explore.SelectAllCommand}" />
-                  <Button Content="{s:T sc_none}" Command="{Binding Explore.SelectNoneCommand}" />
-                  <Button Content="{s:T sc_invert}" Command="{Binding Explore.InvertCommand}" />
+                  <Button Content="{c:T sc_all}" Command="{Binding Explore.SelectAllCommand}" />
+                  <Button Content="{c:T sc_none}" Command="{Binding Explore.SelectNoneCommand}" />
+                  <Button Content="{c:T sc_invert}" Command="{Binding Explore.InvertCommand}" />
                   <TextBlock Classes="muted" Text="{Binding Explore.SelectedText}" VerticalAlignment="Center" />
                 </StackPanel>
               </StackPanel>
             </Border>
-            <Button x:Name="ResetButton" Classes="r" Content="{s:T sc_reset}" Command="{Binding Explore.ResetCommand}" VerticalAlignment="Bottom" />
+            <Button x:Name="ResetButton" Classes="r" Content="{c:T sc_reset}" Command="{Binding Explore.ResetCommand}" VerticalAlignment="Bottom" />
           </StackPanel>
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
             <ComboBox ItemsSource="{Binding Explore.Format.ProfileChoices}" SelectedItem="{Binding Explore.Format.PickedProfile}"
-                      PlaceholderText="{s:T ph_profile}" MinWidth="170" AutomationProperties.Name="{s:T lbl_profile}" />
+                      PlaceholderText="{c:T ph_profile}" MinWidth="170" AutomationProperties.Name="{c:T lbl_profile}" />
             <ComboBox ItemsSource="{Binding Explore.Format.FormatChoices}" SelectedItem="{Binding Explore.Format.SelectedFormat}" MinWidth="200" />
             <ComboBox ItemsSource="{Binding Explore.Format.ResolutionChoices}" SelectedItem="{Binding Explore.Format.SelectedResolution}" MinWidth="90" />
-            <CheckBox Content="{s:T chk_cfr}" IsChecked="{Binding Explore.Format.ConstantRate}" ToolTip.Tip="{s:T tip_cfr}" />
-            <Button Classes="o" Content="{s:T sc_to_queue}" Command="{Binding Explore.SendToQueueCommand}" IsEnabled="{Binding Explore.IsIdle}" />
-            <Button Classes="g" Content="{s:T sc_subscribe}" Command="{Binding SubscribeFromExploreCommand}" IsEnabled="{Binding Explore.IsIdle}" />
+            <CheckBox Content="{c:T chk_cfr}" IsChecked="{Binding Explore.Format.ConstantRate}" ToolTip.Tip="{c:T tip_cfr}" />
+            <Button Classes="o" Content="{c:T sc_to_queue}" Command="{Binding Explore.SendToQueueCommand}" IsEnabled="{Binding Explore.IsIdle}" />
+            <Button Classes="g" Content="{c:T sc_subscribe}" Command="{Binding SubscribeFromExploreCommand}" IsEnabled="{Binding Explore.IsIdle}" />
           </StackPanel>
         </WrapPanel>
       </Border>
@@ -235,41 +236,41 @@
         <DataGrid.ContextMenu>
           <ContextMenu x:Name="SubsMenu">
             <!-- On a subscription -->
-            <MenuItem Header="{s:T mnu_sub_check}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_pause}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedActive}" />
-            <MenuItem Header="{s:T mnu_sub_resume}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedPaused}" />
-            <MenuItem Header="{s:T mnu_sub_edit}" Command="{Binding Subscriptions.EditCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_check}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_pause}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedActive}" />
+            <MenuItem Header="{c:T mnu_sub_resume}" Command="{Binding Subscriptions.TogglePauseCommand}" IsVisible="{Binding Subscriptions.SelectedPaused}" />
+            <MenuItem Header="{c:T mnu_sub_edit}" Command="{Binding Subscriptions.EditCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
             <Separator IsVisible="{Binding Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_channel}" Command="{Binding Subscriptions.OpenChannelCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_copy}" Command="{Binding Subscriptions.CopyChannelLinkCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_folder}" Command="{Binding Subscriptions.OpenDownloadsFolderCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_channel}" Command="{Binding Subscriptions.OpenChannelCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_copy}" Command="{Binding Subscriptions.CopyChannelLinkCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_folder}" Command="{Binding Subscriptions.OpenDownloadsFolderCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
             <Separator IsVisible="{Binding Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsVisible="{Binding Subscriptions.MenuOnRow}" />
             <!-- On the empty space -->
-            <MenuItem Header="{s:T mnu_sub_add}" Command="{Binding Subscriptions.AddCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_checkall}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
-            <MenuItem Header="{s:T mnu_sub_pauseall}" Command="{Binding Subscriptions.PauseAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_add}" Command="{Binding Subscriptions.AddCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_checkall}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
+            <MenuItem Header="{c:T mnu_sub_pauseall}" Command="{Binding Subscriptions.PauseAllCommand}" IsVisible="{Binding !Subscriptions.MenuOnRow}" />
           </ContextMenu>
         </DataGrid.ContextMenu>
         <DataGrid.Columns>
-          <DataGridTemplateColumn Header="{s:T sc_col_on}" Width="80">
+          <DataGridTemplateColumn Header="{c:T sc_col_on}" Width="80">
             <DataTemplate x:DataType="vm:SubscriptionRow">
               <CheckBox IsChecked="{Binding Enabled}" HorizontalAlignment="Center" />
             </DataTemplate>
           </DataGridTemplateColumn>
-          <DataGridTemplateColumn Header="{s:T sc_col_channel}" Width="*">
+          <DataGridTemplateColumn Header="{c:T sc_col_channel}" Width="*">
             <DataTemplate x:DataType="vm:SubscriptionRow">
               <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="10,0" TextTrimming="CharacterEllipsis"
                          Classes.err="{Binding HasError}" Classes.off="{Binding !Enabled}"
                          ToolTip.Tip="{Binding Error}" />
             </DataTemplate>
           </DataGridTemplateColumn>
-          <DataGridTextColumn Header="{s:T sc_col_what}" Binding="{Binding What}" Width="170" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_filters}" Binding="{Binding FiltersText}" Width="*" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_profile}" Binding="{Binding ProfileText}" Width="170" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_format}" Binding="{Binding FormatText}" Width="120" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_last}" Binding="{Binding LastText}" Width="110" IsReadOnly="True" />
-          <DataGridTextColumn Header="{s:T sc_col_newcount}" Binding="{Binding NewText}" Width="90" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_what}" Binding="{Binding What}" Width="170" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_filters}" Binding="{Binding FiltersText}" Width="*" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_profile}" Binding="{Binding ProfileText}" Width="170" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_format}" Binding="{Binding FormatText}" Width="120" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_last}" Binding="{Binding LastText}" Width="110" IsReadOnly="True" />
+          <DataGridTextColumn Header="{c:T sc_col_newcount}" Binding="{Binding NewText}" Width="90" IsReadOnly="True" />
         </DataGrid.Columns>
       </DataGrid>
       <TextBlock Grid.Row="1" Classes="muted" Text="{Binding Subscriptions.StatusLine}" TextWrapping="Wrap"
@@ -277,32 +278,32 @@
       <Border Grid.Row="2" Classes="card">
         <Grid ColumnDefinitions="Auto,*,Auto">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Classes="o" Content="{s:T sc_add}" Command="{Binding Subscriptions.AddCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
-            <Button Content="{s:T sc_edit}" Command="{Binding Subscriptions.EditCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
-            <Button Classes="r" Content="{s:T sc_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="o" Content="{c:T sc_add}" Command="{Binding Subscriptions.AddCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
+            <Button Content="{c:T sc_edit}" Command="{Binding Subscriptions.EditCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="r" Content="{c:T sc_remove}" Command="{Binding Subscriptions.RemoveCommand}" IsEnabled="{Binding Subscriptions.IsIdle}" />
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-            <Button Content="{s:T sc_check_now}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
-            <Button Classes="g" Content="{s:T sc_check_all}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
-            <Button Classes="r" Content="{s:T sc_stop_check}" Command="{Binding Subscriptions.StopCheckCommand}" IsVisible="{Binding Subscriptions.IsChecking}" />
+            <Button Content="{c:T sc_check_now}" Command="{Binding Subscriptions.CheckSelectedCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="g" Content="{c:T sc_check_all}" Command="{Binding Subscriptions.CheckAllCommand}" IsVisible="{Binding Subscriptions.IsIdle}" />
+            <Button Classes="r" Content="{c:T sc_stop_check}" Command="{Binding Subscriptions.StopCheckCommand}" IsVisible="{Binding Subscriptions.IsChecking}" />
           </StackPanel>
         </Grid>
       </Border>
       <Border Grid.Row="3" Classes="card">
         <StackPanel Spacing="7">
           <WrapPanel ItemSpacing="10" LineSpacing="6">
-            <CheckBox Content="{s:T sc_check_start}" IsChecked="{Binding Subscriptions.CheckOnStart}" />
-            <CheckBox Content="{s:T sc_every_pre}" IsChecked="{Binding Subscriptions.CheckEvery}" />
+            <CheckBox Content="{c:T sc_check_start}" IsChecked="{Binding Subscriptions.CheckOnStart}" />
+            <CheckBox Content="{c:T sc_every_pre}" IsChecked="{Binding Subscriptions.CheckEvery}" />
             <NumericUpDown Value="{Binding Subscriptions.EveryHours}" Minimum="1" Maximum="24" Increment="1" FormatString="0" Width="110" />
-            <TextBlock Text="{s:T sc_every_post}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T sc_every_post}" VerticalAlignment="Center" />
           </WrapPanel>
           <WrapPanel ItemSpacing="10" LineSpacing="6">
-            <CheckBox Content="{s:T sc_task}" IsChecked="{Binding Subscriptions.TaskInstalled, Mode=OneWay}" IsHitTestVisible="False" Focusable="False" />
-            <Button Content="{s:T sc_task_config}" Command="{Binding Subscriptions.ConfigureTaskCommand}" />
-            <Button Content="{s:T sc_task_remove}" Command="{Binding Subscriptions.RemoveTaskCommand}" IsVisible="{Binding Subscriptions.TaskInstalled}" />
+            <CheckBox Content="{c:T sc_task}" IsChecked="{Binding Subscriptions.TaskInstalled, Mode=OneWay}" IsHitTestVisible="False" Focusable="False" />
+            <Button Content="{c:T sc_task_config}" Command="{Binding Subscriptions.ConfigureTaskCommand}" />
+            <Button Content="{c:T sc_task_remove}" Command="{Binding Subscriptions.RemoveTaskCommand}" IsVisible="{Binding Subscriptions.TaskInstalled}" />
           </WrapPanel>
-          <TextBlock Classes="muted" Text="{s:T sc_subs_note}" TextWrapping="Wrap" />
-          <TextBlock Classes="muted" Text="{s:T sc_warn_account}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{c:T sc_subs_note}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{c:T sc_warn_account}" TextWrapping="Wrap" />
         </StackPanel>
       </Border>
     </Grid>

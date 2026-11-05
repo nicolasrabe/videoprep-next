@@ -161,7 +161,7 @@ public sealed class QueueDataTests : IDisposable
         vm.ToggleRow(vm.QueueRows[0]);
         await Task.Delay(200);
         Assert.False(vm.IsRunning);
-        Assert.All(vm.QueueRows, r => Assert.Equal(Videoprep.App.Services.Loc.Instance["rs_Queued"], r.Status));
+        Assert.All(vm.QueueRows, r => Assert.Equal(Videoprep.Controls.Loc.Instance["rs_Queued"], r.Status));
         Assert.DoesNotContain(Calls(), c => !c.Contains("--skip-download"));   // only data requests, nothing was downloaded
         Assert.Empty(Directory.Exists(_rig.OutFolder) ? Directory.GetFiles(_rig.OutFolder) : []);
     }

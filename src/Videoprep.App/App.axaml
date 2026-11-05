@@ -21,6 +21,7 @@
 
   <Application.Styles>
     <FluentTheme />
+    <StyleInclude Source="avares://Videoprep.Controls/Spinner.axaml" />
     <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 
     <Style Selector="Window">
@@ -278,7 +279,7 @@
       <Setter Property="Padding" Value="9,3" />
       <Setter Property="FontSize" Value="12" />
     </Style>
-    <Style Selector="Arc.spin">
+    <Style Selector="Arc.spinOLD">
       <Style.Animations>
         <Animation Duration="0:0:1" IterationCount="INFINITE">
           <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>

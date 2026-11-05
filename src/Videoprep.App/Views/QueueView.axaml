@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.Views.QueueView"
              x:DataType="vm:MainViewModel"
@@ -10,9 +11,9 @@
     <!-- RONDA 4 (spec E): the same actions and state as Descargar / Detener in Prep -->
     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button x:Name="QueueStartButton" Classes="g" Content="{s:T qbar_start}" Command="{Binding DownloadCommand}" IsEnabled="{Binding IsIdle}" FontWeight="Bold" />
-        <Button x:Name="QueuePauseButton" Content="{s:T qbar_pause}" Command="{Binding PauseQueueCommand}" IsEnabled="{Binding CanPause}" ToolTip.Tip="{s:T qbar_pause_tip}" />
-        <Button x:Name="QueueStopButton" Classes="r" Content="{s:T btn_stop}" Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}" />
+        <Button x:Name="QueueStartButton" Classes="g" Content="{c:T qbar_start}" Command="{Binding DownloadCommand}" IsEnabled="{Binding IsIdle}" FontWeight="Bold" />
+        <Button x:Name="QueuePauseButton" Content="{c:T qbar_pause}" Command="{Binding PauseQueueCommand}" IsEnabled="{Binding CanPause}" ToolTip.Tip="{c:T qbar_pause_tip}" />
+        <Button x:Name="QueueStopButton" Classes="r" Content="{c:T btn_stop}" Command="{Binding StopCommand}" IsEnabled="{Binding IsRunning}" />
       </StackPanel>
       <TextBlock x:Name="QueueCounterText" Grid.Column="1" Classes="muted" Text="{Binding QueueCounter}" VerticalAlignment="Center" />
     </Grid>
@@ -23,28 +24,28 @@
               RowDetailsVisibilityMode="Collapsed">
       <DataGrid.ContextMenu>
         <ContextMenu>
-          <MenuItem x:Name="MenuRename" Header="{s:T mnu_rename}" IsEnabled="{Binding CanEditOne}" />
-          <MenuItem Header="{s:T mnu_batch}" Command="{Binding BatchEditCommand}" IsEnabled="{Binding CanEditSelection}" />
-          <MenuItem Header="{s:T mnu_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding CanEditOne}" />
+          <MenuItem x:Name="MenuRename" Header="{c:T mnu_rename}" IsEnabled="{Binding CanEditOne}" />
+          <MenuItem Header="{c:T mnu_batch}" Command="{Binding BatchEditCommand}" IsEnabled="{Binding CanEditSelection}" />
+          <MenuItem Header="{c:T mnu_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding CanEditOne}" />
           <Separator />
-          <MenuItem Header="{s:T mnu_dup}" Command="{Binding DuplicateCommand}" IsEnabled="{Binding CanChangeSelection}" />
-          <MenuItem Header="{s:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanChangeSelection}" />
-          <MenuItem Header="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanChangeSelection}" />
-          <MenuItem Header="{s:T mnu_requeue}" Command="{Binding RequeueCommand}" IsEnabled="{Binding CanRequeue}" />
-          <MenuItem Header="{s:T mnu_showfolder}" Command="{Binding ShowInFolderCommand}" IsEnabled="{Binding CanShowInFolder}" />
-          <MenuItem x:Name="MenuThumbnail" Header="{s:T mnu_thumb}" Command="{Binding SaveQueueThumbnailCommand}" IsEnabled="{Binding CanThumbnail}" />
-          <MenuItem x:Name="MenuRefreshData" Header="{s:T mnu_refresh_data}" Command="{Binding RefreshQueueDataCommand}" IsEnabled="{Binding CanThumbnail}" />
-          <MenuItem Header="{s:T mnu_exportsources}" Command="{Binding ExportSourcesCommand}" />
+          <MenuItem Header="{c:T mnu_dup}" Command="{Binding DuplicateCommand}" IsEnabled="{Binding CanChangeSelection}" />
+          <MenuItem Header="{c:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding CanChangeSelection}" />
+          <MenuItem Header="{c:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding CanChangeSelection}" />
+          <MenuItem Header="{c:T mnu_requeue}" Command="{Binding RequeueCommand}" IsEnabled="{Binding CanRequeue}" />
+          <MenuItem Header="{c:T mnu_showfolder}" Command="{Binding ShowInFolderCommand}" IsEnabled="{Binding CanShowInFolder}" />
+          <MenuItem x:Name="MenuThumbnail" Header="{c:T mnu_thumb}" Command="{Binding SaveQueueThumbnailCommand}" IsEnabled="{Binding CanThumbnail}" />
+          <MenuItem x:Name="MenuRefreshData" Header="{c:T mnu_refresh_data}" Command="{Binding RefreshQueueDataCommand}" IsEnabled="{Binding CanThumbnail}" />
+          <MenuItem Header="{c:T mnu_exportsources}" Command="{Binding ExportSourcesCommand}" />
           <Separator />
-          <MenuItem Header="{s:T mnu_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding CanChangeSelection}" />
+          <MenuItem Header="{c:T mnu_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding CanChangeSelection}" />
         </ContextMenu>
       </DataGrid.ContextMenu>
       <DataGrid.Columns>
-        <DataGridTemplateColumn Header="{s:T col_num}" Width="66" IsReadOnly="True">
+        <DataGridTemplateColumn Header="{c:T col_num}" Width="66" IsReadOnly="True">
           <DataTemplate x:DataType="vm:QueueRow">
             <StackPanel Orientation="Horizontal" Spacing="6" Margin="8,0" VerticalAlignment="Center">
               <!-- Grip: drag from here to reorder (only rows that are still waiting). Drawn, not a font character. -->
-              <Border Classes="grip" Width="14" Height="22" Background="Transparent" Cursor="SizeAll" ToolTip.Tip="{s:T qbar_grip_tip}" IsVisible="{Binding !IsLocked}">
+              <Border Classes="grip" Width="14" Height="22" Background="Transparent" Cursor="SizeAll" ToolTip.Tip="{c:T qbar_grip_tip}" IsVisible="{Binding !IsLocked}">
                 <Path Stroke="{DynamicResource Mu}" StrokeThickness="2.4" StrokeLineCap="Round" HorizontalAlignment="Center" VerticalAlignment="Center"
                       Data="M2,2 L2.01,2 M8,2 L8.01,2 M2,8 L2.01,8 M8,8 L8.01,8 M2,14 L2.01,14 M8,14 L8.01,14" />
               </Border>
@@ -53,28 +54,28 @@
             </StackPanel>
           </DataTemplate>
         </DataGridTemplateColumn>
-        <DataGridTemplateColumn Header="{s:T col_name}" Width="2*">
+        <DataGridTemplateColumn Header="{c:T col_name}" Width="2*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:QueueRow">
               <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="8,0">
                 <TextBlock Text="▸" Classes="muted" IsVisible="{Binding !IsExpanded}" />
                 <TextBlock Text="▾" Classes="muted" IsVisible="{Binding IsExpanded}" />
                 <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
-                <v:LoadingText What="{s:T load_data}" IsVisible="{Binding DataLoading}" Margin="10,0,0,0" />
+                <c:LoadingText What="{c:T load_data}" IsVisible="{Binding DataLoading}" Margin="10,0,0,0" />
                 <TextBlock Text="{Binding DataError}" Foreground="{DynamicResource Rt}" Margin="10,0,0,0" IsVisible="{Binding DataError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
           <DataGridTemplateColumn.CellEditingTemplate>
             <DataTemplate x:DataType="vm:QueueRow">
-              <TextBox Text="{Binding EditName}" Padding="6,2" MinHeight="24" AutomationProperties.Name="{s:T col_name}" />
+              <TextBox Text="{Binding EditName}" Padding="6,2" MinHeight="24" AutomationProperties.Name="{c:T col_name}" />
             </DataTemplate>
           </DataGridTemplateColumn.CellEditingTemplate>
         </DataGridTemplateColumn>
-        <DataGridTextColumn Header="{s:T col_fmt}" Binding="{Binding Format}" Width="235" IsReadOnly="True" />
-        <DataGridTextColumn Header="{s:T col_clip}" Binding="{Binding Clip}" Width="160" IsReadOnly="True" />
-        <DataGridTextColumn Header="{s:T col_status}" Binding="{Binding Status}" Width="110" IsReadOnly="True" />
-        <DataGridTextColumn Header="{s:T col_file}" Binding="{Binding File}" Width="*" IsReadOnly="True" />
+        <DataGridTextColumn Header="{c:T col_fmt}" Binding="{Binding Format}" Width="235" IsReadOnly="True" />
+        <DataGridTextColumn Header="{c:T col_clip}" Binding="{Binding Clip}" Width="160" IsReadOnly="True" />
+        <DataGridTextColumn Header="{c:T col_status}" Binding="{Binding Status}" Width="110" IsReadOnly="True" />
+        <DataGridTextColumn Header="{c:T col_file}" Binding="{Binding File}" Width="*" IsReadOnly="True" />
       </DataGrid.Columns>
       <DataGrid.RowDetailsTemplate>
         <DataTemplate x:DataType="vm:QueueRow">
@@ -94,18 +95,18 @@
     <Border x:Name="DropLine" Height="2" VerticalAlignment="Top" Background="{DynamicResource Ot}" IsVisible="False" IsHitTestVisible="False" />
     </Panel>
     <WrapPanel Grid.Row="2" ItemSpacing="8" LineSpacing="8">
-      <Button Content="{s:T btn_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Content="{s:T btn_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Content="{s:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Content="{s:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Content="{s:T btn_retry}" Command="{Binding RetryFailedCommand}" IsEnabled="{Binding CanRetry}" />
-      <Button Content="{s:T btn_undo}" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="Ctrl+Z" />
+      <Button Content="{c:T btn_edit}" Command="{Binding EditSelectedCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_remove}" Command="{Binding RemoveSelectedCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_up}" Command="{Binding MoveUpCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_down}" Command="{Binding MoveDownCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_retry}" Command="{Binding RetryFailedCommand}" IsEnabled="{Binding CanRetry}" />
+      <Button Content="{c:T btn_undo}" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="Ctrl+Z" />
     </WrapPanel>
     <WrapPanel Grid.Row="3" ItemSpacing="8" LineSpacing="8">
-      <Button Content="{s:T btn_loadtxt}" Command="{Binding LoadTxtCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Content="{s:T btn_clearq}" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_loadtxt}" Command="{Binding LoadTxtCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Content="{c:T btn_clearq}" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding IsIdle}" />
     </WrapPanel>
-    <TextBlock Grid.Row="4" Classes="muted" Text="{s:T lbl_qhelp}" TextWrapping="Wrap" />
+    <TextBlock Grid.Row="4" Classes="muted" Text="{c:T lbl_qhelp}" TextWrapping="Wrap" />
     <TextBlock Grid.Row="5" x:Name="QueueStatus" Text="{Binding StatusText}" />
   </Grid>
 </UserControl>

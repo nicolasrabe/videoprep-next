@@ -3,9 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Videoprep.App.Services;
 
-namespace Videoprep.App.Views;
+namespace Videoprep.Controls;
 
 /// <summary>
 /// RONDA 4: a turning spinner and "Cargando &lt;qué&gt;..." (es/en), shown in the same place as the content it stands for.

@@ -2,91 +2,92 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.Views.SettingsView"
              x:DataType="vm:MainViewModel">
   <ScrollViewer>
     <StackPanel Spacing="6" Margin="4,8,12,4" MaxWidth="900" HorizontalAlignment="Left">
       <!-- Login cookies -->
-      <v:CollapsibleSection Title="{s:T set_grp_cookies}">
+      <v:CollapsibleSection Title="{c:T set_grp_cookies}">
         <StackPanel Spacing="8">
           <Grid ColumnDefinitions="260,*" ColumnSpacing="8">
-            <TextBlock Text="{s:T lbl_cookies}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <TextBlock Text="{c:T lbl_cookies}" VerticalAlignment="Center" TextWrapping="Wrap" />
             <ComboBox Grid.Column="1" ItemsSource="{Binding CookieChoices}" SelectedIndex="{Binding SelectedCookieIndex}"
                       HorizontalAlignment="Stretch" IsEnabled="{Binding IsIdle}" />
           </Grid>
           <Grid ColumnDefinitions="260,*,Auto" ColumnSpacing="8">
-            <TextBlock Text="{s:T lbl_cookiefile}" VerticalAlignment="Center" />
+            <TextBlock Text="{c:T lbl_cookiefile}" VerticalAlignment="Center" />
             <TextBox Grid.Column="1" Text="{Binding CookieFile}" IsEnabled="{Binding IsIdle}" />
-            <Button Grid.Column="2" Content="{s:T btn_browse}" Command="{Binding BrowseCookieFileCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Grid.Column="2" Content="{c:T btn_browse}" Command="{Binding BrowseCookieFileCommand}" IsEnabled="{Binding IsIdle}" />
           </Grid>
-          <TextBlock Classes="muted" Text="{s:T txt_privacy}" TextWrapping="Wrap" />
-          <TextBlock Classes="muted" Text="{s:T txt_cookie_export}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{c:T txt_privacy}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{c:T txt_cookie_export}" TextWrapping="Wrap" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- Tools -->
-      <v:CollapsibleSection Title="{s:T grp_tools}">
+      <v:CollapsibleSection Title="{c:T grp_tools}">
         <StackPanel Spacing="8">
           <TextBlock x:Name="ToolsText" Text="{Binding ToolsStatus}" FontFamily="Consolas,Menlo,monospace" TextWrapping="Wrap" />
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="{s:T btn_recheck}" Command="{Binding RecheckToolsCommand}" IsEnabled="{Binding IsIdle}" />
-            <Button Content="{s:T btn_update}" Command="{Binding UpdateToolsCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{c:T btn_recheck}" Command="{Binding RecheckToolsCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{c:T btn_update}" Command="{Binding UpdateToolsCommand}" IsEnabled="{Binding IsIdle}" />
           </StackPanel>
-          <CheckBox Content="{s:T chk_autoupdate}" IsChecked="{Binding AutoUpdate}" IsEnabled="{Binding IsIdle}" />
+          <CheckBox Content="{c:T chk_autoupdate}" IsChecked="{Binding AutoUpdate}" IsEnabled="{Binding IsIdle}" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- F9: updates of videoprep itself -->
-      <v:CollapsibleSection Title="{s:T grp_updates}" Summary="{Binding InstalledVersionText}">
+      <v:CollapsibleSection Title="{c:T grp_updates}" Summary="{Binding InstalledVersionText}">
         <StackPanel Spacing="8">
           <TextBlock x:Name="InstalledVersion" Text="{Binding InstalledVersionText}" />
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button x:Name="CheckUpdatesButton" Content="{s:T btn_checkupd}" Command="{Binding CheckUpdatesNowCommand}" IsEnabled="{Binding IsIdle}" />
-            <Button Content="{s:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding UpdateBannerVisible}" />
+            <Button x:Name="CheckUpdatesButton" Content="{c:T btn_checkupd}" Command="{Binding CheckUpdatesNowCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{c:T upd_install}" Command="{Binding InstallUpdateCommand}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding UpdateBannerVisible}" />
           </StackPanel>
           <TextBlock x:Name="UpdateStatusText" Classes="muted" Text="{Binding UpdateStatus}" TextWrapping="Wrap" IsVisible="{Binding UpdateStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-          <CheckBox Content="{s:T chk_updcheck}" IsChecked="{Binding UpdateCheckOn}" />
-          <TextBlock Classes="muted" Text="{s:T txt_updprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
+          <CheckBox Content="{c:T chk_updcheck}" IsChecked="{Binding UpdateCheckOn}" />
+          <TextBlock Classes="muted" Text="{c:T txt_updprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- When a batch finishes -->
-      <v:CollapsibleSection Title="{s:T set_grp_done}" IsExpanded="False">
+      <v:CollapsibleSection Title="{c:T set_grp_done}" IsExpanded="False">
         <StackPanel Spacing="8">
-          <CheckBox Content="{s:T chk_sound}" IsChecked="{Binding Sound}" IsEnabled="{Binding IsIdle}" />
-          <CheckBox Content="{s:T chk_opendone}" IsChecked="{Binding OpenDone}" IsEnabled="{Binding IsIdle}" />
-          <Button Content="{s:T btn_cleararchive}" Command="{Binding ClearArchiveCommand}" IsEnabled="{Binding IsIdle}" />
+          <CheckBox Content="{c:T chk_sound}" IsChecked="{Binding Sound}" IsEnabled="{Binding IsIdle}" />
+          <CheckBox Content="{c:T chk_opendone}" IsChecked="{Binding OpenDone}" IsEnabled="{Binding IsIdle}" />
+          <Button Content="{c:T btn_cleararchive}" Command="{Binding ClearArchiveCommand}" IsEnabled="{Binding IsIdle}" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- F4 / F5: mini window and clipboard -->
-      <v:CollapsibleSection Title="{s:T set_grp_mini}" IsExpanded="False">
+      <v:CollapsibleSection Title="{c:T set_grp_mini}" IsExpanded="False">
         <StackPanel Spacing="8">
-          <CheckBox Content="{s:T set_miniontop}" IsChecked="{Binding MiniOnTop}" />
-          <CheckBox Content="{s:T chk_clipwatch}" IsChecked="{Binding ClipboardWatch}" />
+          <CheckBox Content="{c:T set_miniontop}" IsChecked="{Binding MiniOnTop}" />
+          <CheckBox Content="{c:T chk_clipwatch}" IsChecked="{Binding ClipboardWatch}" />
           <!-- The privacy note sits right under the option -->
-          <TextBlock Classes="muted" Text="{s:T txt_clipprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
+          <TextBlock Classes="muted" Text="{c:T txt_clipprivacy}" TextWrapping="Wrap" Margin="26,0,0,0" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- F7: list of sources -->
-      <v:CollapsibleSection Title="{s:T grp_sources}" IsExpanded="False">
+      <v:CollapsibleSection Title="{c:T grp_sources}" IsExpanded="False">
         <StackPanel Spacing="8">
-          <CheckBox Content="{s:T chk_sources}" IsChecked="{Binding SourceListOn}" />
+          <CheckBox Content="{c:T chk_sources}" IsChecked="{Binding SourceListOn}" />
           <StackPanel Orientation="Horizontal" Spacing="8" Margin="26,0,0,0">
-            <TextBlock Classes="muted" Text="{s:T lbl_sources_fmt}" VerticalAlignment="Center" />
+            <TextBlock Classes="muted" Text="{c:T lbl_sources_fmt}" VerticalAlignment="Center" />
             <ComboBox ItemsSource="{Binding SourceListFormats}" SelectedIndex="{Binding SourceListFormatIndex}" MinWidth="200"
                       IsEnabled="{Binding SourceListOn}" />
           </StackPanel>
-          <TextBlock Classes="muted" Text="{s:T txt_sources_help}" TextWrapping="Wrap" Margin="26,0,0,0" />
+          <TextBlock Classes="muted" Text="{c:T txt_sources_help}" TextWrapping="Wrap" Margin="26,0,0,0" />
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- F6: profiles -->
-      <v:CollapsibleSection Title="{s:T grp_profiles}" IsExpanded="False">
+      <v:CollapsibleSection Title="{c:T grp_profiles}" IsExpanded="False">
         <StackPanel Spacing="8">
-          <TextBlock Classes="muted" Text="{s:T txt_profiles_help}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="{c:T txt_profiles_help}" TextWrapping="Wrap" />
           <DataGrid ItemsSource="{Binding ManagedProfiles}" SelectedItem="{Binding SelectedManagedProfile}" SelectionMode="Single"
                     HeadersVisibility="None" IsReadOnly="True" MaxHeight="190" CanUserSortColumns="False">
             <DataGrid.Columns>
@@ -95,21 +96,21 @@
             </DataGrid.Columns>
           </DataGrid>
           <WrapPanel ItemSpacing="8" LineSpacing="8">
-            <Button Content="{s:T btn_prof_rename}" Command="{Binding RenameProfileCommand}" IsEnabled="{Binding IsIdle}" />
-            <Button Content="{s:T btn_prof_delete}" Command="{Binding DeleteProfileCommand}" IsEnabled="{Binding IsIdle}" />
-            <Button Content="{s:T btn_prof_export}" Command="{Binding ExportProfilesCommand}" />
-            <Button Content="{s:T btn_prof_import}" Command="{Binding ImportProfilesCommand}" />
+            <Button Content="{c:T btn_prof_rename}" Command="{Binding RenameProfileCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{c:T btn_prof_delete}" Command="{Binding DeleteProfileCommand}" IsEnabled="{Binding IsIdle}" />
+            <Button Content="{c:T btn_prof_export}" Command="{Binding ExportProfilesCommand}" />
+            <Button Content="{c:T btn_prof_import}" Command="{Binding ImportProfilesCommand}" />
           </WrapPanel>
         </StackPanel>
       </v:CollapsibleSection>
 
       <!-- Appearance -->
-      <v:CollapsibleSection Title="{s:T set_grp_look}">
+      <v:CollapsibleSection Title="{c:T set_grp_look}">
         <WrapPanel ItemSpacing="10" LineSpacing="8">
-          <TextBlock Text="{s:T lbl_theme}" VerticalAlignment="Center" />
+          <TextBlock Text="{c:T lbl_theme}" VerticalAlignment="Center" />
           <ComboBox x:Name="ThemeBox" ItemsSource="{Binding ThemeChoices}" SelectedIndex="{Binding SelectedThemeIndex}" MinWidth="190" />
-          <Button Content="{s:T btn_pickcolor}" Command="{Binding PickColorCommand}" IsVisible="{Binding IsCustomTheme}" />
-          <TextBlock Text="{s:T lbl_lang}" VerticalAlignment="Center" Margin="20,0,0,0" />
+          <Button Content="{c:T btn_pickcolor}" Command="{Binding PickColorCommand}" IsVisible="{Binding IsCustomTheme}" />
+          <TextBlock Text="{c:T lbl_lang}" VerticalAlignment="Center" Margin="20,0,0,0" />
           <ComboBox x:Name="LangBox" ItemsSource="{Binding LanguageChoices}" SelectedIndex="{Binding SelectedLanguageIndex}" MinWidth="150" />
         </WrapPanel>
       </v:CollapsibleSection>

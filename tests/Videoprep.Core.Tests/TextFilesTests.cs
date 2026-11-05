@@ -57,7 +57,7 @@ public partial class TextFilesTests
         Assert.True(empty.Count == 0, $"{lang}.json has empty texts: {string.Join(", ", empty)}");
     }
 
-    [GeneratedRegex(@"\{s:T\s+(\w+)\s*\}")]
+    [GeneratedRegex(@"\{[sc]:T\s+(\w+)\s*\}")]
     private static partial Regex ScreenKey();
 
     [GeneratedRegex(@"\b(?:L|Loc\.Instance|loc|Localizer)\[""(\w+)""\]|\bL\.Format\(\s*""(\w+)""|\bL\.Text\(\s*""(\w+)""")]
@@ -89,7 +89,7 @@ public partial class TextFilesTests
     }
 
     /// <summary>The only fixed texts a screen may have: the program's name, signs, key combinations and timecode examples.</summary>
-    private static readonly HashSet<string> AllowedFixed = ["videoprep", "i", "X", "Ctrl+Z", "M:SS", "H:MM:SS"];
+    private static readonly HashSet<string> AllowedFixed = ["videoprep", "miniprep","i", "X", "Ctrl+Z", "M:SS", "H:MM:SS"];
 
     [GeneratedRegex(@"\s(Content|Text|Header|Title|PlaceholderText|Watermark|ToolTip\.Tip|AutomationProperties\.Name|Label)=""([^""]*)""")]
     private static partial Regex TextAttribute();

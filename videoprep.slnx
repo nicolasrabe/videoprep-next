@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Videoprep.Core/Videoprep.Core.csproj" />
+    <Project Path="src/Videoprep.Controls/Videoprep.Controls.csproj" />
     <Project Path="src/Videoprep.App/Videoprep.App.csproj" />
   </Folder>
   <Folder Name="/tests/">

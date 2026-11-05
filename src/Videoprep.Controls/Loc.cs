@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using Videoprep.Core.I18n;
 
-namespace Videoprep.App.Services;
+namespace Videoprep.Controls;
 
 /// <summary>
 /// UI texts for XAML: <c>{Binding [btn_send], Source={x:Static s:Loc.Instance}}</c>. Changing <see cref="Language"/>
