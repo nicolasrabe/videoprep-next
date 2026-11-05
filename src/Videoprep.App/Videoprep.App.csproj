@@ -4,6 +4,7 @@
     <RootNamespace>Videoprep.App</RootNamespace>
     <AssemblyName>videoprep</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\videoprep.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- Needed by [LibraryImport]: Windows console attach for the demo and check modes. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -25,6 +26,11 @@
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
     </ItemGroup>
   </Target>
+
+  <ItemGroup>
+    <!-- The same icon is used by the exe (ApplicationIcon) and by the windows (Icon="avares://videoprep/Assets/videoprep.ico"). -->
+    <AvaloniaResource Include="..\..\assets\videoprep.ico" Link="Assets/videoprep.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Videoprep.App.Tests" />
