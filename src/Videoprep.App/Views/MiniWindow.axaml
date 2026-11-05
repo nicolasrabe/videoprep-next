@@ -4,6 +4,7 @@
         xmlns:s="using:Videoprep.App.Services"
         x:Class="Videoprep.App.Views.MiniWindow"
         x:DataType="vm:MainViewModel"
+        Icon="avares://videoprep/Assets/videoprep.ico"
         Title="{s:T mini_title}"
         Width="340" Height="296" CanResize="False" SizeToContent="Manual"
         SystemDecorations="None" ShowInTaskbar="False" ShowActivated="False"
