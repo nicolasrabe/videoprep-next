@@ -71,6 +71,7 @@ public sealed class FlowTests : IDisposable
         _rig.Ui.Clipboard = "mirá esto https://youtu.be/Qw3r7yTz9Aa y esto otro";
         var vm = _rig.NewViewModel();
         await vm.Prep.PasteCommand.ExecuteAsync(null);
+        await Wait(() => !vm.Prep.IsLoading);
         Assert.Contains("Qw3r7yTz9Aa", vm.Prep.Url);
         Assert.True(vm.Prep.IsReady);
     }
