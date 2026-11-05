@@ -67,10 +67,13 @@ jobs:
             Directory.Packages.props
             **/*.csproj
       - run: dotnet publish src/Videoprep.App -c Release -r win-x64 -o dist/win-x64
+      # miniprep builds as its own single exe; CI only checks that it publishes (nothing is released from here).
+      - run: dotnet publish src/Miniprep.App -c Release -r win-x64 -o dist/miniprep-win-x64
       - name: Zip and SHA-256
         shell: pwsh
         run: |
           Compress-Archive -Path dist/win-x64/* -DestinationPath dist/videoprep-ci-win-x64.zip
+          if (-not (Test-Path dist/miniprep-win-x64/miniprep.exe)) { throw "miniprep.exe was not produced" }
           $h = (Get-FileHash dist/videoprep-ci-win-x64.zip -Algorithm SHA256).Hash.ToLower()
           "$h  videoprep-ci-win-x64.zip" | Tee-Object dist/videoprep-ci-win-x64.zip.sha256
       - uses: actions/upload-artifact@v7

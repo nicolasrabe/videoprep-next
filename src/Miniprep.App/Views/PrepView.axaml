@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
+             xmlns:vm="using:Miniprep.App.ViewModels"
+             x:Class="Miniprep.App.Views.PrepView"
+             x:DataType="vm:PrepViewModel">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="14,12">
+    <!-- The link -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+      <TextBox x:Name="UrlBox" Text="{Binding Url, Mode=TwoWay}" PlaceholderText="{c:T mp_url_ph}" />
+      <Button Grid.Column="1" Content="{c:T btn_paste}" Command="{Binding PasteCommand}" VerticalAlignment="Stretch" />
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-8,0" Padding="0,0,8,0">
+      <StackPanel>
+        <!-- A playlist, a channel or something that is not a video -->
+        <Border IsVisible="{Binding HasNotice}" Margin="0,12,0,0" Padding="10,8" CornerRadius="2" Background="{DynamicResource Ob}">
+          <TextBlock Text="{Binding NoticeText}" TextWrapping="Wrap" Foreground="{DynamicResource Ot}" />
+        </Border>
+
+        <!-- Something went wrong -->
+        <Border IsVisible="{Binding HasError}" Margin="0,12,0,0" Padding="10,8" CornerRadius="2" Background="{DynamicResource Rb}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" Foreground="{DynamicResource Rt}" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="{c:T mp_retry}" Command="{Binding RetryCommand}" />
+              <Button Content="{c:T mp_retry_cookies}" Command="{Binding RetryWithCookiesCommand}" IsVisible="{Binding CanRetryCookies}"
+                      ToolTip.Tip="{c:T mp_cookies_tip}" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Picture: empty box (dashed), "Cargando vista previa..." or the thumbnail with its length -->
+        <c:AspectBox Margin="0,12,0,0">
+          <Grid>
+            <Grid IsVisible="{Binding ShowPlaceholder}">
+              <Rectangle Fill="{DynamicResource Inp}" Stroke="{DynamicResource Bd}" StrokeThickness="1" StrokeDashArray="4,3" />
+              <c:LoadingText What="{c:T mp_what_preview}" IsVisible="{Binding PreviewLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Grid>
+            <Border IsVisible="{Binding HasThumb}" Background="{DynamicResource Inp}" BorderBrush="{DynamicResource Bd}" BorderThickness="1" ClipToBounds="True">
+              <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+            </Border>
+            <Border IsVisible="{Binding HasDuration}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6" Padding="6,0" Background="#BF000000">
+              <TextBlock Text="{Binding Duration}" Foreground="White" />
+            </Border>
+          </Grid>
+        </c:AspectBox>
+
+        <TextBlock IsVisible="{Binding HasTitle}" Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,0" TextWrapping="Wrap" />
+        <TextBlock IsVisible="{Binding HasChannelLine}" Text="{Binding ChannelLine}" Classes="muted" TextTrimming="CharacterEllipsis" />
+
+        <!-- Description (scrolls) or "Cargando descripción..." -->
+        <c:LoadingText What="{c:T mp_what_desc}" IsVisible="{Binding ShowDescriptionLoading}" Margin="0,10,0,0" />
+        <Border IsVisible="{Binding HasDescription}" Margin="0,8,0,0" Padding="0,8,0,0" BorderBrush="{DynamicResource Bd}" BorderThickness="0,1,0,0">
+          <ScrollViewer MaxHeight="92" VerticalScrollBarVisibility="Auto">
+            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Foreground="{DynamicResource Desc}" Margin="0,0,10,0" />
+          </ScrollViewer>
+        </Border>
+
+        <ProgressBar IsVisible="{Binding IsDownloading}" Value="{Binding Progress}" Minimum="0" Maximum="100" Margin="0,12,0,0" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Status and buttons -->
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <TextBlock Text="{Binding StatusText}" Classes="muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+        <Button Content="{c:T mp_add}" Command="{Binding AddCommand}" IsEnabled="{Binding CanAct}" IsVisible="{Binding ShowActions}" />
+        <Button Classes="g" Content="{c:T mp_download}" Command="{Binding DownloadCommand}" IsEnabled="{Binding CanAct}" IsVisible="{Binding ShowActions}" />
+        <Button Content="{c:T btn_stop}" Command="{Binding StopCommand}" IsVisible="{Binding IsDownloading}" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>

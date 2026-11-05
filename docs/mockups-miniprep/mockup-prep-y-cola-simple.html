@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mockup - Prep y Cola simples</title>
+<style>
+:root{--bg:#1e1f22;--card:#2a2b2f;--in:#1b1c1f;--tx:#e8e8e6;--mu:#a0a09b;--bd:#3b3c41;--gb:#2f5a33;--gt:#cdeccf;--ob:#6b4a26;--ot:#fbddb8;--rb:#5e2f2f;--rt:#f6cccc;--desk:#5d6c7d}
+*{box-sizing:border-box}body{margin:0;background:var(--desk);color:var(--tx);font:13px/1.4 "Segoe UI",system-ui,sans-serif;padding:16px;user-select:none}
+.demo{max-width:600px;margin:0 auto 10px;display:flex;gap:6px;flex-wrap:wrap;color:#fff;align-items:center}
+button,input[type=text],select{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:4px 12px;border-radius:2px}
+input[type=text]{background:var(--in);padding:6px 9px;user-select:text}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}
+.demo button.on{outline:2px solid #fff}
+.g{background:var(--gb);color:var(--gt);border-color:var(--gb)}.o{background:var(--ob);color:var(--ot);border-color:var(--ob)}.r{background:var(--rb);color:var(--rt);border-color:var(--rb)}
+.win{width:600px;max-width:100%;margin:0 auto;background:var(--bg);border:1px solid var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.45);position:relative}
+.title{display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid var(--bd);color:var(--mu);font-size:12px}.title b{color:var(--tx);font-weight:400}.title span{margin-left:auto;letter-spacing:10px}
+.tabs{display:flex;gap:8px;padding:6px 12px 0;border-bottom:1px solid var(--bd)}
+.tab{border:0;background:transparent;color:var(--mu);border-bottom:2px solid transparent;padding:6px 10px 6px;border-radius:0}
+.tab.on{color:var(--tx);border-bottom-color:var(--tx)}
+.badge{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:var(--ob);color:var(--ot);font-size:11px;text-align:center}
+.panel{display:none;padding:12px 14px;min-height:500px}.panel.on{display:block}
+.mu{color:var(--mu)}.row{display:flex;gap:8px;align-items:center}.sp{margin-left:auto}
+.st{display:none}body[data-s=empty] .s-empty,body[data-s=load] .s-load,body[data-s=ready] .s-ready,body[data-s=dl] .s-dl{display:block}
+body[data-s=dl] .s-ready{display:block}
+.thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#3c6f9e,#222);border:1px solid var(--bd);position:relative;margin-top:12px}
+.thumb b{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.75);padding:0 6px;font-weight:400;color:#fff}
+.ph{margin-top:12px;aspect-ratio:16/9;background:var(--in);border:1px dashed var(--bd);display:flex;align-items:center;justify-content:center;color:var(--mu);text-align:center;padding:20px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top-color:var(--ot);border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.ttl{font-size:16px;font-weight:600;margin-top:10px}
+.desc{margin-top:8px;max-height:92px;overflow:auto;border-top:1px solid var(--bd);padding-top:8px;white-space:pre-wrap;color:#cfcfcb}
+.bar{height:6px;background:var(--in);border:1px solid var(--bd);margin-top:12px}.bar i{display:block;height:100%;width:37%;background:#5fb868}
+.foot{display:flex;gap:8px;align-items:center;margin-top:12px}
+/* cola */
+.tb{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+.q{display:flex;gap:10px;align-items:center;padding:8px;background:var(--card);border:1px solid var(--bd);margin-bottom:6px;cursor:pointer}
+.q:hover{background:#31323a}.q.drop{border-top:2px solid var(--ot)}.q.drag{opacity:.4}
+.q .gr{color:var(--mu);cursor:grab;width:20px;text-align:center}.q .gr.off{opacity:.3;cursor:default}
+.q .sm{width:84px;aspect-ratio:16/9;background:linear-gradient(135deg,#3c6f9e,#222);border:1px solid var(--bd);flex:none}
+.q .tx{flex:1;min-width:0}.q .tx b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.q .stt{width:110px;text-align:right;color:var(--mu)}.q .stt.dl{color:#7fcf86}.q .stt.ok{color:#7fcf86}
+.q .x{border:0;background:transparent;color:var(--mu);padding:2px 6px}.q .x:hover{color:var(--rt)}
+.det{display:none;background:var(--in);border:1px solid var(--bd);border-top:0;margin:-6px 0 6px;padding:10px;color:#cfcfcb}
+.det.on{display:block}
+.pbq{height:4px;background:var(--in);margin-top:4px}.pbq i{display:block;height:100%;width:37%;background:#5fb868}
+.empty{padding:40px 10px;text-align:center;color:var(--mu);border:1px dashed var(--bd)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--gb);color:var(--gt);padding:8px 16px;border-radius:3px;display:none;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+/* guardar como */
+.dlg{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:5}.dlg.on{display:flex}
+.sd{background:#f3f3f3;color:#111;width:500px;max-width:96%;border:1px solid #888;box-shadow:0 8px 28px rgba(0,0,0,.5);font-size:12.5px}
+.sd .t{background:#fff;padding:7px 10px;border-bottom:1px solid #ccc;font-weight:600}
+.sd .c{padding:10px 12px;display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center}
+.sd input,.sd select{background:#fff;color:#111;border:1px solid #999;padding:4px 7px;width:100%}
+.sd .nav{grid-column:1/-1;background:#fff;border:1px solid #bbb;padding:6px 8px;color:#333}
+.sd .list{grid-column:1/-1;background:#fff;border:1px solid #bbb;height:70px;padding:6px 8px;color:#777}
+.sd .b{padding:8px 12px;text-align:right;border-top:1px solid #ccc}.sd .b button{background:#e6e6e6;color:#111;border:1px solid #999;padding:4px 18px;margin-left:6px}.sd .b .p{background:#cfe4fa;border-color:#5b9bd5}
+.cm{position:fixed;display:none;background:var(--card);border:1px solid var(--bd);box-shadow:0 6px 20px rgba(0,0,0,.5);padding:4px 0;z-index:20;min-width:230px}
+.cm div{padding:5px 16px 5px 26px;cursor:pointer;position:relative}.cm div:hover{background:var(--ob);color:var(--ot)}.cm hr{border:0;border-top:1px solid var(--bd);margin:4px 0}
+.cm .h{color:var(--mu);font-size:11px;padding:4px 16px;cursor:default;text-transform:uppercase;letter-spacing:.04em}.cm .h:hover{background:transparent;color:var(--mu)}
+.cm .ck:before{content:"✓";position:absolute;left:8px;color:#7fcf86}.cm .dng{color:var(--rt)}
+.q .more{border:0;background:transparent;color:var(--mu);font-size:16px;padding:0 6px;line-height:1}.q .more:hover{color:var(--tx)}
+.rn{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:30}.rn.on{display:flex}
+.rn .b{background:var(--bg);border:1px solid var(--bd);width:420px;max-width:94%;padding:12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.note{max-width:600px;margin:10px auto;color:#eef;font-size:12px}
+</style></head><body data-s="ready">
+
+<div class="demo"><span>Prep:</span><button data-b="empty">Vacío</button><button data-b="load">Cargando</button><button data-b="ready" class="on">Listo</button></div>
+
+<div class="win" id="win">
+ <div class="title"><b>videoprep</b><span>– □ ✕</span></div>
+ <div class="tabs"><button class="tab on" data-t="prep">Prep</button><button class="tab" data-t="cola">Cola<span class="badge" id="badge">3</span></button></div>
+
+ <!-- PREP -->
+ <div class="panel on" id="p-prep">
+  <div class="row"><input type="text" id="url" style="flex:1" placeholder="Pegá acá el enlace del video" value="youtube.com/watch?v=Qw3r7yTz9Aa"><button id="paste">Pegar</button></div>
+  <div class="st s-empty"><div class="ph"></div></div>
+  <div class="st s-load"><div class="ph"><span><span class="spin"></span>Cargando vista previa...</span></div><div class="mu" style="margin-top:10px"><span class="spin"></span>Cargando descripción...</div></div>
+  <div class="st s-ready">
+   <div class="thumb"><b>38:12</b></div>
+   <div class="ttl">Entrevista completa con el invitado</div>
+   <div class="mu">Canal de ejemplo · 21 oct 2026 · 41 mil vistas</div>
+   <div class="desc">En este episodio charlamos con nuestro invitado sobre cómo empezó su proyecto, los problemas que tuvo con la edición y lo que haría distinto hoy.
+
+00:00 Introducción
+02:15 El comienzo
+14:40 Los problemas de edición
+21:05 Lo que haría distinto
+35:30 Cierre</div>
+  </div>
+  <div class="st s-dl"><div class="bar"><i></i></div></div>
+  <div class="foot"><span class="mu" id="status">Listo</span>
+   <span class="sp row"><button id="add">Añadir a la cola</button><button class="g" id="dl">Descargar...</button><button id="stop" style="display:none">Detener</button></span></div>
+ </div>
+
+ <!-- COLA -->
+ <div class="panel" id="p-cola">
+  <div class="tb"><button class="g" id="start">▶ Iniciar cola</button><button id="clear">Quitar listos</button><span class="mu sp" id="count"></span></div>
+  <div id="list"></div>
+  <div class="foot" style="margin-top:10px"><span class="mu">Guardar en</span><input type="text" value="C:\Users\nico\Videos" style="flex:1"><button>Cambiar...</button></div>
+ </div>
+
+ <div class="dlg" id="dlg"><div class="sd"><div class="t">Guardar como</div>
+  <div class="c"><div class="nav">Este equipo › Videos</div><div class="list">(carpetas y archivos de la ubicación elegida)</div>
+   <div>Nombre:</div><input type="text" value="Entrevista completa con el invitado">
+   <div>Tipo:</div><select><option>Video MP4 (*.mp4)</option><option>Audio MP3 (*.mp3)</option></select></div>
+  <div class="b"><button class="p" id="save">Guardar</button><button id="cancel">Cancelar</button></div></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="cm" id="cm"></div>
+<div class="rn" id="rn"><div class="b"><div style="margin-bottom:6px">Nombre del archivo</div><input type="text" id="rnin" style="width:100%"><div class="row" style="justify-content:flex-end;margin-top:10px"><button id="rncancel">Cancelar</button><button class="g" id="rnok">Aceptar</button></div></div></div>
+
+<div class="note"><b>Prep:</b> "Descargar..." baja solo el enlace pegado en la caja (con el diálogo de Windows para nombre y carpeta). "Añadir a la cola" lo suma a la lista sin descargar y sube el número de la pestaña Cola.<br><b>Cola:</b> una lista simple con miniatura, título y estado. Clic en una fila para ver la descripción. Se reordena arrastrando desde ⋮⋮ y se quita con ✕. Clic derecho sobre una fila abre el menú: Renombrar, Formato, Calidad, Descargar miniatura, Abrir en el navegador, Copiar enlace y Quitar. La carpeta de destino es una sola para toda la cola, y cada archivo se llama como su video.</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let items=[
+ {t:'Big Buck Bunny 60fps 4K',m:'Blender · 10:34',s:'dl',f:'MP4',q:'1080p'},
+ {t:'Entrevista al invitado - parte 1',m:'Canal de ejemplo · 38:12',s:'q',f:'MP4',q:'1080p'},
+ {t:'Me at the zoo',m:'jawed · 0:19',s:'q',f:'MP4',q:'Mejor'},
+ {t:'Clip de la transmisión',m:'Canal de ejemplo · 0:45',s:'ok',f:'MP4',q:'1080p'}];
+let running=true,open=-1,n=0;
+const label={dl:'Descargando 37%',q:'En cola',ok:'Listo'};
+function render(){
+ const L=$('list');
+ if(!items.length){L.innerHTML='<div class="empty">La cola está vacía.<br>Pegá un enlace en Prep y tocá "Añadir a la cola".</div>';}
+ else L.innerHTML=items.map((x,i)=>`<div class="q" data-i="${i}"><span class="gr ${x.s==='q'?'':'off'}">⋮⋮</span><div class="sm"></div>
+  <div class="tx"><b>${x.t}</b><span class="mu">${x.m} · ${x.f==="MP3"?"MP3 audio":x.f+" "+x.q}</span>${x.s==='dl'?'<div class="pbq"><i></i></div>':''}</div>
+  <span class="stt ${x.s==='dl'||x.s==='ok'?x.s:''}">${label[x.s]}</span><button class="x" title="Quitar">✕</button></div>
+  <div class="det ${open===i?'on':''}">${x.t}<br><span class="mu">En este episodio charlamos con nuestro invitado sobre cómo empezó su proyecto…</span></div>`).join('');
+ const q=items.filter(x=>x.s==='q'||x.s==='dl').length;
+ $('badge').textContent=q;$('badge').style.display=q?'':'none';
+ $('count').textContent=items.length?`${items.filter(x=>x.s==='q').length} en cola · ${items.filter(x=>x.s==='ok').length} lista`:'';
+ $('start').textContent=running?'■ Detener':'▶ Iniciar cola';
+ document.querySelectorAll('.q').forEach(el=>{const i=+el.dataset.i;
+  el.addEventListener('contextmenu',e=>{e.preventDefault();rowMenu(e,i);});
+  el.addEventListener('click',e=>{if(e.target.closest('.x')){items.splice(i,1);open=-1;render();return;}open=open===i?-1:i;render();});
+  const g=el.querySelector('.gr');
+  if(items[i].s==='q'){g.addEventListener('mousedown',()=>el.draggable=true);
+   el.addEventListener('dragstart',e=>{el.classList.add('drag');e.dataTransfer.setData('t',i);});
+   el.addEventListener('dragend',()=>{el.draggable=false;el.classList.remove('drag');});}
+  el.addEventListener('dragover',e=>{e.preventDefault();if(items[i].s==='q')el.classList.add('drop');});
+  el.addEventListener('dragleave',()=>el.classList.remove('drop'));
+  el.addEventListener('drop',e=>{e.preventDefault();const f=+e.dataTransfer.getData('t');if(items[i].s!=='q')return;const [m]=items.splice(f,1);items.splice(i,0,m);render();});
+ });}
+function menu(e,items){const m=$('cm');m.innerHTML='';items.forEach(it=>{
+ if(it==='-'){m.appendChild(document.createElement('hr'));return;}
+ const d=document.createElement('div');if(typeof it==='string'){d.className='h';d.textContent=it;}else{d.textContent=it.l;d.className=(it.c?'ck ':'')+(it.d?'dng':'');d.onclick=()=>{m.style.display='none';it.f&&it.f();};}
+ m.appendChild(d);});
+ m.style.display='block';m.style.left=Math.min(e.clientX,innerWidth-250)+'px';m.style.top=Math.min(e.clientY,innerHeight-m.offsetHeight-10)+'px';}
+function rowMenu(e,i){const x=items[i];const set=(k,v)=>()=>{x[k]=v;render();};
+ menu(e,[{l:'Renombrar...',f:()=>{$('rnin').value=x.t;$('rn').dataset.i=i;$('rn').classList.add('on');$('rnin').focus();}},'-','Formato',
+  {l:'Video MP4',c:x.f==='MP4',f:set('f','MP4')},{l:'Audio MP3',c:x.f==='MP3',f:set('f','MP3')},'-','Calidad',
+  {l:'Mejor disponible',c:x.q==='Mejor',f:set('q','Mejor')},{l:'1080p',c:x.q==='1080p',f:set('q','1080p')},{l:'720p',c:x.q==='720p',f:set('q','720p')},{l:'480p',c:x.q==='480p',f:set('q','480p')},'-',
+  {l:'Descargar miniatura...'},{l:'Abrir en el navegador'},{l:'Copiar enlace'},'-',{l:'Quitar de la cola',d:1,f:()=>{items.splice(i,1);open=-1;render();}}]);}
+document.addEventListener('click',()=>$('cm').style.display='none');
+$('rnok').onclick=()=>{items[+$('rn').dataset.i].t=$('rnin').value||items[+$('rn').dataset.i].t;$('rn').classList.remove('on');render();};
+$('rncancel').onclick=()=>$('rn').classList.remove('on');
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',1800);}
+function st(s){document.body.dataset.s=s;document.querySelectorAll('[data-b]').forEach(b=>b.classList.toggle('on',b.dataset.b===s));
+ $('url').value=s==='empty'?'':'youtube.com/watch?v=Qw3r7yTz9Aa';
+ const dis=(s==='empty'||s==='load');$('dl').disabled=dis;$('add').disabled=dis;
+ $('stop').style.display=s==='dl'?'':'none';$('dl').style.display=s==='dl'?'none':'';$('add').style.display=s==='dl'?'none':'';
+ $('status').textContent={empty:'',load:'Leyendo el enlace...',ready:'Listo',dl:'Descargando... 37% · 2,1 MB/s'}[s];}
+document.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>st(b.dataset.b));
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));
+ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.t));});
+$('dl').onclick=()=>$('dlg').classList.add('on');$('cancel').onclick=()=>$('dlg').classList.remove('on');
+$('save').onclick=()=>{$('dlg').classList.remove('on');st('dl');};$('stop').onclick=()=>st('ready');
+$('paste').onclick=()=>{st('load');setTimeout(()=>st('ready'),1400);};
+$('add').onclick=()=>{n++;items.push({t:'Entrevista completa con el invitado'+(n>1?' ('+n+')':''),m:'Canal de ejemplo · 38:12',s:'q',f:'MP4',q:'1080p'});render();toast('Añadido a la cola');};
+$('start').onclick=()=>{running=!running;render();};
+$('clear').onclick=()=>{items=items.filter(x=>x.s!=='ok');render();};
+st('ready');render();
+</script>
+</body></html>
