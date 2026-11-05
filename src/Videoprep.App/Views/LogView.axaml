@@ -2,16 +2,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              x:Class="Videoprep.App.Views.LogView"
              x:DataType="vm:MainViewModel">
   <Grid RowDefinitions="Auto,*" RowSpacing="6" Margin="4,8,4,4">
     <!-- Compact toolbar on top (RONDA 4); the list below takes all the rest of the height. -->
     <WrapPanel ItemSpacing="6" LineSpacing="4">
-      <Button Classes="tool" Content="{s:T btn_copylog}" Command="{Binding CopyLogCommand}" />
-      <Button Classes="tool" Content="{s:T btn_savelog}" Command="{Binding SaveLogCommand}" />
-      <Button Classes="tool" Content="{s:T btn_clearlog}" Command="{Binding ClearLogCommand}" />
-      <Button Classes="tool" Content="{s:T btn_test}" Command="{Binding TestSetupCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Classes="tool" Content="{s:T btn_diag}" Command="{Binding CopyDiagnosticsCommand}" />
+      <Button Classes="tool" Content="{c:T btn_copylog}" Command="{Binding CopyLogCommand}" />
+      <Button Classes="tool" Content="{c:T btn_savelog}" Command="{Binding SaveLogCommand}" />
+      <Button Classes="tool" Content="{c:T btn_clearlog}" Command="{Binding ClearLogCommand}" />
+      <Button Classes="tool" Content="{c:T btn_test}" Command="{Binding TestSetupCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Classes="tool" Content="{c:T btn_diag}" Command="{Binding CopyDiagnosticsCommand}" />
     </WrapPanel>
     <!-- Dark log box in every theme, like the legacy one (English lines, for bug reports). -->
     <TextBox x:Name="LogBox" Grid.Row="1" Text="{Binding LogText, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"

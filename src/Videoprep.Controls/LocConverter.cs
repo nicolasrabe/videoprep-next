@@ -1,7 +1,7 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace Videoprep.App.Services;
+namespace Videoprep.Controls;
 
 /// <summary>Turns an i18n key held in data (e.g. a status) into its text in the current language.</summary>
 public sealed class LocConverter : IValueConverter

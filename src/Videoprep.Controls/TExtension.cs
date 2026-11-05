@@ -1,7 +1,7 @@
 using Avalonia.Data;
 using Avalonia.Markup.Xaml;
 
-namespace Videoprep.App.Services;
+namespace Videoprep.Controls;
 
 /// <summary>
 /// XAML shortcut for a translated text that follows the language switch: <c>Text="{s:T btn_send}"</c>.

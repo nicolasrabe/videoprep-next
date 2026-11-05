@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              xmlns:v="using:Videoprep.App.Views"
              x:Class="Videoprep.App.Views.DownloadView"
              x:DataType="vm:MainViewModel"
@@ -11,9 +12,9 @@
 
     <!-- Link: paste here (several links at once go straight to the queue) -->
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-      <TextBox x:Name="LinkBox" Text="{Binding LinkText}" PlaceholderText="{s:T ph_link}"
+      <TextBox x:Name="LinkBox" Text="{Binding LinkText}" PlaceholderText="{c:T ph_link}"
                IsEnabled="{Binding IsIdle}" FontSize="14" Padding="8,6" DragDrop.AllowDrop="True" />
-      <Button Grid.Column="1" x:Name="PasteButton" Content="{s:T btn_paste}" Command="{Binding PasteLinkCommand}" IsEnabled="{Binding IsIdle}" Padding="14,8" />
+      <Button Grid.Column="1" x:Name="PasteButton" Content="{c:T btn_paste}" Command="{Binding PasteLinkCommand}" IsEnabled="{Binding IsIdle}" Padding="14,8" />
     </Grid>
 
     <!-- Profile + format | fragments | big preview -->
@@ -22,11 +23,11 @@
         <Border Classes="card">
           <StackPanel Spacing="6">
             <WrapPanel ItemSpacing="8" LineSpacing="6">
-              <TextBlock Classes="muted" Text="{s:T lbl_profile}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="{c:T lbl_profile}" VerticalAlignment="Center" />
               <ComboBox x:Name="ProfileBox" ItemsSource="{Binding ProfileChoices}" SelectedItem="{Binding SelectedProfileChoice}"
-                        PlaceholderText="{s:T ph_profile}" MinWidth="190" IsEnabled="{Binding IsIdle}"
-                        AutomationProperties.Name="{s:T lbl_profile}" />
-              <Button Content="{s:T btn_saveprofile}" Command="{Binding SaveProfileCommand}" ToolTip.Tip="{s:T tip_saveprofile}"
+                        PlaceholderText="{c:T ph_profile}" MinWidth="190" IsEnabled="{Binding IsIdle}"
+                        AutomationProperties.Name="{c:T lbl_profile}" />
+              <Button Content="{c:T btn_saveprofile}" Command="{Binding SaveProfileCommand}" ToolTip.Tip="{c:T tip_saveprofile}"
                       IsEnabled="{Binding IsIdle}" />
               <!-- What this format does: in the "i" -->
               <Border x:Name="InfoIcon" Width="20" Height="20" CornerRadius="10" BorderThickness="1" BorderBrush="{DynamicResource Ot}"
@@ -35,22 +36,22 @@
               </Border>
               <!-- Video / Solo audio -->
               <StackPanel Orientation="Horizontal" Spacing="0" Margin="10,0,0,0" VerticalAlignment="Center">
-                <ToggleButton x:Name="KindVideo" Content="{s:T rad_video}" IsChecked="{Binding IsVideo, Mode=OneWay}" Command="{Binding SetKindCommand}"
+                <ToggleButton x:Name="KindVideo" Content="{c:T rad_video}" IsChecked="{Binding IsVideo, Mode=OneWay}" Command="{Binding SetKindCommand}"
                               CommandParameter="video" IsEnabled="{Binding IsIdle}" Padding="12,4" CornerRadius="4,0,0,4" />
-                <ToggleButton x:Name="KindAudio" Content="{s:T rad_audio}" IsChecked="{Binding IsAudio, Mode=OneWay}" Command="{Binding SetKindCommand}"
+                <ToggleButton x:Name="KindAudio" Content="{c:T rad_audio}" IsChecked="{Binding IsAudio, Mode=OneWay}" Command="{Binding SetKindCommand}"
                               CommandParameter="audio" IsEnabled="{Binding IsIdle}" Padding="12,4" CornerRadius="0,4,4,0" />
               </StackPanel>
             </WrapPanel>
             <WrapPanel ItemSpacing="8" LineSpacing="6">
-              <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="{c:T lbl_fmt}" VerticalAlignment="Center" />
               <ComboBox x:Name="FormatBox" ItemsSource="{Binding FormatChoices}" SelectedItem="{Binding SelectedFormat}"
                         MinWidth="210" IsEnabled="{Binding IsIdle}" />
-              <TextBlock Classes="muted" Text="{s:T lbl_max}" VerticalAlignment="Center" Margin="8,0,0,0" />
+              <TextBlock Classes="muted" Text="{c:T lbl_max}" VerticalAlignment="Center" Margin="8,0,0,0" />
               <ComboBox ItemsSource="{Binding ResolutionChoices}" SelectedItem="{Binding SelectedResolution}"
                         MinWidth="100" IsEnabled="{Binding ResolutionEnabled}" />
               <!-- F8: only videos that really have a variable frame rate are touched -->
-              <CheckBox Content="{s:T chk_cfr}" IsChecked="{Binding ConstantRate}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding IsVideo}"
-                        ToolTip.Tip="{s:T tip_cfr}" Margin="8,0,0,0" />
+              <CheckBox Content="{c:T chk_cfr}" IsChecked="{Binding ConstantRate}" IsEnabled="{Binding IsIdle}" IsVisible="{Binding IsVideo}"
+                        ToolTip.Tip="{c:T tip_cfr}" Margin="8,0,0,0" />
             </WrapPanel>
           </StackPanel>
         </Border>
@@ -59,28 +60,28 @@
         <Border Grid.Row="1" Classes="card">
           <Grid RowDefinitions="Auto,*" RowSpacing="6">
             <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
-              <TextBlock Classes="title" Text="{s:T lbl_clips}" VerticalAlignment="Center" />
+              <TextBlock Classes="title" Text="{c:T lbl_clips}" VerticalAlignment="Center" />
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Classes="muted" Text="{s:T lbl_clips_hint}" />
+                <TextBlock Classes="muted" Text="{c:T lbl_clips_hint}" />
                 <TextBlock Text="(?)" Foreground="{DynamicResource Ot}" Cursor="Help"
-                           ToolTip.Tip="{s:T tip_tc}" ToolTip.ShowDelay="250" />
+                           ToolTip.Tip="{c:T tip_tc}" ToolTip.ShowDelay="250" />
               </StackPanel>
-              <Button Grid.Column="3" x:Name="AddClipButton" Content="{s:T btn_addclip}" Command="{Binding AddClipCommand}" IsEnabled="{Binding IsIdle}" />
+              <Button Grid.Column="3" x:Name="AddClipButton" Content="{c:T btn_addclip}" Command="{Binding AddClipCommand}" IsEnabled="{Binding IsIdle}" />
             </Grid>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="4">
-                <TextBlock Classes="muted" Text="{s:T clip_whole}" IsVisible="{Binding !HasClips}" />
+                <TextBlock Classes="muted" Text="{c:T clip_whole}" IsVisible="{Binding !HasClips}" />
                 <ItemsControl ItemsSource="{Binding Clips}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ClipRowViewModel">
                       <StackPanel Margin="0,0,0,6" Spacing="2">
                         <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto" ColumnSpacing="6">
-                          <TextBlock Classes="muted" Text="{s:T lbl_start}" VerticalAlignment="Center" />
+                          <TextBlock Classes="muted" Text="{c:T lbl_start}" VerticalAlignment="Center" />
                           <TextBox Grid.Column="1" Text="{Binding Start}" Width="118" Classes.bad="{Binding StartBad}" PlaceholderText="00:00:00:00" />
-                          <TextBlock Grid.Column="2" Classes="muted" Text="{s:T lbl_end}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                          <TextBlock Grid.Column="2" Classes="muted" Text="{c:T lbl_end}" VerticalAlignment="Center" Margin="4,0,0,0" />
                           <TextBox Grid.Column="3" Text="{Binding End}" Width="118" Classes.bad="{Binding EndBad}" PlaceholderText="00:00:00:00" />
-                          <TextBox Grid.Column="4" Text="{Binding Name}" PlaceholderText="{s:T ph_frag_name}" Margin="6,0,0,0"
-                                   ToolTip.Tip="{s:T tip_frag_name}" AutomationProperties.Name="{s:T ph_frag_name}" />
+                          <TextBox Grid.Column="4" Text="{Binding Name}" PlaceholderText="{c:T ph_frag_name}" Margin="6,0,0,0"
+                                   ToolTip.Tip="{c:T tip_frag_name}" AutomationProperties.Name="{c:T ph_frag_name}" />
                           <Button Grid.Column="5" Content="X" Command="{Binding RemoveCommand}" Padding="9,4" />
                         </Grid>
                         <!-- F2: beyond the video duration (only a warning) -->
@@ -99,15 +100,15 @@
       <Border Grid.Column="1" Classes="card">
         <Border.ContextMenu>
           <ContextMenu>
-            <MenuItem x:Name="PreviewThumbMenu" Header="{s:T mnu_thumb}" Command="{Binding SaveDraftThumbnailCommand}" IsEnabled="{Binding HasDraft}" />
+            <MenuItem x:Name="PreviewThumbMenu" Header="{c:T mnu_thumb}" Command="{Binding SaveDraftThumbnailCommand}" IsEnabled="{Binding HasDraft}" />
           </ContextMenu>
         </Border.ContextMenu>
         <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
-          <TextBlock Classes="title" Text="{s:T lbl_preview}" />
+          <TextBlock Classes="title" Text="{c:T lbl_preview}" />
           <Panel Grid.Row="1" Height="189">
             <Border Background="{DynamicResource Bg}" CornerRadius="2" />
             <Image Source="{Binding PreviewImage}" Stretch="Uniform" />
-            <v:LoadingText What="{s:T load_preview}" IsVisible="{Binding PreviewLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <c:LoadingText What="{c:T load_preview}" IsVisible="{Binding PreviewLoading}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             <Border Background="#CC000000" CornerRadius="2" Padding="5,1" Margin="5" HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     IsVisible="{Binding PreviewDuration, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <TextBlock Text="{Binding PreviewDuration}" Foreground="White" FontSize="12" />
@@ -123,11 +124,11 @@
     <!-- File name: one box. With fragments it is off: each fragment carries its own name. -->
     <Border Grid.Row="2" x:Name="NamesCard" Classes="card" Classes.dim="{Binding HasClips}" IsEnabled="{Binding NamesEnabled}">
       <WrapPanel ItemSpacing="8" LineSpacing="6">
-        <TextBlock Classes="muted" Text="{s:T lbl_names}" VerticalAlignment="Center" />
+        <TextBlock Classes="muted" Text="{c:T lbl_names}" VerticalAlignment="Center" />
         <ComboBox x:Name="NameModeBox" SelectedIndex="{Binding NameModeIndex}" MinWidth="230">
-          <ComboBoxItem Content="{s:T rad_n1}" />
-          <ComboBoxItem Content="{s:T rad_n2}" />
-          <ComboBoxItem Content="{s:T rad_n3}" />
+          <ComboBoxItem Content="{c:T rad_n1}" />
+          <ComboBoxItem Content="{c:T rad_n2}" />
+          <ComboBoxItem Content="{c:T rad_n3}" />
         </ComboBox>
         <TextBox x:Name="CustomNameBox" Text="{Binding CustomText}" Width="200" IsVisible="{Binding NameCustom}" IsEnabled="{Binding CustomFieldEnabled}" />
         <TextBox x:Name="SeriesNameBox" Text="{Binding SeriesText}" Width="200" IsVisible="{Binding NameSeries}" IsEnabled="{Binding SeriesFieldEnabled}" />
@@ -137,18 +138,18 @@
 
     <!-- Folder, one line -->
     <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-      <TextBlock Classes="muted" Text="{s:T lbl_saveto}" VerticalAlignment="Center" />
+      <TextBlock Classes="muted" Text="{c:T lbl_saveto}" VerticalAlignment="Center" />
       <TextBox Grid.Column="1" Text="{Binding Folder}" IsEnabled="{Binding IsIdle}" />
-      <Button Grid.Column="2" Content="{s:T btn_browse}" Command="{Binding BrowseFolderCommand}" IsEnabled="{Binding IsIdle}" />
-      <Button Grid.Column="3" Content="📁" Command="{Binding OpenSaveFolderCommand}" ToolTip.Tip="{s:T tip_folder}" Padding="9,5" />
+      <Button Grid.Column="2" Content="{c:T btn_browse}" Command="{Binding BrowseFolderCommand}" IsEnabled="{Binding IsIdle}" />
+      <Button Grid.Column="3" Content="📁" Command="{Binding OpenSaveFolderCommand}" ToolTip.Tip="{c:T tip_folder}" Padding="9,5" />
     </Grid>
 
     <!-- Options / Send to queue / Download / Stop, together on the right -->
     <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-      <Button Content="{s:T btn_options}" Command="{Binding ShowOptionsCommand}" IsEnabled="{Binding IsIdle}" Padding="12,8" />
-      <Button Classes="o" Content="{s:T btn_send}" Command="{Binding SendToQueueCommand}" IsEnabled="{Binding IsIdle}" Padding="14,8" />
-      <Button Classes="g" Content="{s:T btn_download}" Command="{Binding DownloadCommand}" FontWeight="Bold" Padding="18,8" IsEnabled="{Binding IsIdle}" />
-      <Button Classes="r" Content="{s:T btn_stop}" Command="{Binding StopCommand}" Padding="14,8" IsEnabled="{Binding IsRunning}" />
+      <Button Content="{c:T btn_options}" Command="{Binding ShowOptionsCommand}" IsEnabled="{Binding IsIdle}" Padding="12,8" />
+      <Button Classes="o" Content="{c:T btn_send}" Command="{Binding SendToQueueCommand}" IsEnabled="{Binding IsIdle}" Padding="14,8" />
+      <Button Classes="g" Content="{c:T btn_download}" Command="{Binding DownloadCommand}" FontWeight="Bold" Padding="18,8" IsEnabled="{Binding IsIdle}" />
+      <Button Classes="r" Content="{c:T btn_stop}" Command="{Binding StopCommand}" Padding="14,8" IsEnabled="{Binding IsRunning}" />
     </StackPanel>
 
     <!-- Progress -->

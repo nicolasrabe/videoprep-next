@@ -2,13 +2,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              x:Class="Videoprep.App.Views.ImportReviewView"
              x:DataType="vm:ImportReviewViewModel">
   <!-- "Enlaces encontrados en ..." (F1, mockup-mini-e-importar.html part 2) -->
   <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="10">
     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
       <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" VerticalAlignment="Center" />
-      <TextBlock Grid.Column="1" Classes="muted" Text="{s:T imp_formats}" VerticalAlignment="Center" />
+      <TextBlock Grid.Column="1" Classes="muted" Text="{c:T imp_formats}" VerticalAlignment="Center" />
     </Grid>
 
     <DataGrid Grid.Row="1" x:Name="Grid" ItemsSource="{Binding Rows}" IsReadOnly="True" SelectionMode="Single"
@@ -22,7 +23,7 @@
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTemplateColumn Header="{s:T col_link}" Width="2*">
+        <DataGridTemplateColumn Header="{c:T col_link}" Width="2*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:ImportRow">
               <TextBlock Text="{Binding ShownUrl}" Classes.muted="{Binding IsDim}" TextTrimming="CharacterEllipsis"
@@ -30,15 +31,15 @@
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTemplateColumn Header="{s:T col_name}" Width="1.4*">
+        <DataGridTemplateColumn Header="{c:T col_name}" Width="1.4*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:ImportRow">
-              <TextBox Text="{Binding Name}" PlaceholderText="{s:T imp_name_ph}" Margin="2" Padding="4,2" MinHeight="24"
-                       AutomationProperties.Name="{s:T col_name}" />
+              <TextBox Text="{Binding Name}" PlaceholderText="{c:T imp_name_ph}" Margin="2" Padding="4,2" MinHeight="24"
+                       AutomationProperties.Name="{c:T col_name}" />
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTemplateColumn Header="{s:T col_where}" Width="2*">
+        <DataGridTemplateColumn Header="{c:T col_where}" Width="2*">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:ImportRow">
               <TextBlock Text="{Binding Context}" Classes.muted="{Binding IsDim}" TextTrimming="CharacterEllipsis"
@@ -46,8 +47,8 @@
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTextColumn Header="{s:T col_how}" Binding="{Binding How}" Width="125" />
-        <DataGridTemplateColumn Header="{s:T col_status}" Width="150">
+        <DataGridTextColumn Header="{c:T col_how}" Binding="{Binding How}" Width="125" />
+        <DataGridTemplateColumn Header="{c:T col_status}" Width="150">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate x:DataType="vm:ImportRow">
               <Border Classes="pill" Classes.ok="{Binding IsOk}" Classes.warn="{Binding IsWarn}" Margin="6,0"
@@ -65,18 +66,18 @@
 
     <Grid Grid.Row="3" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="10">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="{s:T btn_all}" Command="{Binding AllCommand}" />
-        <Button Content="{s:T btn_none}" Command="{Binding NoneCommand}" />
-        <Button Content="{s:T btn_invert}" Command="{Binding InvertCommand}" />
+        <Button Content="{c:T btn_all}" Command="{Binding AllCommand}" />
+        <Button Content="{c:T btn_none}" Command="{Binding NoneCommand}" />
+        <Button Content="{c:T btn_invert}" Command="{Binding InvertCommand}" />
         <TextBlock Classes="muted" Text="{Binding SelectedText}" VerticalAlignment="Center" Margin="4,0,0,0" />
       </StackPanel>
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-        <TextBlock Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+        <TextBlock Classes="muted" Text="{c:T lbl_fmt}" VerticalAlignment="Center" />
         <ComboBox ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" MinWidth="260" MaxWidth="440" />
       </StackPanel>
       <CheckBox Grid.Row="1" Grid.ColumnSpan="2" Content="{Binding SubfolderText}" IsChecked="{Binding UseSubfolder}" />
       <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-        <Button x:Name="CancelButton" Content="{s:T btn_cancel}" MinWidth="90" HorizontalContentAlignment="Center" />
+        <Button x:Name="CancelButton" Content="{c:T btn_cancel}" MinWidth="90" HorizontalContentAlignment="Center" />
         <Button x:Name="AddButton" Classes="o" Content="{Binding AddText}" IsEnabled="{Binding CanAdd}" MinWidth="140"
                 HorizontalContentAlignment="Center" FontWeight="SemiBold" />
       </StackPanel>

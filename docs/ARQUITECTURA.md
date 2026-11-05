@@ -31,3 +31,15 @@ Dos proyectos: **Videoprep.Core** (motor, sin interfaz, sin referencias a Window
 `Videoprep.Core.Tests` (motor; las `*Integration*` usan ffmpeg real, categoría `Integration`), `Videoprep.App.Tests`
 (pantallas sin ventana real, guardan capturas), `FakeYtDlp` (yt-dlp falso), `desktop/` (scripts a mano en un escritorio real).
 Rápido: `powershell -File scripts/check.ps1`. Las pruebas con `[Trait("Inestable","si")]` no corren en el CI normal. `TextFilesTests` revisa los textos y las pantallas leyendo los archivos (sin Avalonia). Capturas de cierre: `--filter "Capturas=si"`.
+
+## Videoprep.Controls (`src/Videoprep.Controls`) - compartido por videoprep y miniprep
+`Loc` / `TExtension` (`{c:T clave}`) / `LocConverter` (textos es/en), `LoadingText` (spinner "Cargando...") y `Spinner.axaml`, `AspectBox` (caja 16:9), `TitleBarStyle` + `WindowTitleBar` (barra de título según el tema, DWM).
+
+## Miniprep.App (`src/Miniprep.App`) - la app chica (Prep + Cola), exe aparte `miniprep.exe`
+| Carpeta | Para qué sirve |
+|---|---|
+| `Logic/` | Sin pantallas: `MiniQueue` (cola, orden, guardado en queue.json), `QueueEntry`, `RowMenu` (menú de clic derecho como datos), `Names` (nombres de "Guardar como"), `Display` (textos de fechas, vistas, filas). |
+| `Services/` | `MiniPaths` (datos en %LOCALAPPDATA%\miniprep; herramientas de videoprep si existen), `MiniSettings`, `MiniServices`, `Downloader` (JobEngine, un trabajo por vez), `ToolsGate`, `RunGate`, `IMiniUi`. |
+| `ViewModels/` | `MiniMainViewModel` (pestañas, número de Cola, avisos), `PrepViewModel`, `QueueViewModel` (+ fila). |
+| `Views/` | `MainWindow` (implementa `IMiniUi`), `PrepView`, `QueueView` (clic, ✕, arrastre y menú se manejan acá). |
+Pruebas: `tests/Miniprep.App.Tests` (lógica, flujos con yt-dlp y descargador falsos, capturas; `RealDownloadTests` = integración real). Mockup: `docs/mockups-miniprep/`.

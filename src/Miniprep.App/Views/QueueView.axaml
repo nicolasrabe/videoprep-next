@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
+             xmlns:vm="using:Miniprep.App.ViewModels"
+             x:Class="Miniprep.App.Views.QueueView"
+             x:DataType="vm:QueueViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.grip.off"><Setter Property="Opacity" Value="0.3" /></Style>
+    <Style Selector="Border.qrow.drag"><Setter Property="Opacity" Value="0.4" /></Style>
+    <Style Selector="Border.qrow:pointerover"><Setter Property="Background" Value="{DynamicResource Hover}" /></Style>
+    <Style Selector="TextBlock.state.live"><Setter Property="Foreground" Value="{DynamicResource Ok}" /></Style>
+    <Style Selector="TextBlock.state.bad"><Setter Property="Foreground" Value="{DynamicResource Rt}" /></Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="14,12">
+    <!-- Toolbar -->
+    <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" Margin="0,0,0,10">
+      <Button Classes="g" Content="{Binding StartText}" Command="{Binding ToggleRunCommand}" />
+      <Button Grid.Column="1" Margin="6,0,0,0" Content="{c:T mp_clear_done}" Command="{Binding ClearDoneCommand}" />
+      <TextBlock Grid.Column="2" Text="{Binding Counter}" Classes="muted" HorizontalAlignment="Right" VerticalAlignment="Center" />
+    </Grid>
+
+    <!-- The list (or the empty message) -->
+    <Grid Grid.Row="1">
+      <Grid IsVisible="{Binding IsEmpty}" VerticalAlignment="Top" Height="130">
+        <Rectangle Stroke="{DynamicResource Bd}" StrokeThickness="1" StrokeDashArray="4,3" />
+        <TextBlock Text="{c:T mp_empty_queue}" Classes="muted" TextAlignment="Center" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" />
+      </Grid>
+      <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,-8,0" Padding="0,0,8,0">
+        <ItemsControl x:Name="List" ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:QueueRowViewModel">
+              <StackPanel>
+                <Border Height="2" Margin="0,0,0,2" Background="{DynamicResource Ot}" IsVisible="{Binding DropAbove}" />
+                <Border Classes="qrow" Classes.drag="{Binding Dragging}" Background="{DynamicResource Card}" BorderBrush="{DynamicResource Bd}"
+                        BorderThickness="1" Padding="8" Margin="0,0,0,6" Cursor="Hand">
+                  <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="10">
+                    <TextBlock Classes="grip" Classes.off="{Binding !CanDrag}" Text="⋮⋮" Width="20" TextAlignment="Center" VerticalAlignment="Center"
+                               Foreground="{DynamicResource Mu}" Cursor="SizeAll" />
+                    <Border Grid.Column="1" Width="84" Height="47" Background="{DynamicResource Inp}" BorderBrush="{DynamicResource Bd}" BorderThickness="1" ClipToBounds="True">
+                      <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Text="{Binding Meta}" Classes="muted" TextTrimming="CharacterEllipsis" />
+                      <ProgressBar IsVisible="{Binding IsDownloading}" Value="{Binding Progress}" Minimum="0" Maximum="100" Height="4" Margin="0,4,0,0" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" Classes="state" Classes.live="{Binding IsGreen}" Classes.bad="{Binding IsError}" Width="110" TextAlignment="Right"
+                               VerticalAlignment="Center" Foreground="{DynamicResource Mu}" Text="{Binding StatusText}" ToolTip.Tip="{Binding ErrorText}" />
+                    <Button Grid.Column="4" Classes="plain remove" Content="✕" VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+                <Border IsVisible="{Binding IsOpen}" Background="{DynamicResource Inp}" BorderBrush="{DynamicResource Bd}" BorderThickness="1,0,1,1" Margin="0,-6,0,6" Padding="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource Desc}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Description}" IsVisible="{Binding HasDescription}" Classes="muted" TextWrapping="Wrap" MaxHeight="120" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding ErrorText}" IsVisible="{Binding IsError}" Foreground="{DynamicResource Rt}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Grid>
+
+    <!-- One destination folder for the whole queue -->
+    <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Margin="0,10,0,0">
+      <TextBlock Text="{c:T mp_save_in}" Classes="muted" VerticalAlignment="Center" />
+      <TextBox Grid.Column="1" Text="{Binding Folder}" IsReadOnly="True" />
+      <Button Grid.Column="2" Content="{c:T mp_change}" Command="{Binding ChangeFolderCommand}" VerticalAlignment="Stretch" />
+    </Grid>
+  </Grid>
+</UserControl>

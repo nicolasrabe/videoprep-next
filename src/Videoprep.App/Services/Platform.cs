@@ -156,31 +156,4 @@ internal static partial class Platform
     {
         if (OperatingSystem.IsWindows()) MessageBeep(MbIconAsterisk);
     }
-
-    // ---------------- title bar colors (Windows: DWM) ----------------
-
-    private const int DwmaUseImmersiveDarkMode = 20, DwmaCaptionColor = 35, DwmaTextColor = 36;
-
-    [LibraryImport("dwmapi.dll")]
-    private static partial int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
-
-    /// <summary>
-    /// Paints the title bar: dark or light mode (Windows 10 build 19041+ and 11) and, where Windows 11 supports it,
-    /// the caption and text colors. Attributes the system does not know are ignored, so this never fails.
-    /// </summary>
-    public static void SetTitleBar(IntPtr hwnd, TitleBarStyle style)
-    {
-        if (!OperatingSystem.IsWindows() || hwnd == IntPtr.Zero) return;
-        try
-        {
-            var dark = style.Dark ? 1 : 0;
-            DwmSetWindowAttribute(hwnd, DwmaUseImmersiveDarkMode, ref dark, sizeof(int));
-            if (Environment.OSVersion.Version.Build < 22000) return; // Windows 10: no color attributes
-            var caption = style.CaptionColorRef;
-            var text = style.TextColorRef;
-            DwmSetWindowAttribute(hwnd, DwmaCaptionColor, ref caption, sizeof(int));
-            DwmSetWindowAttribute(hwnd, DwmaTextColor, ref text, sizeof(int));
-        }
-        catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException) { /* no DWM: leave the default bar */ }
-    }
 }

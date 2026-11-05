@@ -1,6 +1,4 @@
 using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Videoprep.Core.Themes;
@@ -16,17 +14,10 @@ public static class ThemeService
 {
     public static readonly string[] Keys = ["Bg", "Card", "Inp", "Tx", "Mu", "Bd", "Gb", "Gt", "Rb", "Rt", "Ob", "Ot"];
 
-    private static TitleBarStyle? _titleBar;
-
-    /// <summary>Paints the title bar of a window with the current theme (no-op before the first theme or off Windows).</summary>
-    public static void ApplyTitleBar(Window w)
-    {
-        if (_titleBar is { } style) Platform.SetTitleBar(w.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero, style);
-    }
 
     public static void Apply(Application app, Palette p)
     {
-        _titleBar = TitleBarStyle.For(p);
+        WindowTitleBar.Use(app, p);
         string[] values = [p.Bg, p.Card, p.Inp, p.Tx, p.Mu, p.Bd, p.Gb, p.Gt, p.Rb, p.Rt, p.Ob, p.Ot];
         for (var i = 0; i < Keys.Length; i++)
             app.Resources[Keys[i]] = new SolidColorBrush(Color.Parse(values[i]));
@@ -37,11 +28,5 @@ public static class ThemeService
         foreach (var key in new[] { "SystemAccentColor", "SystemAccentColorDark1", "SystemAccentColorDark2", "SystemAccentColorDark3",
                                     "SystemAccentColorLight1", "SystemAccentColorLight2", "SystemAccentColorLight3" })
             app.Resources[key] = accent;
-        if (app.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            foreach (var w in desktop.Windows) ApplyTitleBar(w);
     }
-
-    /// <summary>Every window (main, mini, dialogs) gets the title bar of the current theme when it opens.</summary>
-    public static void WatchWindows() =>
-        Window.WindowOpenedEvent.AddClassHandler<Window>((w, _) => ApplyTitleBar(w));
 }

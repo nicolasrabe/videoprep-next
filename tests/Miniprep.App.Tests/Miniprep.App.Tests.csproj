@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Videoprep.Controls" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Avalonia.Headless.XUnit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Miniprep.App\Miniprep.App.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- An in-memory yt-dlp for the tests (no process, no network). -->
+    <Compile Include="..\Videoprep.Core.Tests\ScriptedRunner.cs" Link="ScriptedRunner.cs" />
+  </ItemGroup>
+</Project>

@@ -35,7 +35,7 @@ public class TitleBarStyleTests
     [Fact]
     public void Setting_the_title_bar_does_not_fail_without_a_window()
     {
-        Platform.SetTitleBar(IntPtr.Zero, TitleBarStyle.For(Palette.For("dark", "")));
-        Platform.SetTitleBar(new IntPtr(1), TitleBarStyle.For(Palette.For("dark", ""))); // not a window: the system refuses, we ignore it
+        WindowTitleBar.Set(IntPtr.Zero, TitleBarStyle.For(Palette.For("dark", "")));
+        WindowTitleBar.Set(new IntPtr(1), TitleBarStyle.For(Palette.For("dark", ""))); // not a window: the system refuses, we ignore it
     }
 }

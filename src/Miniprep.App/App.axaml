@@ -1,0 +1,171 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Miniprep.App.App"
+             RequestedThemeVariant="Dark">
+  <!-- One dark theme (the colors of docs/mockups-miniprep). The names are the same as in videoprep so the shared controls find them. -->
+  <Application.Resources>
+    <SolidColorBrush x:Key="Bg">#1e1f22</SolidColorBrush>
+    <SolidColorBrush x:Key="Card">#2a2b2f</SolidColorBrush>
+    <SolidColorBrush x:Key="Inp">#1b1c1f</SolidColorBrush>
+    <SolidColorBrush x:Key="Tx">#e8e8e6</SolidColorBrush>
+    <SolidColorBrush x:Key="Mu">#a0a09b</SolidColorBrush>
+    <SolidColorBrush x:Key="Bd">#3b3c41</SolidColorBrush>
+    <SolidColorBrush x:Key="Gb">#2f5a33</SolidColorBrush>
+    <SolidColorBrush x:Key="Gt">#cdeccf</SolidColorBrush>
+    <SolidColorBrush x:Key="Rb">#5e2f2f</SolidColorBrush>
+    <SolidColorBrush x:Key="Rt">#f6cccc</SolidColorBrush>
+    <SolidColorBrush x:Key="Ob">#6b4a26</SolidColorBrush>
+    <SolidColorBrush x:Key="Ot">#fbddb8</SolidColorBrush>
+    <SolidColorBrush x:Key="Hover">#31323a</SolidColorBrush>
+    <SolidColorBrush x:Key="Ok">#7fcf86</SolidColorBrush>
+    <SolidColorBrush x:Key="Desc">#cfcfcb</SolidColorBrush>
+    <SolidColorBrush x:Key="Bar">#5fb868</SolidColorBrush>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://Videoprep.Controls/Spinner.axaml" />
+
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource Bg}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontFamily" Value="Segoe UI, Inter, sans-serif" />
+    </Style>
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="TextBlock.muted">
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+    </Style>
+
+    <!-- Buttons: flat, 2 px corners, like the mockup -->
+    <Style Selector="Button">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="12,4" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Hover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="Button:disabled">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+    <Style Selector="Button.g">
+      <Setter Property="Background" Value="{DynamicResource Gb}" />
+      <Setter Property="Foreground" Value="{DynamicResource Gt}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Gb}" />
+    </Style>
+    <Style Selector="Button.g:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Gb}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Gt}" />
+      <Setter Property="Foreground" Value="{DynamicResource Gt}" />
+    </Style>
+    <Style Selector="Button.o">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ob}" />
+    </Style>
+    <Style Selector="Button.o:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Ot}" />
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+    </Style>
+    <Style Selector="Button.plain">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+      <Setter Property="Padding" Value="6,2" />
+    </Style>
+    <Style Selector="Button.plain:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource Rt}" />
+    </Style>
+
+    <!-- Tabs: text with an underline on the open one -->
+    <Style Selector="Button.tab">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+      <Setter Property="BorderThickness" Value="0,0,0,2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Padding" Value="10,6" />
+    </Style>
+    <Style Selector="Button.tab:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="Button.tab.on">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Tx}" />
+    </Style>
+    <Style Selector="Button.tab.on:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource Tx}" />
+    </Style>
+
+    <!-- Text box -->
+    <Style Selector="TextBox">
+      <Setter Property="Background" Value="{DynamicResource Inp}" />
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="9,6" />
+      <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement, TextBox:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="{DynamicResource Inp}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Mu}" />
+    </Style>
+
+    <!-- Progress bars: thin, flat, green -->
+    <Style Selector="ProgressBar">
+      <Setter Property="Background" Value="{DynamicResource Inp}" />
+      <Setter Property="Foreground" Value="{DynamicResource Bar}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Height" Value="6" />
+    </Style>
+    <Style Selector="ProgressBar /template/ Border#PART_Indicator">
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+
+    <!-- Right-click menu -->
+    <Style Selector="ContextMenu">
+      <Setter Property="Background" Value="{DynamicResource Card}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource Bd}" />
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="MenuItem">
+      <Setter Property="Foreground" Value="{DynamicResource Tx}" />
+      <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="MenuItem.header">
+      <Setter Property="Foreground" Value="{DynamicResource Mu}" />
+      <Setter Property="FontSize" Value="11" />
+    </Style>
+    <Style Selector="MenuItem.danger">
+      <Setter Property="Foreground" Value="{DynamicResource Rt}" />
+    </Style>
+    <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+      <Setter Property="Background" Value="{DynamicResource Ob}" />
+    </Style>
+    <Style Selector="MenuItem:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource Ot}" />
+    </Style>
+
+    <!-- Scroll bars thin -->
+    <Style Selector="ScrollViewer">
+      <Setter Property="AllowAutoHide" Value="False" />
+    </Style>
+  </Application.Styles>
+</Application>

@@ -1,12 +1,12 @@
 using Videoprep.Core.Themes;
 
-namespace Videoprep.App.Services;
+namespace Videoprep.Controls;
 
 /// <summary>
 /// How the window title bar looks for a theme: dark or light mode, and the caption and text colors (the theme's
 /// background and text). Pure calculation, no window needed.
 /// </summary>
-internal readonly record struct TitleBarStyle(bool Dark, int CaptionColorRef, int TextColorRef)
+public readonly record struct TitleBarStyle(bool Dark, int CaptionColorRef, int TextColorRef)
 {
     public static TitleBarStyle For(Palette p) => new(p.IsDark, ColorRef(p.Bg), ColorRef(p.Tx));
 

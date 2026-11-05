@@ -2,40 +2,41 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Videoprep.App.ViewModels"
              xmlns:s="using:Videoprep.App.Services"
+        xmlns:c="clr-namespace:Videoprep.Controls;assembly=Videoprep.Controls"
              x:Class="Videoprep.App.Views.BatchEditView"
              x:DataType="vm:BatchEditViewModel">
   <!-- "Cambiar N elementos de la cola" (F2, mockup-editar-cola.html part 2) -->
   <StackPanel Spacing="10">
     <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
       <!-- F6: a profile fills the three boxes below -->
-      <TextBlock Classes="muted" Text="{s:T batch_profile}" VerticalAlignment="Center" IsVisible="{Binding HasProfiles}" />
+      <TextBlock Classes="muted" Text="{c:T batch_profile}" VerticalAlignment="Center" IsVisible="{Binding HasProfiles}" />
       <ComboBox Grid.Column="1" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" MinWidth="260"
-                IsVisible="{Binding HasProfiles}" AutomationProperties.Name="{s:T batch_profile}" />
-      <TextBlock Grid.Row="1" Classes="muted" Text="{s:T lbl_fmt}" VerticalAlignment="Center" />
+                IsVisible="{Binding HasProfiles}" AutomationProperties.Name="{c:T batch_profile}" />
+      <TextBlock Grid.Row="1" Classes="muted" Text="{c:T lbl_fmt}" VerticalAlignment="Center" />
       <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Formats}" SelectedItem="{Binding SelectedFormat}" MinWidth="260" />
-      <TextBlock Grid.Row="2" Classes="muted" Text="{s:T lbl_res}" VerticalAlignment="Center" />
+      <TextBlock Grid.Row="2" Classes="muted" Text="{c:T lbl_res}" VerticalAlignment="Center" />
       <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" MinWidth="160" />
-      <TextBlock Grid.Row="3" Classes="muted" Text="{s:T batch_cfr}" VerticalAlignment="Center" />
+      <TextBlock Grid.Row="3" Classes="muted" Text="{c:T batch_cfr}" VerticalAlignment="Center" />
       <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding ConstantChoices}" SelectedItem="{Binding SelectedConstant}" MinWidth="160"
-                ToolTip.Tip="{s:T tip_cfr}" AutomationProperties.Name="{s:T batch_cfr}" />
-      <TextBlock Grid.Row="4" Classes="muted" Text="{s:T batch_names}" VerticalAlignment="Center" />
+                ToolTip.Tip="{c:T tip_cfr}" AutomationProperties.Name="{c:T batch_cfr}" />
+      <TextBlock Grid.Row="4" Classes="muted" Text="{c:T batch_names}" VerticalAlignment="Center" />
       <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{Binding NameModes}" SelectedItem="{Binding SelectedNames}" MinWidth="300" />
       <StackPanel Grid.Row="5" Grid.Column="1" Spacing="6">
         <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsSeries}">
-          <TextBlock Classes="muted" Text="{s:T batch_prefix}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_prefix}" VerticalAlignment="Center" />
           <TextBox Text="{Binding Prefix}" Width="170" />
-          <TextBlock Classes="muted" Text="{s:T batch_series_note}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_series_note}" VerticalAlignment="Center" />
         </StackPanel>
         <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsAddText}">
-          <TextBlock Classes="muted" Text="{s:T batch_before}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_before}" VerticalAlignment="Center" />
           <TextBox Text="{Binding Before}" Width="150" />
-          <TextBlock Classes="muted" Text="{s:T batch_after}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_after}" VerticalAlignment="Center" />
           <TextBox Text="{Binding After}" Width="150" />
         </WrapPanel>
         <WrapPanel ItemSpacing="8" LineSpacing="6" IsVisible="{Binding IsReplace}">
-          <TextBlock Classes="muted" Text="{s:T batch_find}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_find}" VerticalAlignment="Center" />
           <TextBox Text="{Binding Find}" Width="150" />
-          <TextBlock Classes="muted" Text="{s:T batch_with}" VerticalAlignment="Center" />
+          <TextBlock Classes="muted" Text="{c:T batch_with}" VerticalAlignment="Center" />
           <TextBox Text="{Binding ReplaceWith}" Width="150" />
         </WrapPanel>
       </StackPanel>
@@ -43,7 +44,7 @@
 
     <Border Classes="card">
       <StackPanel Spacing="4">
-        <TextBlock Classes="title" Text="{s:T batch_preview}" />
+        <TextBlock Classes="title" Text="{c:T batch_preview}" />
         <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
           <ItemsControl ItemsSource="{Binding Preview}">
             <ItemsControl.ItemTemplate>
